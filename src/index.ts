@@ -11,7 +11,8 @@ import {
   ApplePlatformAdapter,
   MicrosoftPlatformAdapter,
   MetaPlatformAdapter,
-  ManusPlatformAdapter
+  ManusPlatformAdapter,
+  WebPlatformAdapter
 } from './platform/PlatformAdapter';
 import {
   AIManager,
@@ -103,6 +104,9 @@ export class DOGESpatialExplorer {
       
       case PlatformType.MANUS_VR:
         return new ManusPlatformAdapter(privacy, security);
+      
+      case PlatformType.WEB:
+        return new WebPlatformAdapter(privacy, security);
       
       default:
         throw new Error(`Unsupported platform: ${platform}`);

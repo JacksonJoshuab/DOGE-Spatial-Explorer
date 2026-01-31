@@ -225,7 +225,7 @@ export class SecureChannel {
   /**
    * Send data securely
    */
-  async send(data: any): Promise<void> {
+  async send(_data: any): Promise<void> {
     console.log('Sending data over secure channel');
     // Implement secure data transmission
   }

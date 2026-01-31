@@ -212,3 +212,43 @@ export class ManusPlatformAdapter extends PlatformAdapter {
     console.log('Shutting down Manus platform adapter');
   }
 }
+
+/**
+ * Web platform adapter (browser-based)
+ */
+export class WebPlatformAdapter extends PlatformAdapter {
+  constructor(privacySettings: PrivacySettings, securityConfig: SecurityConfig) {
+    super(PlatformType.WEB, privacySettings, securityConfig);
+  }
+
+  protected detectCapabilities(): PlatformCapabilities {
+    // Check for WebXR support
+    const hasWebXR = typeof navigator !== 'undefined' && 'xr' in navigator;
+    
+    return {
+      hasAR: hasWebXR,
+      hasVR: hasWebXR,
+      hasHandTracking: false,
+      hasEyeTracking: false,
+      hasSpatialAudio: typeof window !== 'undefined' && 'AudioContext' in window,
+      supportedAIProcessing: ['edge', 'cloud'] as any
+    };
+  }
+
+  async initialize(): Promise<void> {
+    console.log('Initializing Web platform');
+    // Platform-specific initialization (WebXR, WebGL)
+  }
+
+  async getDevicePose(): Promise<SpatialPose> {
+    // Get pose from WebXR or default camera position
+    return {
+      position: { x: 0, y: 1.6, z: 3 },
+      orientation: { x: 0, y: 0, z: 0, w: 1 }
+    };
+  }
+
+  async shutdown(): Promise<void> {
+    console.log('Shutting down Web platform adapter');
+  }
+}

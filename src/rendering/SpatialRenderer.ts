@@ -69,26 +69,28 @@ export class SpatialRenderingEngine {
    */
   addObject(spatialObject: SpatialObject): string {
     const { pose, scale, type } = spatialObject;
-    let mesh: THREE.Object3D;
 
     // Create geometry based on type
+    let mesh: THREE.Object3D;
     switch (type) {
-      case 'cube':
+      case 'cube': {
         const cubeGeometry = new THREE.BoxGeometry(scale.x, scale.y, scale.z);
         const cubeMaterial = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
         mesh = new THREE.Mesh(cubeGeometry, cubeMaterial);
         break;
-      
-      case 'sphere':
+      }
+      case 'sphere': {
         const sphereGeometry = new THREE.SphereGeometry(scale.x / 2, 32, 32);
         const sphereMaterial = new THREE.MeshStandardMaterial({ color: 0x0000ff });
         mesh = new THREE.Mesh(sphereGeometry, sphereMaterial);
         break;
-      
-      default:
+      }
+      default: {
         const defaultGeometry = new THREE.BoxGeometry(1, 1, 1);
         const defaultMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff });
         mesh = new THREE.Mesh(defaultGeometry, defaultMaterial);
+        break;
+      }
     }
 
     // Set position and rotation
@@ -236,7 +238,7 @@ export class SpatialRenderingEngine {
     this.stopRendering();
     
     // Dispose all objects
-    for (const [id, _object] of this.objects) {
+    for (const [id] of this.objects) {
       this.removeObject(id);
     }
     
@@ -271,7 +273,7 @@ export class SpatialAudioEngine {
   /**
    * Update listener position (camera/user position)
    */
-  updateListenerPose(pose: SpatialPose): void {
+  updateListenerPose(_pose: SpatialPose): void {
     // In a real implementation, update the AudioListener position
     console.log('Listener pose updated');
   }
@@ -282,7 +284,7 @@ export class SpatialAudioEngine {
   async playAudioAtPosition(
     audioId: string,
     position: SpatialCoordinate,
-    audioBuffer?: ArrayBuffer
+    _audioBuffer?: ArrayBuffer
   ): Promise<void> {
     console.log(`Playing spatial audio at position: ${JSON.stringify(position)}`);
     // Implement spatial audio playback

@@ -3,7 +3,8 @@ import {
   PlatformCapabilities,
   SpatialPose,
   PrivacySettings,
-  SecurityConfig
+  SecurityConfig,
+  AIProcessingMode
 } from '../types';
 
 /**
@@ -75,7 +76,11 @@ export class ApplePlatformAdapter extends PlatformAdapter {
       hasHandTracking: isVisionOS,
       hasEyeTracking: isVisionOS,
       hasSpatialAudio: true,
-      supportedAIProcessing: ['on_device', 'edge', 'cloud'] as any
+      supportedAIProcessing: [
+        AIProcessingMode.ON_DEVICE,
+        AIProcessingMode.EDGE,
+        AIProcessingMode.CLOUD
+      ]
     };
   }
 
@@ -117,7 +122,11 @@ export class MicrosoftPlatformAdapter extends PlatformAdapter {
       hasHandTracking: isHoloLens,
       hasEyeTracking: isHoloLens,
       hasSpatialAudio: isHoloLens,
-      supportedAIProcessing: ['on_device', 'edge', 'cloud'] as any
+      supportedAIProcessing: [
+        AIProcessingMode.ON_DEVICE,
+        AIProcessingMode.EDGE,
+        AIProcessingMode.CLOUD
+      ]
     };
   }
 
@@ -154,7 +163,11 @@ export class MetaPlatformAdapter extends PlatformAdapter {
       hasHandTracking: true,
       hasEyeTracking: true,
       hasSpatialAudio: true,
-      supportedAIProcessing: ['on_device', 'edge', 'cloud'] as any
+      supportedAIProcessing: [
+        AIProcessingMode.ON_DEVICE,
+        AIProcessingMode.EDGE,
+        AIProcessingMode.CLOUD
+      ]
     };
   }
 
@@ -191,7 +204,7 @@ export class ManusPlatformAdapter extends PlatformAdapter {
       hasHandTracking: true,
       hasEyeTracking: false,
       hasSpatialAudio: false,
-      supportedAIProcessing: ['edge', 'cloud'] as any
+      supportedAIProcessing: [AIProcessingMode.EDGE, AIProcessingMode.CLOUD]
     };
   }
 
@@ -231,7 +244,7 @@ export class WebPlatformAdapter extends PlatformAdapter {
       hasHandTracking: false,
       hasEyeTracking: false,
       hasSpatialAudio: typeof window !== 'undefined' && 'AudioContext' in window,
-      supportedAIProcessing: ['edge', 'cloud'] as any
+      supportedAIProcessing: [AIProcessingMode.EDGE, AIProcessingMode.CLOUD]
     };
   }
 

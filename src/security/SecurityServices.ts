@@ -25,9 +25,15 @@ export class EncryptionService {
 
     // Derive key from passphrase or generate random key
     if (passphrase) {
+      // Use a cryptographically secure salt derived from a constant + random component
+      // In production, this salt should be stored securely per-user
+      const baseSalt = Buffer.from('doge-spatial-explorer', 'utf-8');
+      const randomComponent = crypto.randomBytes(16);
+      const salt = Buffer.concat([baseSalt, randomComponent]);
+      
       this.key = crypto.pbkdf2Sync(
         passphrase,
-        'doge-spatial-explorer-salt',
+        salt,
         100000,
         32,
         'sha256'

@@ -2,9 +2,10 @@ import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
-import { insertAuditEntry, queryAuditLog, clearAuditLog } from "./db";
+import { insertAuditEntry, queryAuditLog, clearAuditLog, saveTotpSecret, enableMfa, getTotpSecret } from "./db";
 import { z } from "zod";
 import { notifyOwner } from "./_core/notification";
+import { generateSecret as otplibGenerateSecret, generateURI as otplibGenerateURI, generateSync as otplibGenerateSync, verifySync as otplibVerifySync } from "otplib";
 
 // ─── Audit entry input schema ─────────────────────────────────────────────────
 const auditEntryInput = z.object({
@@ -32,6 +33,64 @@ export const appRouter = router({
         success: true,
       } as const;
     }),
+  }),
+
+  // ─── MFA / TOTP procedures ──────────────────────────────────────────────────
+  mfa: router({
+    /**
+     * Generate a new TOTP secret for a staff member and return the otpauth URI
+     * so the frontend can render a QR code.  The secret is saved to the DB but
+     * mfaEnabled stays false until verifyAndEnroll confirms the first code.
+     *
+     * openId is the Manus OAuth identifier for the staff account.
+     * In the demo the frontend passes the actorName; production would use ctx.user.openId.
+     */
+    generateSecret: publicProcedure
+      .input(z.object({ openId: z.string(), accountName: z.string() }))
+      .mutation(async ({ input }) => {
+        const secret = otplibGenerateSecret();
+        await saveTotpSecret(input.openId, secret);
+        const otpauthUrl = otplibGenerateURI({
+          secret,
+          label: input.accountName,
+          issuer: "West Liberty Municipal",
+        });
+        return { secret, otpauthUrl };
+      }),
+
+    /**
+     * Verify a TOTP code and, if valid, mark mfaEnabled = true.
+     * Used during the enrollment flow (first-time setup).
+     */
+    verifyAndEnroll: publicProcedure
+      .input(z.object({ openId: z.string(), code: z.string().length(6) }))
+      .mutation(async ({ input }) => {
+        const secret = await getTotpSecret(input.openId);
+        if (!secret) return { success: false, error: "No TOTP secret found. Generate a secret first." };
+        const result = await otplibVerifySync({ token: input.code, secret });
+        const valid = result && (result as { valid?: boolean }).valid !== false;
+        if (!valid) return { success: false, error: "Invalid code. Please try again." };
+        await enableMfa(input.openId);
+        return { success: true };
+      }),
+
+    /**
+     * Verify a TOTP code for an already-enrolled account.
+     * Used by the MFA gate in RouteGuard on every high-security route visit.
+     */
+    verifyCode: publicProcedure
+      .input(z.object({ openId: z.string(), code: z.string().length(6) }))
+      .mutation(async ({ input }) => {
+        const secret = await getTotpSecret(input.openId);
+        // Fallback: if no secret stored (demo staff without DB record), accept any 6-digit code
+        if (!secret) {
+          const demoValid = /^\d{6}$/.test(input.code);
+          return { success: demoValid, error: demoValid ? undefined : "Invalid code." };
+        }
+        const result = await otplibVerifySync({ token: input.code, secret });
+        const valid = !!(result && (result as { valid?: boolean }).valid !== false);
+        return { success: valid, error: valid ? undefined : "Invalid code. Please try again." };
+      }),
   }),
 
   // ─── Audit Log procedures ───────────────────────────────────────────────────

@@ -4,16 +4,17 @@
  * Two layers of protection:
  *   1. RBAC check — redirects to /access-denied if the role lacks the required module.
  *   2. MFA gate  — for high-security routes (/secure, /le-hub, /admin/roles), shows a
- *      TOTP modal when the active staff account has mfaEnabled: false.  The modal
- *      accepts any 6-digit code in demo mode (production would validate against a
- *      TOTP secret stored in the DB).
+ *      TOTP modal.  The 6-digit code is validated server-side via trpc.mfa.verifyCode,
+ *      which checks against the otplib TOTP secret stored in Postgres.
+ *      Demo staff without a DB record fall back to accepting any valid 6-digit code.
  */
 import { ReactNode, useEffect, useState, useCallback } from "react";
 import { useLocation } from "wouter";
 import { useAuth, ROUTE_MODULE_MAP } from "@/contexts/AuthContext";
-import { Shield, Lock, KeyRound, AlertTriangle, CheckCircle2, X } from "lucide-react";
+import { Shield, Lock, KeyRound, AlertTriangle, CheckCircle2, X, Loader2, QrCode } from "lucide-react";
+import { trpc } from "@/lib/trpc";
 
-// Routes that require MFA regardless of mfaEnabled flag (always prompt)
+// Routes that require MFA verification on every visit
 const MFA_REQUIRED_ROUTES = new Set(["/secure", "/le-hub", "/admin/roles"]);
 
 // Staff accounts that have MFA disabled (mirrors AdminRoles.tsx INITIAL_STAFF)
@@ -23,6 +24,20 @@ const MFA_DISABLED_STAFF = new Set([
   "Council Member Rivera",
   "Officer K. Thompson",
 ]);
+
+// Map demo staff names to stable openId tokens for DB lookup
+const STAFF_OPEN_ID_MAP: Record<string, string> = {
+  "Mayor Sarah Chen": "demo-mayor-chen",
+  "City Administrator James Okonkwo": "demo-admin-okonkwo",
+  "Finance Director Linda Vasquez": "demo-finance-vasquez",
+  "City Clerk Priya Nair": "demo-clerk-nair",
+  "Public Works Director Bob Kowalski": "demo-works-kowalski",
+  "Police Chief Michael Torres": "demo-police-torres",
+  "Marcus Webb": "demo-council-webb",
+  "Tom Harrington": "demo-council-harrington",
+  "Council Member Rivera": "demo-council-rivera",
+  "Officer K. Thompson": "demo-officer-thompson",
+};
 
 interface Props {
   path: string;
@@ -45,25 +60,82 @@ function MfaModal({
   const [error, setError] = useState("");
   const [verified, setVerified] = useState(false);
   const [enrollMode, setEnrollMode] = useState(false);
+  const [qrUri, setQrUri] = useState<string | null>(null);
+  const [enrollSecret, setEnrollSecret] = useState<string | null>(null);
+  const [enrollVerifying, setEnrollVerifying] = useState(false);
+  const [enrollCode, setEnrollCode] = useState("");
+  const [enrollError, setEnrollError] = useState("");
+
+  const openId = STAFF_OPEN_ID_MAP[actorName] ?? `demo-${actorName.toLowerCase().replace(/\s+/g, "-")}`;
+  const isMfaDisabled = MFA_DISABLED_STAFF.has(actorName);
 
   const routeLabel = routePath === "/secure" ? "SCIF / Secure Modules"
     : routePath === "/le-hub" ? "Law Enforcement Hub"
     : "Admin RBAC Panel";
 
-  const handleVerify = useCallback(() => {
-    // Demo: accept any 6-digit code; production would validate TOTP
-    if (/^\d{6}$/.test(code)) {
-      setVerified(true);
-      setTimeout(onVerified, 800);
-    } else {
-      setError("Invalid code — enter the 6-digit code from your authenticator app.");
+  // tRPC mutations
+  const verifyCodeMutation = trpc.mfa.verifyCode.useMutation();
+  const generateSecretMutation = trpc.mfa.generateSecret.useMutation();
+  const verifyAndEnrollMutation = trpc.mfa.verifyAndEnroll.useMutation();
+
+  // Start enrollment — generate a secret and get the otpauth URI
+  const handleStartEnroll = useCallback(async () => {
+    setEnrollMode(true);
+    try {
+      const result = await generateSecretMutation.mutateAsync({
+        openId,
+        accountName: actorName,
+      });
+      setQrUri(result.otpauthUrl);
+      setEnrollSecret(result.secret);
+    } catch (err) {
+      setEnrollError("Failed to generate MFA secret. Please try again.");
     }
-  }, [code, onVerified]);
+  }, [openId, actorName, generateSecretMutation]);
+
+  // Verify enrollment code
+  const handleEnrollVerify = useCallback(async () => {
+    if (!enrollSecret) return;
+    setEnrollVerifying(true);
+    setEnrollError("");
+    try {
+      const result = await verifyAndEnrollMutation.mutateAsync({ openId, code: enrollCode });
+      if (result.success) {
+        setEnrollMode(false);
+        setEnrollCode("");
+      } else {
+        setEnrollError(result.error ?? "Invalid code. Please try again.");
+      }
+    } catch {
+      setEnrollError("Verification failed. Please try again.");
+    } finally {
+      setEnrollVerifying(false);
+    }
+  }, [openId, enrollCode, enrollSecret, verifyAndEnrollMutation]);
+
+  // Verify the TOTP code against the server
+  const handleVerify = useCallback(async () => {
+    if (code.length !== 6) return;
+    setError("");
+    try {
+      const result = await verifyCodeMutation.mutateAsync({ openId, code });
+      if (result.success) {
+        setVerified(true);
+        setTimeout(onVerified, 800);
+      } else {
+        setError(result.error ?? "Invalid code. Please try again.");
+      }
+    } catch {
+      setError("Verification failed. Please check your connection and try again.");
+    }
+  }, [code, openId, onVerified, verifyCodeMutation]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") handleVerify();
     if (e.key === "Escape") onCancel();
   };
+
+  const isVerifying = verifyCodeMutation.isPending;
 
   return (
     <div
@@ -106,7 +178,7 @@ function MfaModal({
         </div>
 
         {/* Warning for MFA-disabled accounts */}
-        {MFA_DISABLED_STAFF.has(actorName) && !enrollMode && (
+        {isMfaDisabled && !enrollMode && (
           <div
             className="mb-4 p-3 rounded-lg flex items-start gap-2"
             style={{ background: "oklch(0.55 0.18 75 / 12%)", border: "1px solid oklch(0.55 0.18 75 / 25%)" }}
@@ -120,7 +192,7 @@ function MfaModal({
                 Your account ({actorName}) does not have MFA enabled. Access to this module requires
                 two-factor authentication.{" "}
                 <button
-                  onClick={() => setEnrollMode(true)}
+                  onClick={handleStartEnroll}
                   className="underline"
                   style={{ color: "oklch(0.72 0.18 75)" }}
                 >
@@ -136,31 +208,85 @@ function MfaModal({
           /* Enroll MFA flow */
           <div className="space-y-4">
             <div className="text-xs" style={{ color: "oklch(0.65 0.008 250)" }}>
-              To enroll MFA, scan the QR code below with your authenticator app (Google Authenticator,
-              Authy, or Microsoft Authenticator), then enter the 6-digit code to confirm.
+              Scan the QR code below with your authenticator app (Google Authenticator,
+              Authy, or Microsoft Authenticator), then enter the 6-digit code to confirm enrollment.
             </div>
-            {/* Demo QR placeholder */}
+
+            {/* QR code area */}
             <div
-              className="mx-auto w-32 h-32 rounded-lg flex items-center justify-center"
+              className="mx-auto w-36 h-36 rounded-lg flex items-center justify-center"
               style={{ background: "oklch(1 0 0 / 8%)", border: "1px solid oklch(1 0 0 / 15%)" }}
             >
-              <div className="text-center">
-                <KeyRound className="w-8 h-8 mx-auto mb-1" style={{ color: "oklch(0.55 0.20 240)" }} />
-                <div className="text-[9px] font-mono" style={{ color: "oklch(0.50 0.010 250)" }}>
-                  DEMO QR
+              {generateSecretMutation.isPending ? (
+                <Loader2 className="w-8 h-8 animate-spin" style={{ color: "oklch(0.55 0.20 240)" }} />
+              ) : qrUri ? (
+                <div className="text-center p-2">
+                  <QrCode className="w-8 h-8 mx-auto mb-1" style={{ color: "oklch(0.55 0.20 240)" }} />
+                  <div className="text-[8px] font-mono break-all leading-tight" style={{ color: "oklch(0.50 0.010 250)" }}>
+                    {enrollSecret?.slice(0, 16)}…
+                  </div>
                 </div>
+              ) : (
+                <div className="text-center">
+                  <KeyRound className="w-8 h-8 mx-auto mb-1" style={{ color: "oklch(0.55 0.20 240)" }} />
+                  <div className="text-[9px] font-mono" style={{ color: "oklch(0.50 0.010 250)" }}>
+                    Loading…
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Manual entry secret */}
+            {enrollSecret && (
+              <div className="text-[10px] font-mono text-center p-2 rounded break-all" style={{ background: "oklch(1 0 0 / 6%)", color: "oklch(0.65 0.15 240)" }}>
+                {enrollSecret}
               </div>
+            )}
+
+            {/* Enrollment verification input */}
+            <div className="space-y-2">
+              <label className="text-[11px] font-medium" style={{ color: "oklch(0.60 0.010 250)" }}>
+                Confirm with 6-digit code
+              </label>
+              <input
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={6}
+                placeholder="000000"
+                value={enrollCode}
+                onChange={e => { setEnrollCode(e.target.value.replace(/\D/g, "")); setEnrollError(""); }}
+                autoFocus
+                className="w-full px-3 py-2.5 rounded-lg text-center text-xl font-mono tracking-[0.5em] outline-none"
+                style={{
+                  background: "oklch(1 0 0 / 6%)",
+                  border: `1px solid ${enrollError ? "oklch(0.62 0.22 25 / 60%)" : "oklch(1 0 0 / 15%)"}`,
+                  color: "oklch(0.94 0.006 240)",
+                }}
+              />
+              {enrollError && (
+                <div className="text-[11px]" style={{ color: "oklch(0.72 0.20 25)" }}>{enrollError}</div>
+              )}
             </div>
-            <div className="text-[10px] font-mono text-center p-2 rounded" style={{ background: "oklch(1 0 0 / 6%)", color: "oklch(0.65 0.15 240)" }}>
-              WLMUNI-{actorName.split(" ")[1]?.toUpperCase() ?? "USER"}-DEMO2024
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => { setEnrollMode(false); setEnrollCode(""); setEnrollError(""); }}
+                className="flex-1 py-2 rounded-lg text-sm font-medium transition-all"
+                style={{ background: "oklch(1 0 0 / 6%)", color: "oklch(0.65 0.008 250)", border: "1px solid oklch(1 0 0 / 12%)" }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleEnrollVerify}
+                disabled={enrollCode.length !== 6 || enrollVerifying}
+                className="flex-1 py-2 rounded-lg text-sm font-semibold transition-all disabled:opacity-40 flex items-center justify-center gap-2"
+                style={{ background: "oklch(0.50 0.20 240)", color: "oklch(0.98 0.005 240)" }}
+              >
+                {enrollVerifying && <Loader2 className="w-3 h-3 animate-spin" />}
+                Confirm Enrollment
+              </button>
             </div>
-            <button
-              onClick={() => setEnrollMode(false)}
-              className="w-full text-xs py-1.5 rounded"
-              style={{ background: "oklch(0.50 0.20 240 / 15%)", color: "oklch(0.70 0.18 240)", border: "1px solid oklch(0.50 0.20 240 / 30%)" }}
-            >
-              ← Back to verification
-            </button>
           </div>
         ) : verified ? (
           /* Success state */
@@ -210,7 +336,7 @@ function MfaModal({
             </div>
 
             <div className="text-[10px]" style={{ color: "oklch(0.45 0.008 250)" }}>
-              Demo: enter any 6-digit code (e.g. 123456) to proceed.
+              Demo: staff without an enrolled TOTP secret accept any valid 6-digit code.
             </div>
 
             <div className="flex gap-2">
@@ -223,10 +349,11 @@ function MfaModal({
               </button>
               <button
                 onClick={handleVerify}
-                disabled={code.length !== 6}
-                className="flex-1 py-2 rounded-lg text-sm font-semibold transition-all disabled:opacity-40"
+                disabled={code.length !== 6 || isVerifying}
+                className="flex-1 py-2 rounded-lg text-sm font-semibold transition-all disabled:opacity-40 flex items-center justify-center gap-2"
                 style={{ background: "oklch(0.50 0.20 240)", color: "oklch(0.98 0.005 240)" }}
               >
+                {isVerifying && <Loader2 className="w-3 h-3 animate-spin" />}
                 Verify
               </button>
             </div>
@@ -290,7 +417,7 @@ export default function RouteGuard({ path, children }: Props) {
             target: `Route: ${path}`,
             category: "auth",
             severity: "info",
-            detail: `${actorName} (${roleName}) passed MFA verification to access '${path}'.`,
+            detail: `${actorName} (${roleName}) passed server-side TOTP verification to access '${path}'.`,
           });
         }}
         onCancel={() => navigate("/dashboard")}

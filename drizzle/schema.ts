@@ -17,6 +17,10 @@ export const users = mysqlTable("users", {
   email: varchar("email", { length: 320 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
   role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
+  /** Base32-encoded TOTP secret generated at MFA enrollment. Null until enrolled. */
+  totpSecret: varchar("totpSecret", { length: 64 }),
+  /** Whether MFA has been fully enrolled and verified for this account. */
+  mfaEnabled: int("mfaEnabled").default(0).notNull(), // 0 = false, 1 = true
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),

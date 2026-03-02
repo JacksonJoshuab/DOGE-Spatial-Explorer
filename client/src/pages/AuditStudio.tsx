@@ -3,8 +3,8 @@
  * Audit findings management with West Liberty FY2024 data
  */
 import DashboardLayout from "@/components/DashboardLayout";
-import { AlertTriangle, CheckCircle2, Clock, Shield, FileText, TrendingUp, DollarSign, Download, Printer, Activity, UserCog, ShieldAlert, Database, Lock } from "lucide-react";
-import React, { useState } from "react";
+import { AlertTriangle, CheckCircle2, Clock, Shield, FileText, TrendingUp, DollarSign, Download, Printer, Activity, UserCog, ShieldAlert, Database, Lock, Filter, Calendar, X } from "lucide-react";
+import React, { useState, useMemo } from "react";
 import { toast } from "sonner";
 import { useAuth, AuditEntry } from "@/contexts/AuthContext";
 
@@ -229,6 +229,37 @@ export default function AuditStudio() {
   const { auditLog, clearAuditLog } = useAuth();
   const filtered = filter === "all" ? FINDINGS : FINDINGS.filter(f => f.status === filter || f.severity === filter);
 
+  // ─── RBAC log filter state ─────────────────────────────────────────────────
+  const [logCategory, setLogCategory] = useState<string>("all");
+  const [logSeverity, setLogSeverity] = useState<string>("all");
+  const [logDatePreset, setLogDatePreset] = useState<string>("all");
+  const [logFromDate, setLogFromDate] = useState<string>("");
+  const [logToDate, setLogToDate] = useState<string>("");
+  const [logSearch, setLogSearch] = useState<string>("");
+
+  const filteredLog = useMemo(() => {
+    let entries = [...auditLog];
+    if (logDatePreset !== "all" && logDatePreset !== "custom") {
+      const now = Date.now();
+      const cutoffs: Record<string, number> = { today: 86400000, week: 7*86400000, month: 30*86400000, quarter: 90*86400000 };
+      const threshold = now - (cutoffs[logDatePreset] ?? 0);
+      entries = entries.filter(e => e.timestamp.getTime() >= threshold);
+    }
+    if (logDatePreset === "custom") {
+      if (logFromDate) entries = entries.filter(e => e.timestamp.getTime() >= new Date(logFromDate).getTime());
+      if (logToDate) entries = entries.filter(e => e.timestamp.getTime() <= new Date(logToDate).getTime() + 86400000);
+    }
+    if (logCategory !== "all") entries = entries.filter(e => e.category === logCategory);
+    if (logSeverity !== "all") entries = entries.filter(e => e.severity === logSeverity);
+    if (logSearch.trim()) {
+      const q = logSearch.toLowerCase();
+      entries = entries.filter(e => e.actor.toLowerCase().includes(q) || e.action.toLowerCase().includes(q) || e.target.toLowerCase().includes(q) || (e.detail ?? "").toLowerCase().includes(q));
+    }
+    return entries;
+  }, [auditLog, logCategory, logSeverity, logDatePreset, logFromDate, logToDate, logSearch]);
+
+  const hasActiveFilters = logCategory !== "all" || logSeverity !== "all" || logDatePreset !== "all" || logSearch.trim() !== "";
+
   const selectedFinding = FINDINGS.find(f => f.id === selected);
 
   const openCount = FINDINGS.filter(f => f.status === "open").length;
@@ -382,27 +413,142 @@ export default function AuditStudio() {
         </div>
         {/* RBAC & Access Audit Log */}
         <div className="mt-8">
-          <div className="flex items-center justify-between mb-4">
+          {/* Log header */}
+          <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <Activity className="w-4 h-4" style={{ color: "oklch(0.45 0.20 240)" }} />
               <h2 className="text-sm font-bold" style={{ fontFamily: "'Syne', sans-serif", color: "oklch(0.18 0.018 250)" }}>RBAC &amp; Access Audit Log</h2>
               <span className="text-[9px] font-mono px-1.5 py-0.5 rounded" style={{ background: "oklch(0.45 0.20 240 / 10%)", color: "oklch(0.40 0.18 240)", border: "1px solid oklch(0.45 0.20 240 / 20%)" }}>
-                {auditLog.length} entries
+                {filteredLog.length}/{auditLog.length}
               </span>
+              {hasActiveFilters && (
+                <span className="text-[9px] px-1.5 py-0.5 rounded font-bold" style={{ background: "oklch(0.55 0.18 75 / 12%)", color: "oklch(0.55 0.18 75)", border: "1px solid oklch(0.55 0.18 75 / 25%)" }}>
+                  FILTERED
+                </span>
+              )}
             </div>
-            <button
-              onClick={() => { clearAuditLog(); toast.success("Audit log cleared"); }}
-              className="text-[10px] px-2 py-1 rounded font-medium transition-all"
-              style={{ background: "oklch(0 0 0 / 5%)", border: "1px solid oklch(0 0 0 / 10%)", color: "oklch(0.52 0.010 250)" }}
-            >
-              Clear Log
-            </button>
+            <div className="flex items-center gap-2">
+              {hasActiveFilters && (
+                <button
+                  onClick={() => { setLogCategory("all"); setLogSeverity("all"); setLogDatePreset("all"); setLogFromDate(""); setLogToDate(""); setLogSearch(""); }}
+                  className="flex items-center gap-1 text-[10px] px-2 py-1 rounded font-medium transition-all"
+                  style={{ background: "oklch(0.50 0.22 25 / 8%)", border: "1px solid oklch(0.50 0.22 25 / 20%)", color: "oklch(0.50 0.22 25)" }}
+                >
+                  <X className="w-3 h-3" /> Clear Filters
+                </button>
+              )}
+              <button
+                onClick={() => { clearAuditLog(); toast.success("Audit log cleared"); }}
+                className="text-[10px] px-2 py-1 rounded font-medium transition-all"
+                style={{ background: "oklch(0 0 0 / 5%)", border: "1px solid oklch(0 0 0 / 10%)", color: "oklch(0.52 0.010 250)" }}
+              >
+                Clear Log
+              </button>
+            </div>
           </div>
 
-          {auditLog.length === 0 ? (
+          {/* Filter bar */}
+          <div className="p-3 rounded-xl mb-3 flex flex-wrap gap-3 items-end" style={{ background: "oklch(0.97 0.004 240)", border: "1px solid oklch(0 0 0 / 7%)" }}>
+            {/* Search */}
+            <div className="flex-1 min-w-[160px]">
+              <label className="block text-[9px] font-bold uppercase tracking-wider mb-1" style={{ color: "oklch(0.52 0.010 250)" }}>Search</label>
+              <input
+                type="text"
+                placeholder="Actor, action, target…"
+                value={logSearch}
+                onChange={e => setLogSearch(e.target.value)}
+                className="w-full px-2.5 py-1.5 rounded text-xs outline-none"
+                style={{ background: "oklch(1 0 0)", border: "1px solid oklch(0 0 0 / 10%)", color: "oklch(0.25 0.018 250)" }}
+              />
+            </div>
+
+            {/* Date preset */}
+            <div>
+              <label className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider mb-1" style={{ color: "oklch(0.52 0.010 250)" }}>
+                <Calendar className="w-2.5 h-2.5" /> Date Range
+              </label>
+              <select
+                value={logDatePreset}
+                onChange={e => setLogDatePreset(e.target.value)}
+                className="px-2.5 py-1.5 rounded text-xs outline-none cursor-pointer"
+                style={{ background: "oklch(1 0 0)", border: "1px solid oklch(0 0 0 / 10%)", color: "oklch(0.25 0.018 250)" }}
+              >
+                <option value="all">All time</option>
+                <option value="today">Last 24 hours</option>
+                <option value="week">Last 7 days</option>
+                <option value="month">Last 30 days</option>
+                <option value="quarter">Last 90 days</option>
+                <option value="custom">Custom range…</option>
+              </select>
+            </div>
+
+            {/* Custom date inputs */}
+            {logDatePreset === "custom" && (
+              <>
+                <div>
+                  <label className="block text-[9px] font-bold uppercase tracking-wider mb-1" style={{ color: "oklch(0.52 0.010 250)" }}>From</label>
+                  <input
+                    type="date"
+                    value={logFromDate}
+                    onChange={e => setLogFromDate(e.target.value)}
+                    className="px-2.5 py-1.5 rounded text-xs outline-none"
+                    style={{ background: "oklch(1 0 0)", border: "1px solid oklch(0 0 0 / 10%)", color: "oklch(0.25 0.018 250)" }}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[9px] font-bold uppercase tracking-wider mb-1" style={{ color: "oklch(0.52 0.010 250)" }}>To</label>
+                  <input
+                    type="date"
+                    value={logToDate}
+                    onChange={e => setLogToDate(e.target.value)}
+                    className="px-2.5 py-1.5 rounded text-xs outline-none"
+                    style={{ background: "oklch(1 0 0)", border: "1px solid oklch(0 0 0 / 10%)", color: "oklch(0.25 0.018 250)" }}
+                  />
+                </div>
+              </>
+            )}
+
+            {/* Category */}
+            <div>
+              <label className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider mb-1" style={{ color: "oklch(0.52 0.010 250)" }}>
+                <Filter className="w-2.5 h-2.5" /> Category
+              </label>
+              <select
+                value={logCategory}
+                onChange={e => setLogCategory(e.target.value)}
+                className="px-2.5 py-1.5 rounded text-xs outline-none cursor-pointer"
+                style={{ background: "oklch(1 0 0)", border: "1px solid oklch(0 0 0 / 10%)", color: "oklch(0.25 0.018 250)" }}
+              >
+                <option value="all">All categories</option>
+                {Object.entries(CATEGORY_CONFIG).map(([k, v]) => (
+                  <option key={k} value={k}>{v.label}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Severity */}
+            <div>
+              <label className="block text-[9px] font-bold uppercase tracking-wider mb-1" style={{ color: "oklch(0.52 0.010 250)" }}>Severity</label>
+              <select
+                value={logSeverity}
+                onChange={e => setLogSeverity(e.target.value)}
+                className="px-2.5 py-1.5 rounded text-xs outline-none cursor-pointer"
+                style={{ background: "oklch(1 0 0)", border: "1px solid oklch(0 0 0 / 10%)", color: "oklch(0.25 0.018 250)" }}
+              >
+                <option value="all">All severities</option>
+                <option value="info">Info</option>
+                <option value="warning">Warning</option>
+                <option value="critical">Critical</option>
+              </select>
+            </div>
+          </div>
+
+          {filteredLog.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 rounded-xl" style={{ background: "oklch(1 0 0)", border: "1px solid oklch(0 0 0 / 8%)" }}>
               <Shield className="w-8 h-8 mb-2" style={{ color: "oklch(0.70 0.010 250)" }} />
-              <div className="text-xs" style={{ color: "oklch(0.52 0.010 250)" }}>No audit events recorded yet</div>
+              <div className="text-xs" style={{ color: "oklch(0.52 0.010 250)" }}>
+                {auditLog.length === 0 ? "No audit events recorded yet" : "No entries match the current filters"}
+              </div>
             </div>
           ) : (
             <div className="rounded-xl overflow-hidden" style={{ border: "1px solid oklch(0 0 0 / 8%)" }}>
@@ -415,7 +561,7 @@ export default function AuditStudio() {
                   </tr>
                 </thead>
                 <tbody>
-                  {auditLog.map((entry, i) => {
+                  {filteredLog.map((entry, i) => {
                     const cat = CATEGORY_CONFIG[entry.category];
                     const sev = SEVERITY_AUDIT_CONFIG[entry.severity];
                     const CatIcon = cat.icon;

@@ -222,11 +222,15 @@ const INITIAL_ALERTS: AlertItem[] = [
 export interface UseIoTSensorsOptions {
   sensorInterval?: number;
   alertInterval?: number;
+  /** Called when any sensor transitions into "alert" or "warning" status */
+  onAlert?: (sensor: SensorReading, prevStatus: SensorReading["status"]) => void;
 }
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 export function useIoTSensors(options: UseIoTSensorsOptions = {}) {
-  const { sensorInterval = 4000, alertInterval = 6000 } = options;
+  const { sensorInterval = 4000, alertInterval = 6000, onAlert } = options;
+  const onAlertRef = useRef(onAlert);
+  useEffect(() => { onAlertRef.current = onAlert; }, [onAlert]);
 
   const [sensors, setSensors] = useState<SensorReading[]>(SEED_SENSORS.map(s => ({ ...s, tick: 0 })));
   const [alerts, setAlerts]   = useState<AlertItem[]>(INITIAL_ALERTS);
@@ -248,11 +252,25 @@ export function useIoTSensors(options: UseIoTSensorsOptions = {}) {
 
   // ── Sensor telemetry update (shared by WS handler + simulation) ───────────
   const applyTelemetryUpdate = useCallback(() => {
-    setSensors(prev => prev.map(sensor => {
-      const script = UPDATE_SCRIPTS[sensor.id];
-      if (!script) return sensor;
-      return { ...sensor, ...script(sensor), tick: sensor.tick + 1 };
-    }));
+    setSensors(prev => {
+      const next = prev.map(sensor => {
+        const script = UPDATE_SCRIPTS[sensor.id];
+        if (!script) return sensor;
+        const patch = script(sensor);
+        const updated: SensorReading = { ...sensor, ...patch, tick: sensor.tick + 1 };
+
+        // Fire onAlert when a sensor transitions INTO alert or warning
+        const prevStatus = sensor.status;
+        const newStatus  = updated.status;
+        if (newStatus !== prevStatus && (newStatus === "alert" || newStatus === "warning")) {
+          // Defer to avoid setState-in-render
+          setTimeout(() => onAlertRef.current?.(updated, prevStatus), 0);
+        }
+
+        return updated;
+      });
+      return next;
+    });
     setLastUpdated(new Date());
   }, []);
 

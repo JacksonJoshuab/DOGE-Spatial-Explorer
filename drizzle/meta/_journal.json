@@ -15,6 +15,13 @@
       "when": 1772440390229,
       "tag": "0001_simple_william_stryker",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1772441999183,
+      "tag": "0002_bouncy_stepford_cuckoos",
+      "breakpoints": true
     }
   ]
 }

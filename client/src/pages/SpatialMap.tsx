@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useIoTSensors, type SensorReading } from "@/hooks/useIoTSensors";
+import { useAuth } from "@/contexts/AuthContext";
 
 // ─── Icon map (cannot serialize React components through the hook) ─────────────
 const SENSOR_ICONS: Record<string, React.ElementType> = {
@@ -93,7 +94,22 @@ export default function SpatialMap() {
   const markersRef = useRef<Map<string, google.maps.Marker>>(new Map());
   const polylinesRef = useRef<Map<string, google.maps.Polyline[]>>(new Map());
 
-  // ── Live IoT sensor hook ────────────────────────────────────────────────────
+  // ── Auth context for audit log ─────────────────────────────────────────────────
+  const { appendAudit } = useAuth();
+
+  // ── IoT alert → audit pipeline ────────────────────────────────────────────────
+  const handleSensorAlert = useCallback((sensor: SensorReading, prevStatus: SensorReading["status"]) => {
+    const isAlert = sensor.status === "alert";
+    appendAudit({
+      action: isAlert ? "SENSOR_ALERT" : "SENSOR_WARNING",
+      target: `${sensor.name} (${sensor.id}) — ${sensor.reading}`,
+      category: "iot",
+      severity: isAlert ? "critical" : "warning",
+      detail: sensor.alert ?? `Status changed ${prevStatus} → ${sensor.status}`,
+    });
+  }, [appendAudit]);
+
+  // ── Live IoT sensor hook ───────────────────────────────────────────────────────
   const {
     sensors,
     alerts,
@@ -107,9 +123,7 @@ export default function SpatialMap() {
     dispatchAlert,
     dispatchAll,
     toggleLive,
-  } = useIoTSensors({ sensorInterval: 4000, alertInterval: 6000 });
-
-  const wsStatusLabel = wsStatus === "connected" ? "WS CONNECTED"
+  } = useIoTSensors({ sensorInterval: 4000, alertInterval: 6000, onAlert: handleSensorAlert }); const wsStatusLabel = wsStatus === "connected" ? "WS CONNECTED"
     : wsStatus === "reconnecting" ? "WS RECONNECTING…"
     : wsStatus === "failed" ? "WS FAILED"
     : wsStatus === "simulation" ? "SIMULATION MODE"

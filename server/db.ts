@@ -137,3 +137,45 @@ export async function clearAuditLog(): Promise<void> {
   if (!db) return;
   await db.delete(auditLog);
 }
+
+// ─── TOTP / MFA helpers ───────────────────────────────────────────────────────
+
+/** Store a newly generated TOTP secret for a staff member (pre-enrollment). */
+export async function saveTotpSecret(openId: string, secret: string): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(users)
+    .set({ totpSecret: secret, mfaEnabled: 0 })
+    .where(eq(users.openId, openId));
+}
+
+/** Mark MFA as fully enrolled after the user verifies their first code. */
+export async function enableMfa(openId: string): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(users)
+    .set({ mfaEnabled: 1 })
+    .where(eq(users.openId, openId));
+}
+
+/** Retrieve the TOTP secret for a given openId (returns null if not set). */
+export async function getTotpSecret(openId: string): Promise<string | null> {
+  const db = await getDb();
+  if (!db) return null;
+  const rows = await db.select({ totpSecret: users.totpSecret })
+    .from(users)
+    .where(eq(users.openId, openId))
+    .limit(1);
+  return rows[0]?.totpSecret ?? null;
+}
+
+/** Check whether MFA is enabled for a given openId. */
+export async function isMfaEnabled(openId: string): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+  const rows = await db.select({ mfaEnabled: users.mfaEnabled })
+    .from(users)
+    .where(eq(users.openId, openId))
+    .limit(1);
+  return (rows[0]?.mfaEnabled ?? 0) === 1;
+}

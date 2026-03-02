@@ -4,32 +4,68 @@ import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import Home from "./pages/Home";
 
+// Public pages
+import Home from "./pages/Home";
+import Platform from "./pages/Platform";
+import Solutions from "./pages/Solutions";
+import Roadmap from "./pages/Roadmap";
+import Contact from "./pages/Contact";
+import ROICalculator from "./pages/ROICalculator";
+
+// Marketplace & IP
+import HardwareMarketplace from "./pages/HardwareMarketplace";
+import IPPipeline from "./pages/IPPipeline";
+import CapitalHub from "./pages/CapitalHub";
+import DataCenter from "./pages/DataCenter";
+
+// Dashboard / operational
+import Dashboard from "./pages/Dashboard";
+import AuditStudio from "./pages/AuditStudio";
+import OperationsCenter from "./pages/OperationsCenter";
+import SpatialMap from "./pages/SpatialMap";
+
+// Compliance / secure
+import RecordsManagement from "./pages/RecordsManagement";
+import SecureModules from "./pages/SecureModules";
 
 function Router() {
   return (
     <Switch>
-      <Route path={"/"} component={Home} />
-      <Route path={"/404"} component={NotFound} />
-      {/* Final fallback route */}
+      {/* Public marketing */}
+      <Route path="/" component={Home} />
+      <Route path="/platform" component={Platform} />
+      <Route path="/solutions" component={Solutions} />
+      <Route path="/roadmap" component={Roadmap} />
+      <Route path="/contact" component={Contact} />
+      <Route path="/roi" component={ROICalculator} />
+
+      {/* Marketplace & IP */}
+      <Route path="/hardware" component={HardwareMarketplace} />
+      <Route path="/ip-pipeline" component={IPPipeline} />
+      <Route path="/capital-hub" component={CapitalHub} />
+      <Route path="/data-center" component={DataCenter} />
+
+      {/* Operational dashboard */}
+      <Route path="/dashboard" component={Dashboard} />
+      <Route path="/audit" component={AuditStudio} />
+      <Route path="/operations" component={OperationsCenter} />
+      <Route path="/map" component={SpatialMap} />
+
+      {/* Compliance & secure */}
+      <Route path="/records" component={RecordsManagement} />
+      <Route path="/secure" component={SecureModules} />
+
+      <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>
   );
 }
 
-// NOTE: About Theme
-// - First choose a default theme according to your design style (dark or light bg), than change color palette in index.css
-//   to keep consistent foreground/background color across components
-// - If you want to make theme switchable, pass `switchable` ThemeProvider and use `useTheme` hook
-
 function App() {
   return (
     <ErrorBoundary>
-      <ThemeProvider
-        defaultTheme="light"
-        // switchable
-      >
+      <ThemeProvider defaultTheme="dark">
         <TooltipProvider>
           <Toaster />
           <Router />

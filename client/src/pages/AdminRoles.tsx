@@ -14,6 +14,7 @@ import {
   Eye, EyeOff, AlertTriangle, UserCog, Key, Building2
 } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 // ─── Role definitions ─────────────────────────────────────────────────────────
 export const ROLES = [
@@ -147,6 +148,7 @@ const INITIAL_STAFF: StaffAccount[] = [
 const MODULE_CATEGORIES = ["Core", "Finance", "Departments", "Secure", "Resident", "Admin"];
 
 export default function AdminRoles() {
+  const { appendAudit } = useAuth();
   const [permissions, setPermissions] = useState<Record<string, Set<string>>>(DEFAULT_PERMISSIONS);
   const [staff, setStaff] = useState<StaffAccount[]>(INITIAL_STAFF);
   const [activeView, setActiveView] = useState<"matrix" | "staff">("matrix");
@@ -158,6 +160,7 @@ export default function AdminRoles() {
   const [pendingChanges, setPendingChanges] = useState<Set<string>>(new Set());
 
   const togglePermission = (roleId: string, moduleId: string) => {
+    const wasGranted = permissions[roleId]?.has(moduleId);
     setPermissions(prev => {
       const next = { ...prev, [roleId]: new Set(prev[roleId]) };
       if (next[roleId].has(moduleId)) {
@@ -168,11 +171,29 @@ export default function AdminRoles() {
       return next;
     });
     setPendingChanges(prev => new Set(Array.from(prev).concat(roleId)));
+    const roleName = ROLES.find(r => r.id === roleId)?.name ?? roleId;
+    const modLabel = MODULES.find(m => m.id === moduleId)?.label ?? moduleId;
+    appendAudit({
+      action: wasGranted ? "ROLE_REVOKED" : "ROLE_GRANTED",
+      target: `${roleName} — ${modLabel}`,
+      category: "rbac",
+      severity: "warning",
+      detail: `Module '${modLabel}' ${wasGranted ? "revoked from" : "granted to"} role '${roleName}'. Change pending save.`,
+    });
   };
 
   const saveChanges = () => {
+    const count = pendingChanges.size;
+    const roleNames = Array.from(pendingChanges).map(id => ROLES.find(r => r.id === id)?.name ?? id).join(", ");
     setPendingChanges(new Set());
-    toast.success(`Permissions saved for ${pendingChanges.size} role${pendingChanges.size > 1 ? "s" : ""}`);
+    toast.success(`Permissions saved for ${count} role${count > 1 ? "s" : ""}`);
+    appendAudit({
+      action: "PERMISSIONS_SAVED",
+      target: roleNames,
+      category: "rbac",
+      severity: "info",
+      detail: `Permission changes committed for ${count} role(s): ${roleNames}.`,
+    });
   };
 
   const toggleCategory = (cat: string) => {
@@ -203,12 +224,29 @@ export default function AdminRoles() {
     setNewStaff({ name: "", email: "", roleId: "public-works", department: "" });
     setShowAddStaff(false);
     toast.success(`${account.name} added — invitation email queued`);
+    const roleName = ROLES.find(r => r.id === account.roleId)?.name ?? account.roleId;
+    appendAudit({
+      action: "STAFF_ADDED",
+      target: `${account.name} (${account.id}) — ${roleName}`,
+      category: "rbac",
+      severity: "info",
+      detail: `New staff account created: ${account.name} <${account.email}>, role '${roleName}', dept '${account.department}'.`,
+    });
   };
 
   const toggleStaffActive = (id: string) => {
-    setStaff(prev => prev.map(s => s.id === id ? { ...s, active: !s.active } : s));
     const member = staff.find(s => s.id === id);
-    toast.success(member?.active ? `${member.name} deactivated` : `${member?.name} reactivated`);
+    setStaff(prev => prev.map(s => s.id === id ? { ...s, active: !s.active } : s));
+    toast.success(member?.active ? `${member?.name} deactivated` : `${member?.name} reactivated`);
+    if (member) {
+      appendAudit({
+        action: member.active ? "STAFF_DEACTIVATED" : "STAFF_REACTIVATED",
+        target: `${member.name} (${member.id})`,
+        category: "rbac",
+        severity: member.active ? "warning" : "info",
+        detail: `Staff account ${member.id} (${member.name}) ${member.active ? "deactivated — all active sessions invalidated" : "reactivated — access restored"}.`,
+      });
+    }
   };
 
   const toggleMFA = (id: string) => {

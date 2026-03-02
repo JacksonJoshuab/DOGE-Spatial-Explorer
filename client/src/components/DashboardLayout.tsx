@@ -11,6 +11,7 @@ import {
   Building2, Wifi, AlertTriangle, ChevronRight, ShieldCheck, Droplets,
   Menu, X, Trees, HardHat, DollarSign, Users, BookOpen, UserCog
 } from "lucide-react";
+import RoleSwitcher from "@/components/RoleSwitcher";
 
 const SIDEBAR_SECTIONS = [
   {
@@ -144,6 +145,12 @@ function SidebarContent({ onLinkClick }: { onLinkClick?: () => void }) {
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Role switcher */}
+      <div className="p-3 border-t" style={{ borderColor: "oklch(1 0 0 / 8%)" }}>
+        <div className="section-label mb-2" style={{ color: "oklch(0.45 0.010 250)" }}>Active Session</div>
+        <RoleSwitcher />
       </div>
 
       {/* FY2024 mini stats */}

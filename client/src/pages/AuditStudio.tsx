@@ -3,9 +3,10 @@
  * Audit findings management with West Liberty FY2024 data
  */
 import DashboardLayout from "@/components/DashboardLayout";
-import { AlertTriangle, CheckCircle2, Clock, Shield, FileText, TrendingUp, DollarSign, Download, Printer } from "lucide-react";
-import { useState } from "react";
+import { AlertTriangle, CheckCircle2, Clock, Shield, FileText, TrendingUp, DollarSign, Download, Printer, Activity, UserCog, ShieldAlert, Database, Lock } from "lucide-react";
+import React, { useState } from "react";
 import { toast } from "sonner";
+import { useAuth, AuditEntry } from "@/contexts/AuthContext";
 
 function exportAuditPDF(findings: typeof FINDINGS) {
   const now = new Date();
@@ -208,9 +209,23 @@ const STATUS_CONFIG = {
   resolved: { color: "oklch(0.45 0.18 145)", label: "Resolved" },
 };
 
+const CATEGORY_CONFIG: Record<AuditEntry["category"], { label: string; color: string; icon: React.ElementType }> = {
+  rbac:   { label: "RBAC",   color: "oklch(0.50 0.22 280)", icon: UserCog },
+  access: { label: "Access", color: "oklch(0.55 0.22 25)",  icon: ShieldAlert },
+  auth:   { label: "Auth",   color: "oklch(0.50 0.18 240)", icon: Lock },
+  data:   { label: "Data",   color: "oklch(0.45 0.18 145)", icon: Database },
+};
+
+const SEVERITY_AUDIT_CONFIG: Record<AuditEntry["severity"], { color: string; bg: string }> = {
+  info:     { color: "oklch(0.45 0.18 145)", bg: "oklch(0.45 0.18 145 / 10%)" },
+  warning:  { color: "oklch(0.55 0.18 75)",  bg: "oklch(0.55 0.18 75 / 12%)" },
+  critical: { color: "oklch(0.50 0.22 25)",  bg: "oklch(0.50 0.22 25 / 12%)" },
+};
+
 export default function AuditStudio() {
   const [filter, setFilter] = useState<string>("all");
   const [selected, setSelected] = useState<string | null>(null);
+  const { auditLog, clearAuditLog } = useAuth();
   const filtered = filter === "all" ? FINDINGS : FINDINGS.filter(f => f.status === filter || f.severity === filter);
 
   const selectedFinding = FINDINGS.find(f => f.id === selected);
@@ -363,6 +378,81 @@ export default function AuditStudio() {
               </div>
             )}
           </div>
+        </div>
+        {/* RBAC & Access Audit Log */}
+        <div className="mt-8">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Activity className="w-4 h-4" style={{ color: "oklch(0.45 0.20 240)" }} />
+              <h2 className="text-sm font-bold" style={{ fontFamily: "'Syne', sans-serif", color: "oklch(0.18 0.018 250)" }}>RBAC &amp; Access Audit Log</h2>
+              <span className="text-[9px] font-mono px-1.5 py-0.5 rounded" style={{ background: "oklch(0.45 0.20 240 / 10%)", color: "oklch(0.40 0.18 240)", border: "1px solid oklch(0.45 0.20 240 / 20%)" }}>
+                {auditLog.length} entries
+              </span>
+            </div>
+            <button
+              onClick={() => { clearAuditLog(); toast.success("Audit log cleared"); }}
+              className="text-[10px] px-2 py-1 rounded font-medium transition-all"
+              style={{ background: "oklch(0 0 0 / 5%)", border: "1px solid oklch(0 0 0 / 10%)", color: "oklch(0.52 0.010 250)" }}
+            >
+              Clear Log
+            </button>
+          </div>
+
+          {auditLog.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 rounded-xl" style={{ background: "oklch(1 0 0)", border: "1px solid oklch(0 0 0 / 8%)" }}>
+              <Shield className="w-8 h-8 mb-2" style={{ color: "oklch(0.70 0.010 250)" }} />
+              <div className="text-xs" style={{ color: "oklch(0.52 0.010 250)" }}>No audit events recorded yet</div>
+            </div>
+          ) : (
+            <div className="rounded-xl overflow-hidden" style={{ border: "1px solid oklch(0 0 0 / 8%)" }}>
+              <table className="w-full text-xs">
+                <thead>
+                  <tr style={{ background: "oklch(0.965 0.005 240)", borderBottom: "1px solid oklch(0 0 0 / 8%)" }}>
+                    {["ID", "Time", "Actor", "Category", "Action", "Target", "Severity"].map(h => (
+                      <th key={h} className="text-left px-3 py-2.5 font-bold text-[9px] uppercase tracking-wider" style={{ color: "oklch(0.45 0.010 250)" }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {auditLog.map((entry, i) => {
+                    const cat = CATEGORY_CONFIG[entry.category];
+                    const sev = SEVERITY_AUDIT_CONFIG[entry.severity];
+                    const CatIcon = cat.icon;
+                    return (
+                      <tr
+                        key={entry.id}
+                        className="transition-colors"
+                        style={{ background: i % 2 === 0 ? "oklch(1 0 0)" : "oklch(0.985 0.003 240)", borderBottom: "1px solid oklch(0 0 0 / 5%)" }}
+                        title={entry.detail}
+                      >
+                        <td className="px-3 py-2.5 font-mono" style={{ color: "oklch(0.52 0.010 250)" }}>{entry.id}</td>
+                        <td className="px-3 py-2.5 font-mono whitespace-nowrap" style={{ color: "oklch(0.52 0.010 250)" }}>
+                          {entry.timestamp.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+                        </td>
+                        <td className="px-3 py-2.5">
+                          <div className="font-semibold" style={{ color: "oklch(0.25 0.018 250)" }}>{entry.actor}</div>
+                          <div className="text-[9px]" style={{ color: "oklch(0.55 0.010 250)" }}>{entry.actorRole}</div>
+                        </td>
+                        <td className="px-3 py-2.5">
+                          <span className="flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded w-fit" style={{ background: `${cat.color.replace(")", " / 12%)")}`, color: cat.color }}>
+                            <CatIcon className="w-2.5 h-2.5" />
+                            {cat.label}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2.5 font-mono font-semibold text-[10px]" style={{ color: "oklch(0.35 0.018 250)" }}>{entry.action}</td>
+                        <td className="px-3 py-2.5 max-w-[200px] truncate" style={{ color: "oklch(0.45 0.010 250)" }} title={entry.target}>{entry.target}</td>
+                        <td className="px-3 py-2.5">
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded uppercase" style={{ background: sev.bg, color: sev.color }}>
+                            {entry.severity}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
     </DashboardLayout>

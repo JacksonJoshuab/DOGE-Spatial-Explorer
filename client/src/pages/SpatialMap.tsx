@@ -99,6 +99,7 @@ export default function SpatialMap() {
     alerts,
     isLive,
     lastUpdated,
+    wsStatus,
     alertCount,
     warningCount,
     onlineCount,
@@ -107,6 +108,16 @@ export default function SpatialMap() {
     dispatchAll,
     toggleLive,
   } = useIoTSensors({ sensorInterval: 4000, alertInterval: 6000 });
+
+  const wsStatusLabel = wsStatus === "connected" ? "WS CONNECTED"
+    : wsStatus === "reconnecting" ? "WS RECONNECTING…"
+    : wsStatus === "failed" ? "WS FAILED"
+    : wsStatus === "simulation" ? "SIMULATION MODE"
+    : "WS CONNECTING…";
+  const wsStatusColor = wsStatus === "connected" ? "oklch(0.32 0.18 145)"
+    : wsStatus === "simulation" ? "oklch(0.65 0.20 55)"
+    : wsStatus === "failed" ? "oklch(0.55 0.22 25)"
+    : "oklch(0.52 0.010 250)";
 
   // Sync selected sensor with live data updates
   useEffect(() => {
@@ -296,6 +307,9 @@ export default function SpatialMap() {
           <div className="flex items-center gap-1 text-[10px] font-mono" style={{ color: "oklch(0.32 0.18 145)" }}>
             <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: isLive ? "#16a34a" : "#6b7280" }} />
             {onlineCount} sensors online
+          </div>
+          <div className="flex items-center gap-1 text-[9px] font-mono px-1.5 py-0.5 rounded" style={{ background: `${wsStatusColor}12`, border: `1px solid ${wsStatusColor}30`, color: wsStatusColor }}>
+            {wsStatusLabel}
           </div>
           {alertSensorCount > 0 && (
             <div className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded" style={{ background: "oklch(0.58 0.22 25 / 10%)", border: "1px solid oklch(0.58 0.22 25 / 25%)", color: "oklch(0.45 0.22 25)" }}>

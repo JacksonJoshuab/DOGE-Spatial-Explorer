@@ -6,6 +6,9 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { CommandPalette, CommandPaletteProvider } from "./components/CommandPalette";
 import { NotificationProvider, NotificationPanel } from "./components/NotificationPanel";
+import { AuthProvider } from "./contexts/AuthContext";
+import RouteGuard from "./components/RouteGuard";
+import AccessDenied from "./pages/AccessDenied";
 
 // Public pages
 import Home from "./pages/Home";
@@ -75,32 +78,35 @@ function Router() {
       <Route path="/data-center" component={DataCenter} />
 
       {/* Operational dashboard */}
-      <Route path="/dashboard" component={Dashboard} />
-      <Route path="/audit" component={AuditStudio} />
-      <Route path="/operations" component={OperationsCenter} />
-      <Route path="/map" component={SpatialMap} />
+      <Route path="/dashboard">{() => <RouteGuard path="/dashboard"><Dashboard /></RouteGuard>}</Route>
+      <Route path="/audit">{() => <RouteGuard path="/audit"><AuditStudio /></RouteGuard>}</Route>
+      <Route path="/operations">{() => <RouteGuard path="/operations"><OperationsCenter /></RouteGuard>}</Route>
+      <Route path="/map">{() => <RouteGuard path="/map"><SpatialMap /></RouteGuard>}</Route>
 
       {/* Compliance & secure */}
-      <Route path="/records" component={RecordsManagement} />
-      <Route path="/secure" component={SecureModules} />
+      <Route path="/records">{() => <RouteGuard path="/records"><RecordsManagement /></RouteGuard>}</Route>
+      <Route path="/secure">{() => <RouteGuard path="/secure"><SecureModules /></RouteGuard>}</Route>
 
       {/* Resident portal */}
       <Route path="/resident" component={ResidentPortal} />
 
       {/* Department hubs */}
-      <Route path="/le-hub" component={LEHub} />
-      <Route path="/utilities" component={UtilitiesHub} />
-      <Route path="/parks" component={ParksHub} />
-      <Route path="/community-dev" component={CommunityDevHub} />
-      <Route path="/council-report" component={CouncilReport} />
-      <Route path="/staff" component={StaffDirectory} />
-      <Route path="/finance" component={FinanceHub} />
+      <Route path="/le-hub">{() => <RouteGuard path="/le-hub"><LEHub /></RouteGuard>}</Route>
+      <Route path="/utilities">{() => <RouteGuard path="/utilities"><UtilitiesHub /></RouteGuard>}</Route>
+      <Route path="/parks">{() => <RouteGuard path="/parks"><ParksHub /></RouteGuard>}</Route>
+      <Route path="/community-dev">{() => <RouteGuard path="/community-dev"><CommunityDevHub /></RouteGuard>}</Route>
+      <Route path="/council-report">{() => <RouteGuard path="/council-report"><CouncilReport /></RouteGuard>}</Route>
+      <Route path="/staff">{() => <RouteGuard path="/staff"><StaffDirectory /></RouteGuard>}</Route>
+      <Route path="/finance">{() => <RouteGuard path="/finance"><FinanceHub /></RouteGuard>}</Route>
       <Route path="/resident/m" component={ResidentMobile} />
       <Route path="/utility-bill-qr" component={UtilityBillQR} />
-      <Route path="/transparency" component={Transparency} />
+      <Route path="/transparency">{() => <RouteGuard path="/transparency"><Transparency /></RouteGuard>}</Route>
 
       {/* Admin */}
-      <Route path="/admin/roles" component={AdminRoles} />
+      <Route path="/admin/roles">{() => <RouteGuard path="/admin/roles"><AdminRoles /></RouteGuard>}</Route>
+
+      {/* Access denied */}
+      <Route path="/access-denied" component={AccessDenied} />
 
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
@@ -112,14 +118,16 @@ function App() {
   return (
     <ErrorBoundary>
       <ThemeProvider defaultTheme="light" switchable>
-        <CommandPaletteProvider>
-          <NotificationProvider>
-            <TooltipProvider>
-              <Toaster />
-              <AppShell />
-            </TooltipProvider>
-          </NotificationProvider>
-        </CommandPaletteProvider>
+        <AuthProvider>
+          <CommandPaletteProvider>
+            <NotificationProvider>
+              <TooltipProvider>
+                <Toaster />
+                <AppShell />
+              </TooltipProvider>
+            </NotificationProvider>
+          </CommandPaletteProvider>
+        </AuthProvider>
       </ThemeProvider>
     </ErrorBoundary>
   );

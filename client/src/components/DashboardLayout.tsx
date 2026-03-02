@@ -1,7 +1,6 @@
 /**
- * DashboardLayout — Civic Intelligence Dark
- * Persistent sidebar for all operational dashboard pages
- * Dark sidebar with glowing active states
+ * DashboardLayout — Civic Intelligence Light
+ * Dark sidebar (standard gov dashboard pattern) + light main content area
  */
 import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
@@ -45,14 +44,14 @@ export default function DashboardLayout({ children, title }: Props) {
   const [location] = useLocation();
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: "oklch(0.11 0.012 250)" }}>
+    <div className="min-h-screen flex flex-col" style={{ background: "oklch(0.965 0.005 240)" }}>
       <Navbar />
       <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar */}
+        {/* Sidebar — intentionally dark in light mode (standard gov dashboard pattern) */}
         <aside
           className="hidden md:flex flex-col w-56 flex-shrink-0 border-r overflow-y-auto"
           style={{
-            background: "oklch(0.13 0.013 250)",
+            background: "oklch(0.18 0.020 250)",
             borderColor: "oklch(1 0 0 / 8%)",
           }}
         >
@@ -61,15 +60,15 @@ export default function DashboardLayout({ children, title }: Props) {
             <div className="flex items-center gap-2.5">
               <div
                 className="w-8 h-8 rounded flex items-center justify-center flex-shrink-0"
-                style={{ background: "oklch(0.58 0.20 240 / 15%)", border: "1px solid oklch(0.58 0.20 240 / 25%)" }}
+                style={{ background: "oklch(0.45 0.20 240 / 20%)", border: "1px solid oklch(0.55 0.20 240 / 30%)" }}
               >
                 <Building2 className="w-4 h-4" style={{ color: "oklch(0.70 0.18 240)" }} />
               </div>
               <div>
-                <div className="text-xs font-semibold" style={{ color: "oklch(0.88 0.008 240)", fontFamily: "'Syne', sans-serif" }}>
+                <div className="text-xs font-semibold" style={{ color: "oklch(0.92 0.008 240)", fontFamily: "'Syne', sans-serif" }}>
                   West Liberty, IA
                 </div>
-                <div className="text-[10px]" style={{ color: "oklch(0.50 0.010 250)" }}>
+                <div className="text-[10px]" style={{ color: "oklch(0.55 0.010 250)" }}>
                   Muscatine County · Pop. 3,858
                 </div>
               </div>
@@ -88,7 +87,7 @@ export default function DashboardLayout({ children, title }: Props) {
           <nav className="flex-1 p-3 space-y-4">
             {SIDEBAR_SECTIONS.map((section) => (
               <div key={section.label}>
-                <div className="section-label px-2 mb-1.5">{section.label}</div>
+                <div className="section-label px-2 mb-1.5" style={{ color: "oklch(0.45 0.010 250)" }}>{section.label}</div>
                 <div className="space-y-0.5">
                   {section.links.map((link) => {
                     const active = location === link.href || location.startsWith(link.href + "/");
@@ -98,8 +97,8 @@ export default function DashboardLayout({ children, title }: Props) {
                         href={link.href}
                         className="flex items-center gap-2.5 px-2.5 py-2 rounded text-[13px] transition-all no-underline group"
                         style={{
-                          background: active ? "oklch(0.58 0.20 240 / 15%)" : "transparent",
-                          color: active ? "oklch(0.72 0.18 240)" : "oklch(0.55 0.010 250)",
+                          background: active ? "oklch(0.45 0.20 240 / 20%)" : "transparent",
+                          color: active ? "oklch(0.75 0.18 240)" : "oklch(0.60 0.010 250)",
                           fontWeight: active ? "500" : "400",
                           borderLeft: active ? "2px solid oklch(0.58 0.20 240)" : "2px solid transparent",
                         }}
@@ -117,7 +116,7 @@ export default function DashboardLayout({ children, title }: Props) {
 
           {/* Alerts */}
           <div className="p-3 border-t" style={{ borderColor: "oklch(1 0 0 / 8%)" }}>
-            <div className="section-label mb-2 flex items-center gap-1.5">
+            <div className="section-label mb-2 flex items-center gap-1.5" style={{ color: "oklch(0.45 0.010 250)" }}>
               <AlertTriangle className="w-3 h-3" style={{ color: "oklch(0.75 0.18 75)" }} />
               Active Alerts
             </div>
@@ -125,7 +124,7 @@ export default function DashboardLayout({ children, title }: Props) {
               {ALERTS.map((alert, i) => (
                 <div key={i} className="flex items-start gap-2">
                   <span className={`status-dot ${alert.severity} mt-1.5 flex-shrink-0`} />
-                  <span className="text-[10px] leading-tight" style={{ color: "oklch(0.50 0.010 250)" }}>
+                  <span className="text-[10px] leading-tight" style={{ color: "oklch(0.55 0.010 250)" }}>
                     {alert.text}
                   </span>
                 </div>
@@ -135,15 +134,15 @@ export default function DashboardLayout({ children, title }: Props) {
 
           {/* FY2024 mini stats */}
           <div className="p-3 border-t" style={{ borderColor: "oklch(1 0 0 / 8%)" }}>
-            <div className="section-label mb-2">FY2024 Budget</div>
+            <div className="section-label mb-2" style={{ color: "oklch(0.45 0.010 250)" }}>FY2024 Budget</div>
             <div className="space-y-1">
               {[
                 { label: "Revenue", value: "$17.5M", color: "oklch(0.65 0.18 145)" },
-                { label: "Expenses", value: "$17.3M", color: "oklch(0.70 0.18 240)" },
+                { label: "Expenses", value: "$17.3M", color: "oklch(0.65 0.18 240)" },
                 { label: "Surplus", value: "+$172K", color: "oklch(0.65 0.18 145)" },
               ].map((stat) => (
                 <div key={stat.label} className="flex justify-between items-center">
-                  <span className="text-[10px]" style={{ color: "oklch(0.45 0.008 250)" }}>{stat.label}</span>
+                  <span className="text-[10px]" style={{ color: "oklch(0.52 0.010 250)" }}>{stat.label}</span>
                   <span className="text-[11px] font-mono font-semibold" style={{ color: stat.color }}>{stat.value}</span>
                 </div>
               ))}
@@ -151,11 +150,11 @@ export default function DashboardLayout({ children, title }: Props) {
           </div>
         </aside>
 
-        {/* Main content */}
-        <main className="flex-1 min-w-0 overflow-auto">
+        {/* Main content — light */}
+        <main className="flex-1 min-w-0 overflow-auto" style={{ background: "oklch(0.965 0.005 240)" }}>
           {title && (
-            <div className="px-6 py-4 border-b" style={{ borderColor: "oklch(1 0 0 / 8%)" }}>
-              <h1 className="text-lg font-bold" style={{ fontFamily: "'Syne', sans-serif", color: "oklch(0.88 0.008 240)" }}>
+            <div className="px-6 py-4 border-b" style={{ borderColor: "oklch(0 0 0 / 8%)", background: "oklch(1 0 0)" }}>
+              <h1 className="text-lg font-bold" style={{ fontFamily: "'Syne', sans-serif", color: "oklch(0.18 0.018 250)" }}>
                 {title}
               </h1>
             </div>

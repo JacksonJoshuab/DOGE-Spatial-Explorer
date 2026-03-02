@@ -29,23 +29,23 @@ export default function ROICalculator() {
   const fmt = (n: number) => n >= 1000000 ? `$${(n / 1000000).toFixed(2)}M` : `$${Math.round(n).toLocaleString()}`;
 
   const BENEFITS = [
-    { label: "Admin Overhead Reduction", value: adminSavings, color: "oklch(0.65 0.18 145)" },
-    { label: "IoT Operational Savings", value: waterSavings, color: "oklch(0.70 0.18 240)" },
-    { label: "Audit Time Reduction", value: auditSavings, color: "oklch(0.75 0.18 75)" },
-    { label: "IoT Patent Royalties", value: iotRoyalties, color: "oklch(0.62 0.22 25)" },
-    { label: "Data Center Revenue Share", value: dataCenterRevenue, color: "oklch(0.70 0.18 240)" },
+    { label: "Admin Overhead Reduction", value: adminSavings, color: "oklch(0.45 0.18 145)" },
+    { label: "IoT Operational Savings", value: waterSavings, color: "oklch(0.40 0.18 240)" },
+    { label: "Audit Time Reduction", value: auditSavings, color: "oklch(0.55 0.18 75)" },
+    { label: "IoT Patent Royalties", value: iotRoyalties, color: "oklch(0.50 0.22 25)" },
+    { label: "Data Center Revenue Share", value: dataCenterRevenue, color: "oklch(0.40 0.18 240)" },
   ];
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: "oklch(0.11 0.012 250)" }}>
+    <div className="min-h-screen flex flex-col" style={{ background: "oklch(0.975 0.004 240)" }}>
       <Navbar />
 
-      <section className="py-16 border-b" style={{ background: "oklch(0.13 0.013 250)", borderColor: "oklch(1 0 0 / 8%)" }}>
+      <section className="py-16 border-b" style={{ background: "oklch(0.965 0.005 240)", borderColor: "oklch(0 0 0 / 8%)" }}>
         <div className="container">
           <div className="section-label mb-3">ROI Calculator</div>
           <h1 className="text-4xl font-bold mb-3" style={{ fontFamily: "'Syne', sans-serif", color: "oklch(0.95 0.008 240)" }}>
             Calculate Your<br />
-            <span style={{ color: "oklch(0.70 0.18 240)" }}>Municipal ROI</span>
+            <span style={{ color: "oklch(0.40 0.18 240)" }}>Municipal ROI</span>
           </h1>
           <p className="text-sm max-w-xl" style={{ color: "oklch(0.60 0.010 250)" }}>
             Prefilled with City of West Liberty, IA FY2024 data. Adjust the sliders to model your city's projected return on investment.
@@ -68,7 +68,7 @@ export default function ROICalculator() {
               <div key={slider.label}>
                 <div className="flex justify-between mb-2">
                   <label className="text-xs" style={{ color: "oklch(0.60 0.010 250)" }}>{slider.label}</label>
-                  <span className="text-xs font-mono font-bold" style={{ color: "oklch(0.70 0.18 240)" }}>{slider.display}</span>
+                  <span className="text-xs font-mono font-bold" style={{ color: "oklch(0.40 0.18 240)" }}>{slider.display}</span>
                 </div>
                 <input
                   type="range"
@@ -78,11 +78,11 @@ export default function ROICalculator() {
                   value={slider.value}
                   onChange={(e) => slider.setter(Number(e.target.value) as any)}
                   className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
-                  style={{ background: `linear-gradient(to right, oklch(0.58 0.20 240) ${((slider.value - slider.min) / (slider.max - slider.min)) * 100}%, oklch(1 0 0 / 10%) 0%)`, accentColor: "oklch(0.58 0.20 240)" }}
+                  style={{ background: `linear-gradient(to right, oklch(0.45 0.20 240) ${((slider.value - slider.min) / (slider.max - slider.min)) * 100}%, oklch(0 0 0 / 10%) 0%)`, accentColor: "oklch(0.45 0.20 240)" }}
                 />
                 <div className="flex justify-between mt-1">
-                  <span className="text-[9px]" style={{ color: "oklch(0.35 0.008 250)" }}>{slider.min}{slider.unit}</span>
-                  <span className="text-[9px]" style={{ color: "oklch(0.35 0.008 250)" }}>{slider.max.toLocaleString()}{slider.unit}</span>
+                  <span className="text-[9px]" style={{ color: "oklch(0.45 0.012 250)" }}>{slider.min}{slider.unit}</span>
+                  <span className="text-[9px]" style={{ color: "oklch(0.45 0.012 250)" }}>{slider.max.toLocaleString()}{slider.unit}</span>
                 </div>
               </div>
             ))}
@@ -95,10 +95,10 @@ export default function ROICalculator() {
                   <div key={b.label} className="flex items-center gap-3">
                     <div className="flex-1">
                       <div className="flex justify-between mb-1">
-                        <span className="text-xs" style={{ color: "oklch(0.55 0.010 250)" }}>{b.label}</span>
+                        <span className="text-xs" style={{ color: "oklch(0.45 0.012 250)" }}>{b.label}</span>
                         <span className="text-xs font-mono font-bold" style={{ color: b.color }}>{fmt(b.value)}</span>
                       </div>
-                      <div className="h-1 rounded-full" style={{ background: "oklch(1 0 0 / 8%)" }}>
+                      <div className="h-1 rounded-full" style={{ background: "oklch(0 0 0 / 8%)" }}>
                         <div
                           className="h-full rounded-full transition-all"
                           style={{ width: `${Math.min(100, (b.value / totalAnnualBenefit) * 100)}%`, background: b.color }}
@@ -116,34 +116,34 @@ export default function ROICalculator() {
             <div className="section-label">Projected Returns</div>
 
             {/* Big ROI number */}
-            <div className="p-6 rounded-xl text-center" style={{ background: "oklch(0.58 0.20 240 / 10%)", border: "1px solid oklch(0.58 0.20 240 / 25%)" }}>
-              <div className="text-5xl font-bold font-mono mb-1" style={{ color: "oklch(0.70 0.18 240)", fontFamily: "'Syne', sans-serif" }}>
+            <div className="p-6 rounded-xl text-center" style={{ background: "oklch(0.45 0.20 240 / 8%)", border: "1px solid oklch(0.58 0.20 240 / 25%)" }}>
+              <div className="text-5xl font-bold font-mono mb-1" style={{ color: "oklch(0.40 0.18 240)", fontFamily: "'Syne', sans-serif" }}>
                 {roiPercent}%
               </div>
-              <div className="text-xs" style={{ color: "oklch(0.55 0.010 250)" }}>Annual Return on Investment</div>
+              <div className="text-xs" style={{ color: "oklch(0.45 0.012 250)" }}>Annual Return on Investment</div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               {[
-                { label: "Platform Cost", value: fmt(platformCost), icon: DollarSign, color: "oklch(0.62 0.22 25)" },
-                { label: "Total Annual Benefit", value: fmt(totalAnnualBenefit), icon: TrendingUp, color: "oklch(0.65 0.18 145)" },
-                { label: "Net Annual ROI", value: fmt(netAnnualROI), icon: DollarSign, color: "oklch(0.65 0.18 145)" },
-                { label: "Payback Period", value: `${paybackMonths} months`, icon: Clock, color: "oklch(0.70 0.18 240)" },
+                { label: "Platform Cost", value: fmt(platformCost), icon: DollarSign, color: "oklch(0.50 0.22 25)" },
+                { label: "Total Annual Benefit", value: fmt(totalAnnualBenefit), icon: TrendingUp, color: "oklch(0.45 0.18 145)" },
+                { label: "Net Annual ROI", value: fmt(netAnnualROI), icon: DollarSign, color: "oklch(0.45 0.18 145)" },
+                { label: "Payback Period", value: `${paybackMonths} months`, icon: Clock, color: "oklch(0.40 0.18 240)" },
               ].map((stat) => (
-                <div key={stat.label} className="p-4 rounded-lg" style={{ background: "oklch(0.16 0.014 250)", border: "1px solid oklch(1 0 0 / 8%)" }}>
+                <div key={stat.label} className="p-4 rounded-lg" style={{ background: "oklch(1 0 0)", border: "1px solid oklch(0 0 0 / 8%)" }}>
                   <stat.icon className="w-4 h-4 mb-2" style={{ color: stat.color }} />
                   <div className="text-lg font-mono font-bold" style={{ color: stat.color }}>{stat.value}</div>
-                  <div className="text-[10px] mt-0.5" style={{ color: "oklch(0.45 0.008 250)" }}>{stat.label}</div>
+                  <div className="text-[10px] mt-0.5" style={{ color: "oklch(0.52 0.010 250)" }}>{stat.label}</div>
                 </div>
               ))}
             </div>
 
-            <div className="p-4 rounded-lg" style={{ background: "oklch(0.16 0.014 250)", border: "1px solid oklch(1 0 0 / 8%)" }}>
+            <div className="p-4 rounded-lg" style={{ background: "oklch(1 0 0)", border: "1px solid oklch(0 0 0 / 8%)" }}>
               <div className="section-label mb-2">5-Year Cumulative Benefit</div>
-              <div className="text-2xl font-mono font-bold" style={{ color: "oklch(0.65 0.18 145)", fontFamily: "'Syne', sans-serif" }}>
+              <div className="text-2xl font-mono font-bold" style={{ color: "oklch(0.45 0.18 145)", fontFamily: "'Syne', sans-serif" }}>
                 {fmt(totalAnnualBenefit * 5 - platformCost)}
               </div>
-              <div className="text-xs mt-1" style={{ color: "oklch(0.45 0.008 250)" }}>
+              <div className="text-xs mt-1" style={{ color: "oklch(0.52 0.010 250)" }}>
                 After platform cost, over 5 years
               </div>
             </div>
@@ -151,7 +151,7 @@ export default function ROICalculator() {
             <Link
               href="/contact"
               className="flex items-center justify-center gap-2 w-full py-3 rounded font-semibold no-underline"
-              style={{ background: "oklch(0.58 0.20 240)", color: "oklch(0.98 0.005 240)" }}
+              style={{ background: "oklch(0.45 0.20 240)", color: "oklch(0.18 0.018 250)" }}
             >
               Get a Custom ROI Analysis <ArrowRight className="w-4 h-4" />
             </Link>

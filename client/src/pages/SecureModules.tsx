@@ -9,9 +9,9 @@ import { Shield, Lock, Eye, AlertTriangle, CheckCircle2, Clock, Radio, Thermomet
 import { toast } from "sonner";
 
 const MODULES = [
-  { id: "evidence", label: "Evidence Room", icon: Shield, color: "oklch(0.58 0.20 240)" },
-  { id: "scif", label: "SCIF Management", icon: Lock, color: "oklch(0.62 0.22 25)" },
-  { id: "detention", label: "Detention Center", icon: Users, color: "oklch(0.75 0.18 75)" },
+  { id: "evidence", label: "Evidence Room", icon: Shield, color: "oklch(0.45 0.20 240)" },
+  { id: "scif", label: "SCIF Management", icon: Lock, color: "oklch(0.50 0.22 25)" },
+  { id: "detention", label: "Detention Center", icon: Users, color: "oklch(0.55 0.18 75)" },
 ];
 
 const EVIDENCE_ITEMS = [
@@ -35,7 +35,7 @@ const SCIF_ZONES = [
     id: "ZONE-TS-01",
     name: "Top Secret / SCI Zone",
     classification: "TS/SCI",
-    color: "oklch(0.62 0.22 25)",
+    color: "oklch(0.50 0.22 25)",
     faraday: "ACTIVE",
     emShielding: "98.7 dB",
     rfAnomaly: false,
@@ -50,7 +50,7 @@ const SCIF_ZONES = [
     id: "ZONE-S-01",
     name: "Secret Zone",
     classification: "SECRET",
-    color: "oklch(0.75 0.18 75)",
+    color: "oklch(0.55 0.18 75)",
     faraday: "ACTIVE",
     emShielding: "95.2 dB",
     rfAnomaly: false,
@@ -65,7 +65,7 @@ const SCIF_ZONES = [
     id: "ZONE-CUI-01",
     name: "CUI Processing Room",
     classification: "CUI",
-    color: "oklch(0.70 0.18 240)",
+    color: "oklch(0.40 0.18 240)",
     faraday: "PASSIVE",
     emShielding: "72.1 dB",
     rfAnomaly: true,
@@ -114,9 +114,9 @@ export default function SecureModules() {
               onClick={() => setActiveModule(m.id)}
               className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all"
               style={{
-                background: activeModule === m.id ? `${m.color.replace(")", " / 15%)")}` : "oklch(0.16 0.014 250)",
-                border: `1px solid ${activeModule === m.id ? m.color.replace(")", " / 40%)") : "oklch(1 0 0 / 8%)"}`,
-                color: activeModule === m.id ? m.color : "oklch(0.55 0.010 250)",
+                background: activeModule === m.id ? `${m.color.replace(")", " / 15%)")}` : "oklch(1 0 0)",
+                border: `1px solid ${activeModule === m.id ? m.color.replace(")", " / 40%)") : "oklch(0 0 0 / 8%)"}`,
+                color: activeModule === m.id ? m.color : "oklch(0.45 0.012 250)",
               }}
             >
               <m.icon className="w-4 h-4" />
@@ -131,10 +131,10 @@ export default function SecureModules() {
             {/* Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
-                { label: "Active Items", value: "4", color: "oklch(0.70 0.18 240)" },
-                { label: "Pending Disposition", value: "1", color: "oklch(0.75 0.18 75)" },
-                { label: "Released to Court", value: "1", color: "oklch(0.65 0.18 145)" },
-                { label: "Chain Integrity", value: "100%", color: "oklch(0.65 0.18 145)" },
+                { label: "Active Items", value: "4", color: "oklch(0.40 0.18 240)" },
+                { label: "Pending Disposition", value: "1", color: "oklch(0.55 0.18 75)" },
+                { label: "Released to Court", value: "1", color: "oklch(0.45 0.18 145)" },
+                { label: "Chain Integrity", value: "100%", color: "oklch(0.45 0.18 145)" },
               ].map((s) => (
                 <div key={s.label} className="data-card">
                   <div className="metric-value text-2xl" style={{ color: s.color }}>{s.value}</div>
@@ -145,27 +145,27 @@ export default function SecureModules() {
 
             {/* Environmental status */}
             <div className="p-4 rounded-lg flex items-center gap-4" style={{ background: "oklch(0.65 0.18 145 / 8%)", border: "1px solid oklch(0.65 0.18 145 / 20%)" }}>
-              <Thermometer className="w-4 h-4" style={{ color: "oklch(0.65 0.18 145)" }} />
-              <span className="text-sm" style={{ color: "oklch(0.72 0.16 145)" }}>
+              <Thermometer className="w-4 h-4" style={{ color: "oklch(0.45 0.18 145)" }} />
+              <span className="text-sm" style={{ color: "oklch(0.42 0.18 145)" }}>
                 <strong>Environmental OK:</strong> Avg temp 68.1°F (target 65–72°F) · Avg humidity 44.4% RH (target 30–50%) · DOGE Sentinel Node online
               </span>
               <span className="badge-success ml-auto">NOMINAL</span>
             </div>
 
             {/* Evidence items */}
-            <div className="rounded-lg overflow-hidden" style={{ border: "1px solid oklch(1 0 0 / 8%)" }}>
-              <div className="px-4 py-3 border-b" style={{ background: "oklch(0.16 0.014 250)", borderColor: "oklch(1 0 0 / 8%)" }}>
+            <div className="rounded-lg overflow-hidden" style={{ border: "1px solid oklch(0 0 0 / 8%)" }}>
+              <div className="px-4 py-3 border-b" style={{ background: "oklch(1 0 0)", borderColor: "oklch(0 0 0 / 8%)" }}>
                 <div className="text-sm font-semibold" style={{ color: "oklch(0.88 0.008 240)" }}>Evidence Inventory</div>
               </div>
               {EVIDENCE_ITEMS.map((item) => (
-                <div key={item.id} className="flex items-start gap-4 px-4 py-3 border-b last:border-b-0" style={{ background: "oklch(0.14 0.014 250)", borderColor: "oklch(1 0 0 / 6%)" }}>
+                <div key={item.id} className="flex items-start gap-4 px-4 py-3 border-b last:border-b-0" style={{ background: "oklch(0.985 0.003 240)", borderColor: "oklch(0 0 0 / 6%)" }}>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
-                      <span className="text-xs font-mono font-bold" style={{ color: "oklch(0.58 0.20 240)" }}>{item.id}</span>
-                      <span className="text-[10px]" style={{ color: "oklch(0.45 0.008 250)" }}>Case {item.case}</span>
+                      <span className="text-xs font-mono font-bold" style={{ color: "oklch(0.45 0.20 240)" }}>{item.id}</span>
+                      <span className="text-[10px]" style={{ color: "oklch(0.52 0.010 250)" }}>Case {item.case}</span>
                     </div>
-                    <div className="text-sm font-medium" style={{ color: "oklch(0.80 0.008 240)" }}>{item.description}</div>
-                    <div className="text-[10px] mt-0.5" style={{ color: "oklch(0.45 0.008 250)" }}>
+                    <div className="text-sm font-medium" style={{ color: "oklch(0.22 0.018 250)" }}>{item.description}</div>
+                    <div className="text-[10px] mt-0.5" style={{ color: "oklch(0.52 0.010 250)" }}>
                       Collected {item.collected} by {item.officer} · {item.location}
                     </div>
                   </div>
@@ -173,8 +173,8 @@ export default function SecureModules() {
                     <span className={`badge-${item.status === "Active" ? "info" : item.status === "Released to Court" ? "success" : "warning"}`}>
                       {item.status}
                     </span>
-                    <div className="text-[10px] mt-1 font-mono" style={{ color: "oklch(0.45 0.008 250)" }}>{item.chain} custody events</div>
-                    <div className="text-[9px] mt-0.5" style={{ color: "oklch(0.40 0.008 250)" }}>{item.temp}°F · {item.humidity}% RH</div>
+                    <div className="text-[10px] mt-1 font-mono" style={{ color: "oklch(0.52 0.010 250)" }}>{item.chain} custody events</div>
+                    <div className="text-[9px] mt-0.5" style={{ color: "oklch(0.48 0.012 250)" }}>{item.temp}°F · {item.humidity}% RH</div>
                   </div>
                 </div>
               ))}
@@ -185,12 +185,12 @@ export default function SecureModules() {
               <div className="section-label mb-3">Blockchain Chain of Custody — Recent Events</div>
               <div className="space-y-1.5">
                 {CHAIN_OF_CUSTODY.map((log, i) => (
-                  <div key={i} className="flex items-center gap-3 px-3 py-2 rounded" style={{ background: "oklch(0.16 0.014 250)", border: "1px solid oklch(1 0 0 / 6%)" }}>
-                    <span className="text-[9px] font-mono w-36 flex-shrink-0" style={{ color: "oklch(0.40 0.008 250)" }}>{log.time}</span>
+                  <div key={i} className="flex items-center gap-3 px-3 py-2 rounded" style={{ background: "oklch(1 0 0)", border: "1px solid oklch(0 0 0 / 6%)" }}>
+                    <span className="text-[9px] font-mono w-36 flex-shrink-0" style={{ color: "oklch(0.48 0.012 250)" }}>{log.time}</span>
                     <span className="text-xs flex-1" style={{ color: "oklch(0.65 0.010 250)" }}>{log.action}</span>
-                    <span className="text-[10px]" style={{ color: "oklch(0.50 0.010 250)" }}>{log.actor}</span>
-                    <span className="text-[9px] font-mono" style={{ color: "oklch(0.40 0.008 250)" }}>{log.hash}</span>
-                    <CheckCircle2 className="w-3 h-3 flex-shrink-0" style={{ color: "oklch(0.65 0.18 145)" }} />
+                    <span className="text-[10px]" style={{ color: "oklch(0.48 0.012 250)" }}>{log.actor}</span>
+                    <span className="text-[9px] font-mono" style={{ color: "oklch(0.48 0.012 250)" }}>{log.hash}</span>
+                    <CheckCircle2 className="w-3 h-3 flex-shrink-0" style={{ color: "oklch(0.45 0.18 145)" }} />
                   </div>
                 ))}
               </div>
@@ -203,8 +203,8 @@ export default function SecureModules() {
           <div className="space-y-4">
             {/* RF Alert */}
             <div className="flex items-center gap-3 px-4 py-3 rounded-lg" style={{ background: "oklch(0.62 0.22 25 / 10%)", border: "1px solid oklch(0.62 0.22 25 / 25%)" }}>
-              <Radio className="w-4 h-4 flex-shrink-0" style={{ color: "oklch(0.75 0.18 25)" }} />
-              <span className="text-sm" style={{ color: "oklch(0.75 0.18 25)" }}>
+              <Radio className="w-4 h-4 flex-shrink-0" style={{ color: "oklch(0.50 0.22 25)" }} />
+              <span className="text-sm" style={{ color: "oklch(0.50 0.22 25)" }}>
                 <strong>RF Anomaly Detected:</strong> CUI Processing Room — 2.4GHz signal detected at 07:22. Sweep initiated. Security officer notified.
               </span>
               <span className="badge-critical ml-auto flex-shrink-0">ACTIVE ALERT</span>
@@ -213,7 +213,7 @@ export default function SecureModules() {
             {/* Zone cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {SCIF_ZONES.map((zone) => (
-                <div key={zone.id} className="p-4 rounded-xl" style={{ background: "oklch(0.16 0.014 250)", border: `1px solid ${zone.rfAnomaly ? "oklch(0.62 0.22 25 / 30%)" : zone.color.replace(")", " / 20%)")}` }}>
+                <div key={zone.id} className="p-4 rounded-xl" style={{ background: "oklch(1 0 0)", border: `1px solid ${zone.rfAnomaly ? "oklch(0.50 0.22 25 / 22%)" : zone.color.replace(")", " / 20%)")}` }}>
                   <div className="flex items-start justify-between mb-3">
                     <div>
                       <span
@@ -228,29 +228,29 @@ export default function SecureModules() {
                   </div>
 
                   <div className="grid grid-cols-2 gap-2 mb-3">
-                    <div className="p-2 rounded" style={{ background: "oklch(0.13 0.013 250)" }}>
+                    <div className="p-2 rounded" style={{ background: "oklch(0.965 0.005 240)" }}>
                       <div className="section-label mb-0.5">Faraday Cage</div>
-                      <div className="text-xs font-mono font-bold" style={{ color: "oklch(0.65 0.18 145)" }}>{zone.faraday}</div>
+                      <div className="text-xs font-mono font-bold" style={{ color: "oklch(0.45 0.18 145)" }}>{zone.faraday}</div>
                     </div>
-                    <div className="p-2 rounded" style={{ background: "oklch(0.13 0.013 250)" }}>
+                    <div className="p-2 rounded" style={{ background: "oklch(0.965 0.005 240)" }}>
                       <div className="section-label mb-0.5">EM Shielding</div>
-                      <div className="text-xs font-mono font-bold" style={{ color: "oklch(0.70 0.18 240)" }}>{zone.emShielding}</div>
+                      <div className="text-xs font-mono font-bold" style={{ color: "oklch(0.40 0.18 240)" }}>{zone.emShielding}</div>
                     </div>
-                    <div className="p-2 rounded" style={{ background: "oklch(0.13 0.013 250)" }}>
+                    <div className="p-2 rounded" style={{ background: "oklch(0.965 0.005 240)" }}>
                       <div className="section-label mb-0.5">RF Anomaly</div>
-                      <div className="text-xs font-mono font-bold" style={{ color: zone.rfAnomaly ? "oklch(0.75 0.18 25)" : "oklch(0.65 0.18 145)" }}>
+                      <div className="text-xs font-mono font-bold" style={{ color: zone.rfAnomaly ? "oklch(0.50 0.22 25)" : "oklch(0.45 0.18 145)" }}>
                         {zone.rfAnomaly ? "DETECTED" : "CLEAR"}
                       </div>
                     </div>
-                    <div className="p-2 rounded" style={{ background: "oklch(0.13 0.013 250)" }}>
+                    <div className="p-2 rounded" style={{ background: "oklch(0.965 0.005 240)" }}>
                       <div className="section-label mb-0.5">Occupants</div>
-                      <div className="text-xs font-mono font-bold" style={{ color: zone.occupants > 0 ? "oklch(0.75 0.18 75)" : "oklch(0.50 0.010 250)" }}>
+                      <div className="text-xs font-mono font-bold" style={{ color: zone.occupants > 0 ? "oklch(0.55 0.18 75)" : "oklch(0.48 0.012 250)" }}>
                         {zone.occupants}
                       </div>
                     </div>
                   </div>
 
-                  <div className="text-[10px] space-y-0.5" style={{ color: "oklch(0.45 0.008 250)" }}>
+                  <div className="text-[10px] space-y-0.5" style={{ color: "oklch(0.52 0.010 250)" }}>
                     <div>Temp: {zone.tempC}°C · Humidity: {zone.humidity}%</div>
                     <div>Last entry: {zone.lastEntry}</div>
                     <div>Last exit: {zone.lastExit}</div>
@@ -262,13 +262,13 @@ export default function SecureModules() {
             {/* Access log */}
             <div>
               <div className="section-label mb-3">Biometric Access Log</div>
-              <div className="rounded-lg overflow-hidden" style={{ border: "1px solid oklch(1 0 0 / 8%)" }}>
+              <div className="rounded-lg overflow-hidden" style={{ border: "1px solid oklch(0 0 0 / 8%)" }}>
                 {SCIF_ACCESS_LOG.map((log, i) => (
-                  <div key={i} className="flex items-center gap-4 px-4 py-2.5 border-b last:border-b-0" style={{ background: "oklch(0.16 0.014 250)", borderColor: "oklch(1 0 0 / 6%)" }}>
-                    <span className="text-[9px] font-mono w-36 flex-shrink-0" style={{ color: "oklch(0.40 0.008 250)" }}>{log.time}</span>
+                  <div key={i} className="flex items-center gap-4 px-4 py-2.5 border-b last:border-b-0" style={{ background: "oklch(1 0 0)", borderColor: "oklch(0 0 0 / 6%)" }}>
+                    <span className="text-[9px] font-mono w-36 flex-shrink-0" style={{ color: "oklch(0.48 0.012 250)" }}>{log.time}</span>
                     <span className="text-xs flex-1" style={{ color: "oklch(0.70 0.010 250)" }}>{log.name}</span>
-                    <span className="text-xs" style={{ color: "oklch(0.55 0.010 250)" }}>{log.zone}</span>
-                    <span className="text-[10px]" style={{ color: "oklch(0.45 0.008 250)" }}>{log.method}</span>
+                    <span className="text-xs" style={{ color: "oklch(0.45 0.012 250)" }}>{log.zone}</span>
+                    <span className="text-[10px]" style={{ color: "oklch(0.52 0.010 250)" }}>{log.method}</span>
                     <span className={`badge-${log.result === "Granted" ? "success" : "critical"}`}>{log.result}</span>
                   </div>
                 ))}
@@ -283,10 +283,10 @@ export default function SecureModules() {
             {/* Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
-                { label: "Occupied Cells", value: "3/4", color: "oklch(0.75 0.18 75)" },
-                { label: "Medical Alerts", value: "1", color: "oklch(0.62 0.22 25)" },
-                { label: "Checks Today", value: "47", color: "oklch(0.70 0.18 240)" },
-                { label: "Missed Checks", value: "0", color: "oklch(0.65 0.18 145)" },
+                { label: "Occupied Cells", value: "3/4", color: "oklch(0.55 0.18 75)" },
+                { label: "Medical Alerts", value: "1", color: "oklch(0.50 0.22 25)" },
+                { label: "Checks Today", value: "47", color: "oklch(0.40 0.18 240)" },
+                { label: "Missed Checks", value: "0", color: "oklch(0.45 0.18 145)" },
               ].map((s) => (
                 <div key={s.label} className="data-card">
                   <div className="metric-value text-2xl" style={{ color: s.color }}>{s.value}</div>
@@ -297,8 +297,8 @@ export default function SecureModules() {
 
             {/* Medical alert */}
             <div className="flex items-center gap-3 px-4 py-3 rounded-lg" style={{ background: "oklch(0.62 0.22 25 / 10%)", border: "1px solid oklch(0.62 0.22 25 / 25%)" }}>
-              <Activity className="w-4 h-4 flex-shrink-0" style={{ color: "oklch(0.75 0.18 25)" }} />
-              <span className="text-sm" style={{ color: "oklch(0.75 0.18 25)" }}>
+              <Activity className="w-4 h-4 flex-shrink-0" style={{ color: "oklch(0.50 0.22 25)" }} />
+              <span className="text-sm" style={{ color: "oklch(0.50 0.22 25)" }}>
                 <strong>Medical Alert — CELL-A2:</strong> Booking #2024-1851 reported chest pain at 14:10. Medical staff en route. Ofc. Ramirez on scene.
               </span>
               <span className="badge-critical ml-auto flex-shrink-0">ACTIVE</span>
@@ -311,14 +311,14 @@ export default function SecureModules() {
                   key={cell.id}
                   className="p-4 rounded-lg"
                   style={{
-                    background: "oklch(0.16 0.014 250)",
-                    border: `1px solid ${cell.wellness === "Medical Requested" ? "oklch(0.62 0.22 25 / 30%)" : cell.status === "Vacant" ? "oklch(1 0 0 / 6%)" : "oklch(0.75 0.18 75 / 20%)"}`,
+                    background: "oklch(1 0 0)",
+                    border: `1px solid ${cell.wellness === "Medical Requested" ? "oklch(0.50 0.22 25 / 22%)" : cell.status === "Vacant" ? "oklch(0 0 0 / 6%)" : "oklch(0.75 0.18 75 / 20%)"}`,
                   }}
                 >
                   <div className="flex items-start justify-between mb-2">
                     <div>
                       <div className="text-sm font-bold" style={{ color: "oklch(0.88 0.008 240)", fontFamily: "'Syne', sans-serif" }}>{cell.id}</div>
-                      <div className="text-xs mt-0.5" style={{ color: "oklch(0.55 0.010 250)" }}>{cell.occupant}</div>
+                      <div className="text-xs mt-0.5" style={{ color: "oklch(0.45 0.012 250)" }}>{cell.occupant}</div>
                     </div>
                     <span className={`badge-${cell.status === "Vacant" ? "info" : cell.wellness === "Medical Requested" ? "critical" : "warning"}`}>
                       {cell.status === "Vacant" ? "VACANT" : cell.wellness === "Medical Requested" ? "MEDICAL" : "OCCUPIED"}
@@ -327,20 +327,20 @@ export default function SecureModules() {
                   {cell.status !== "Vacant" && (
                     <div className="space-y-1.5 text-[10px]">
                       <div className="flex justify-between">
-                        <span style={{ color: "oklch(0.45 0.008 250)" }}>Last check:</span>
+                        <span style={{ color: "oklch(0.52 0.010 250)" }}>Last check:</span>
                         <span className="font-mono" style={{ color: "oklch(0.60 0.010 250)" }}>{cell.lastCheck}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span style={{ color: "oklch(0.45 0.008 250)" }}>Next check:</span>
+                        <span style={{ color: "oklch(0.52 0.010 250)" }}>Next check:</span>
                         <span className="font-mono" style={{ color: "oklch(0.60 0.010 250)" }}>{cell.nextCheck}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span style={{ color: "oklch(0.45 0.008 250)" }}>Officer:</span>
+                        <span style={{ color: "oklch(0.52 0.010 250)" }}>Officer:</span>
                         <span style={{ color: "oklch(0.60 0.010 250)" }}>{cell.officer}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span style={{ color: "oklch(0.45 0.008 250)" }}>Notes:</span>
-                        <span style={{ color: cell.wellness === "Medical Requested" ? "oklch(0.75 0.18 25)" : "oklch(0.60 0.010 250)" }}>{cell.notes}</span>
+                        <span style={{ color: "oklch(0.52 0.010 250)" }}>Notes:</span>
+                        <span style={{ color: cell.wellness === "Medical Requested" ? "oklch(0.50 0.22 25)" : "oklch(0.60 0.010 250)" }}>{cell.notes}</span>
                       </div>
                     </div>
                   )}
@@ -348,7 +348,7 @@ export default function SecureModules() {
                     <button
                       onClick={() => toast.success(`Wellness check logged for ${cell.id} at ${new Date().toLocaleTimeString()}`)}
                       className="mt-3 w-full py-1.5 rounded text-xs font-semibold"
-                      style={{ background: "oklch(0.75 0.18 75 / 15%)", border: "1px solid oklch(0.75 0.18 75 / 25%)", color: "oklch(0.82 0.16 75)" }}
+                      style={{ background: "oklch(0.55 0.18 75 / 12%)", border: "1px solid oklch(0.75 0.18 75 / 25%)", color: "oklch(0.50 0.18 75)" }}
                     >
                       Log Wellness Check
                     </button>
@@ -362,11 +362,11 @@ export default function SecureModules() {
               <div className="section-label mb-3">Wellness Check Log — Today</div>
               <div className="space-y-1.5">
                 {WELLNESS_LOG.map((log, i) => (
-                  <div key={i} className="flex items-center gap-3 px-3 py-2 rounded" style={{ background: "oklch(0.16 0.014 250)", border: "1px solid oklch(1 0 0 / 6%)" }}>
-                    <span className="text-[9px] font-mono w-36 flex-shrink-0" style={{ color: "oklch(0.40 0.008 250)" }}>{log.time}</span>
-                    <span className="text-[10px] w-20 flex-shrink-0 font-mono" style={{ color: "oklch(0.55 0.010 250)" }}>{log.cell}</span>
+                  <div key={i} className="flex items-center gap-3 px-3 py-2 rounded" style={{ background: "oklch(1 0 0)", border: "1px solid oklch(0 0 0 / 6%)" }}>
+                    <span className="text-[9px] font-mono w-36 flex-shrink-0" style={{ color: "oklch(0.48 0.012 250)" }}>{log.time}</span>
+                    <span className="text-[10px] w-20 flex-shrink-0 font-mono" style={{ color: "oklch(0.45 0.012 250)" }}>{log.cell}</span>
                     <span className="text-xs flex-1" style={{ color: "oklch(0.65 0.010 250)" }}>{log.notes}</span>
-                    <span className="text-[10px]" style={{ color: "oklch(0.50 0.010 250)" }}>{log.officer}</span>
+                    <span className="text-[10px]" style={{ color: "oklch(0.48 0.012 250)" }}>{log.officer}</span>
                     <span className={`badge-${log.result === "OK" ? "success" : "critical"}`}>{log.result}</span>
                   </div>
                 ))}

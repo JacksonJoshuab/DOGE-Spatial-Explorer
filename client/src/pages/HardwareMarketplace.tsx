@@ -19,7 +19,7 @@ const DEVICES = [
     name: "SmartValve Pro",
     category: "Utility Valves & Sensors",
     icon: Droplets,
-    color: "oklch(0.58 0.20 240)",
+    color: "oklch(0.45 0.20 240)",
     price: 1249,
     unitPrice: "$1,249",
     patentStatus: "Pending",
@@ -42,7 +42,7 @@ const DEVICES = [
     name: "AquaSentinel Node",
     category: "Utility Valves & Sensors",
     icon: Droplets,
-    color: "oklch(0.58 0.20 240)",
+    color: "oklch(0.45 0.20 240)",
     price: 2180,
     unitPrice: "$2,180",
     patentStatus: "Filed",
@@ -65,7 +65,7 @@ const DEVICES = [
     name: "GasPulse Monitor",
     category: "Utility Valves & Sensors",
     icon: Zap,
-    color: "oklch(0.58 0.20 240)",
+    color: "oklch(0.45 0.20 240)",
     price: 895,
     unitPrice: "$895",
     patentStatus: "Pending",
@@ -88,7 +88,7 @@ const DEVICES = [
     name: "DOGE Sentinel Node",
     category: "Law Enforcement",
     icon: Shield,
-    color: "oklch(0.62 0.22 25)",
+    color: "oklch(0.50 0.22 25)",
     price: 3450,
     unitPrice: "$3,450",
     patentStatus: "Filed",
@@ -111,7 +111,7 @@ const DEVICES = [
     name: "SecureEntry Biometric Panel",
     category: "Law Enforcement",
     icon: Shield,
-    color: "oklch(0.62 0.22 25)",
+    color: "oklch(0.50 0.22 25)",
     price: 4890,
     unitPrice: "$4,890",
     patentStatus: "Pending",
@@ -134,7 +134,7 @@ const DEVICES = [
     name: "PatrolMesh Hub",
     category: "Law Enforcement",
     icon: Shield,
-    color: "oklch(0.62 0.22 25)",
+    color: "oklch(0.50 0.22 25)",
     price: 2100,
     unitPrice: "$2,100",
     patentStatus: "Filed",
@@ -157,7 +157,7 @@ const DEVICES = [
     name: "RoadSense Pavement Monitor",
     category: "Public Works",
     icon: Wrench,
-    color: "oklch(0.75 0.18 75)",
+    color: "oklch(0.55 0.18 75)",
     price: 780,
     unitPrice: "$780",
     patentStatus: "Pending",
@@ -180,7 +180,7 @@ const DEVICES = [
     name: "StormNet Drain Sensor",
     category: "Public Works",
     icon: Wrench,
-    color: "oklch(0.75 0.18 75)",
+    color: "oklch(0.55 0.18 75)",
     price: 420,
     unitPrice: "$420",
     patentStatus: "Filed",
@@ -203,7 +203,7 @@ const DEVICES = [
     name: "BridgeWatch Monitor",
     category: "Public Works",
     icon: Wrench,
-    color: "oklch(0.75 0.18 75)",
+    color: "oklch(0.55 0.18 75)",
     price: 5600,
     unitPrice: "$5,600",
     patentStatus: "Pending",
@@ -226,7 +226,7 @@ const DEVICES = [
     name: "ParkPulse Occupancy Node",
     category: "Parks & Recreation",
     icon: TreePine,
-    color: "oklch(0.65 0.18 145)",
+    color: "oklch(0.45 0.18 145)",
     price: 340,
     unitPrice: "$340",
     patentStatus: "Filed",
@@ -249,7 +249,7 @@ const DEVICES = [
     name: "IrriSmart Soil Sensor",
     category: "Parks & Recreation",
     icon: TreePine,
-    color: "oklch(0.65 0.18 145)",
+    color: "oklch(0.45 0.18 145)",
     price: 195,
     unitPrice: "$195",
     patentStatus: "Pending",
@@ -272,7 +272,7 @@ const DEVICES = [
     name: "TrailCam Safety Node",
     category: "Parks & Recreation",
     icon: TreePine,
-    color: "oklch(0.65 0.18 145)",
+    color: "oklch(0.45 0.18 145)",
     price: 890,
     unitPrice: "$890",
     patentStatus: "Filed",
@@ -305,7 +305,7 @@ export default function HardwareMarketplace() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: "oklch(0.11 0.012 250)" }}>
+    <div className="min-h-screen flex flex-col" style={{ background: "oklch(0.975 0.004 240)" }}>
       <Navbar />
 
       {/* Hero */}
@@ -327,16 +327,16 @@ export default function HardwareMarketplace() {
             Each device includes patent claim documentation, procurement specs, and West Liberty deployment guidance.
           </p>
           {cart.length > 0 && (
-            <div className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 rounded" style={{ background: "oklch(0.58 0.20 240 / 15%)", border: "1px solid oklch(0.58 0.20 240 / 30%)" }}>
-              <ShoppingCart className="w-4 h-4" style={{ color: "oklch(0.70 0.18 240)" }} />
-              <span className="text-sm font-mono" style={{ color: "oklch(0.70 0.18 240)" }}>{cart.length} items in procurement cart</span>
+            <div className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 rounded" style={{ background: "oklch(0.45 0.20 240 / 12%)", border: "1px solid oklch(0.58 0.20 240 / 30%)" }}>
+              <ShoppingCart className="w-4 h-4" style={{ color: "oklch(0.40 0.18 240)" }} />
+              <span className="text-sm font-mono" style={{ color: "oklch(0.40 0.18 240)" }}>{cart.length} items in procurement cart</span>
             </div>
           )}
         </div>
       </section>
 
       {/* Category filter */}
-      <div className="border-b sticky top-14 z-40" style={{ background: "oklch(0.13 0.013 250 / 95%)", borderColor: "oklch(1 0 0 / 8%)", backdropFilter: "blur(12px)" }}>
+      <div className="border-b sticky top-14 z-40" style={{ background: "oklch(0.13 0.013 250 / 95%)", borderColor: "oklch(0 0 0 / 8%)", backdropFilter: "blur(12px)" }}>
         <div className="container flex gap-1 py-3 overflow-x-auto">
           {CATEGORIES.map((cat) => (
             <button
@@ -344,8 +344,8 @@ export default function HardwareMarketplace() {
               onClick={() => setActiveCategory(cat)}
               className="px-3 py-1.5 rounded text-xs font-medium whitespace-nowrap transition-all flex-shrink-0"
               style={{
-                background: activeCategory === cat ? "oklch(0.58 0.20 240 / 15%)" : "transparent",
-                color: activeCategory === cat ? "oklch(0.70 0.18 240)" : "oklch(0.55 0.010 250)",
+                background: activeCategory === cat ? "oklch(0.45 0.20 240 / 12%)" : "transparent",
+                color: activeCategory === cat ? "oklch(0.40 0.18 240)" : "oklch(0.45 0.012 250)",
                 border: activeCategory === cat ? "1px solid oklch(0.58 0.20 240 / 30%)" : "1px solid transparent",
               }}
             >
@@ -363,10 +363,10 @@ export default function HardwareMarketplace() {
               <div
                 key={device.id}
                 className="rounded-lg overflow-hidden transition-all"
-                style={{ background: "oklch(0.16 0.014 250)", border: "1px solid oklch(1 0 0 / 8%)" }}
+                style={{ background: "oklch(1 0 0)", border: "1px solid oklch(0 0 0 / 8%)" }}
               >
                 {/* Card header */}
-                <div className="p-4 border-b" style={{ borderColor: "oklch(1 0 0 / 8%)" }}>
+                <div className="p-4 border-b" style={{ borderColor: "oklch(0 0 0 / 8%)" }}>
                   <div className="flex items-start justify-between mb-3">
                     <div
                       className="w-10 h-10 rounded-lg flex items-center justify-center"
@@ -381,25 +381,25 @@ export default function HardwareMarketplace() {
                       >
                         {device.badge}
                       </span>
-                      <span className="text-[9px] font-mono" style={{ color: "oklch(0.45 0.008 250)" }}>
+                      <span className="text-[9px] font-mono" style={{ color: "oklch(0.52 0.010 250)" }}>
                         {device.patentId}
                       </span>
                     </div>
                   </div>
-                  <h3 className="text-sm font-bold mb-1" style={{ color: "oklch(0.88 0.008 240)", fontFamily: "'Syne', sans-serif" }}>
+                  <h3 className="text-sm font-bold mb-1" style={{ color: "oklch(0.18 0.018 250)", fontFamily: "'Syne', sans-serif" }}>
                     {device.name}
                   </h3>
-                  <p className="text-xs leading-relaxed" style={{ color: "oklch(0.50 0.010 250)" }}>
+                  <p className="text-xs leading-relaxed" style={{ color: "oklch(0.48 0.012 250)" }}>
                     {device.description}
                   </p>
                 </div>
 
                 {/* Specs preview */}
-                <div className="px-4 py-3 border-b" style={{ borderColor: "oklch(1 0 0 / 8%)" }}>
+                <div className="px-4 py-3 border-b" style={{ borderColor: "oklch(0 0 0 / 8%)" }}>
                   <div className="section-label mb-2">Key Specs</div>
                   <div className="space-y-1">
                     {device.specs.slice(0, 3).map((spec, i) => (
-                      <div key={i} className="flex items-center gap-1.5 text-[10px]" style={{ color: "oklch(0.50 0.010 250)" }}>
+                      <div key={i} className="flex items-center gap-1.5 text-[10px]" style={{ color: "oklch(0.48 0.012 250)" }}>
                         <CheckCircle2 className="w-3 h-3 flex-shrink-0" style={{ color: device.color }} />
                         {spec}
                       </div>
@@ -417,9 +417,9 @@ export default function HardwareMarketplace() {
                 </div>
 
                 {/* Patent claim */}
-                <div className="px-4 py-3 border-b" style={{ borderColor: "oklch(1 0 0 / 8%)" }}>
+                <div className="px-4 py-3 border-b" style={{ borderColor: "oklch(0 0 0 / 8%)" }}>
                   <div className="section-label mb-1.5">Patent Claim Summary</div>
-                  <p className="text-[10px] leading-relaxed italic" style={{ color: "oklch(0.45 0.008 250)" }}>
+                  <p className="text-[10px] leading-relaxed italic" style={{ color: "oklch(0.52 0.010 250)" }}>
                     "{device.claims}"
                   </p>
                   <div className="flex items-center gap-1.5 mt-1.5">
@@ -433,13 +433,13 @@ export default function HardwareMarketplace() {
                 <div className="px-4 py-3 flex items-center justify-between">
                   <div>
                     <div className="metric-value text-lg" style={{ color: device.color }}>{device.unitPrice}</div>
-                    <div className="text-[10px]" style={{ color: "oklch(0.40 0.008 250)" }}>per unit · FOB West Liberty</div>
+                    <div className="text-[10px]" style={{ color: "oklch(0.48 0.012 250)" }}>per unit · FOB West Liberty</div>
                   </div>
                   <div className="flex gap-2">
                     <button
                       onClick={() => setSelectedDevice(device)}
                       className="p-2 rounded transition-all"
-                      style={{ background: "oklch(1 0 0 / 6%)", border: "1px solid oklch(1 0 0 / 12%)", color: "oklch(0.60 0.010 250)" }}
+                      style={{ background: "oklch(0 0 0 / 6%)", border: "1px solid oklch(1 0 0 / 12%)", color: "oklch(0.60 0.010 250)" }}
                     >
                       <FileText className="w-3.5 h-3.5" />
                     </button>
@@ -468,21 +468,21 @@ export default function HardwareMarketplace() {
         >
           <div
             className="w-full max-w-2xl rounded-xl overflow-hidden max-h-[90vh] overflow-y-auto"
-            style={{ background: "oklch(0.16 0.014 250)", border: "1px solid oklch(1 0 0 / 12%)" }}
+            style={{ background: "oklch(1 0 0)", border: "1px solid oklch(1 0 0 / 12%)" }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="p-6 border-b" style={{ borderColor: "oklch(1 0 0 / 8%)" }}>
+            <div className="p-6 border-b" style={{ borderColor: "oklch(0 0 0 / 8%)" }}>
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: `${selectedDevice.color.replace(")", " / 15%)")}`, border: `1px solid ${selectedDevice.color.replace(")", " / 25%)")}` }}>
                     <selectedDevice.icon className="w-6 h-6" style={{ color: selectedDevice.color }} />
                   </div>
                   <div>
-                    <h2 className="text-lg font-bold" style={{ fontFamily: "'Syne', sans-serif", color: "oklch(0.92 0.008 240)" }}>{selectedDevice.name}</h2>
-                    <div className="text-xs font-mono mt-0.5" style={{ color: "oklch(0.50 0.010 250)" }}>{selectedDevice.patentId} · Patent {selectedDevice.patentStatus}</div>
+                    <h2 className="text-lg font-bold" style={{ fontFamily: "'Syne', sans-serif", color: "oklch(0.18 0.018 250)" }}>{selectedDevice.name}</h2>
+                    <div className="text-xs font-mono mt-0.5" style={{ color: "oklch(0.48 0.012 250)" }}>{selectedDevice.patentId} · Patent {selectedDevice.patentStatus}</div>
                   </div>
                 </div>
-                <button onClick={() => setSelectedDevice(null)} className="text-2xl leading-none" style={{ color: "oklch(0.50 0.010 250)" }}>×</button>
+                <button onClick={() => setSelectedDevice(null)} className="text-2xl leading-none" style={{ color: "oklch(0.48 0.012 250)" }}>×</button>
               </div>
             </div>
             <div className="p-6 space-y-5">
@@ -498,16 +498,16 @@ export default function HardwareMarketplace() {
                   ))}
                 </div>
               </div>
-              <div className="p-4 rounded-lg" style={{ background: "oklch(0.13 0.013 250)", border: "1px solid oklch(1 0 0 / 8%)" }}>
+              <div className="p-4 rounded-lg" style={{ background: "oklch(0.965 0.005 240)", border: "1px solid oklch(0 0 0 / 8%)" }}>
                 <div className="section-label mb-2">Patent Claim (Independent Claim 1)</div>
-                <p className="text-xs leading-relaxed italic" style={{ color: "oklch(0.55 0.010 250)" }}>
+                <p className="text-xs leading-relaxed italic" style={{ color: "oklch(0.45 0.012 250)" }}>
                   A system comprising: {selectedDevice.claims}
                 </p>
               </div>
               <div className="flex items-center justify-between pt-2">
                 <div>
                   <div className="metric-value text-xl" style={{ color: selectedDevice.color }}>{selectedDevice.unitPrice}</div>
-                  <div className="text-xs" style={{ color: "oklch(0.40 0.008 250)" }}>per unit · FOB West Liberty, IA</div>
+                  <div className="text-xs" style={{ color: "oklch(0.48 0.012 250)" }}>per unit · FOB West Liberty, IA</div>
                 </div>
                 <button
                   onClick={() => { addToCart(selectedDevice.id, selectedDevice.name); setSelectedDevice(null); }}

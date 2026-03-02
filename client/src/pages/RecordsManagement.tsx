@@ -63,10 +63,10 @@ export default function RecordsManagement() {
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { label: "Total Records", value: "7,175", color: "oklch(0.70 0.18 240)" },
-            { label: "Blockchain Verified", value: "100%", color: "oklch(0.65 0.18 145)" },
-            { label: "Physical Locations", value: "4", color: "oklch(0.75 0.18 75)" },
-            { label: "Pending Destruction", value: "23", color: "oklch(0.75 0.18 75)" },
+            { label: "Total Records", value: "7,175", color: "oklch(0.40 0.18 240)" },
+            { label: "Blockchain Verified", value: "100%", color: "oklch(0.45 0.18 145)" },
+            { label: "Physical Locations", value: "4", color: "oklch(0.55 0.18 75)" },
+            { label: "Pending Destruction", value: "23", color: "oklch(0.55 0.18 75)" },
           ].map((s) => (
             <div key={s.label} className="data-card">
               <div className="metric-value text-2xl" style={{ color: s.color }}>{s.value}</div>
@@ -77,15 +77,15 @@ export default function RecordsManagement() {
 
         {/* Blockchain integrity banner */}
         <div className="flex items-center gap-3 px-4 py-3 rounded-lg" style={{ background: "oklch(0.65 0.18 145 / 10%)", border: "1px solid oklch(0.65 0.18 145 / 25%)" }}>
-          <Shield className="w-4 h-4 flex-shrink-0" style={{ color: "oklch(0.65 0.18 145)" }} />
-          <span className="text-sm" style={{ color: "oklch(0.72 0.16 145)" }}>
+          <Shield className="w-4 h-4 flex-shrink-0" style={{ color: "oklch(0.45 0.18 145)" }} />
+          <span className="text-sm" style={{ color: "oklch(0.42 0.18 145)" }}>
             <strong>Blockchain Integrity:</strong> All 7,175 records cryptographically anchored. Last verification: 2025-03-01 00:00:00 UTC. Chain intact — 0 tampering events detected.
           </span>
           <span className="badge-success ml-auto flex-shrink-0">VERIFIED</span>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 border-b" style={{ borderColor: "oklch(1 0 0 / 8%)" }}>
+        <div className="flex gap-1 border-b" style={{ borderColor: "oklch(0 0 0 / 8%)" }}>
           {[
             { id: "digital", label: "Digital Records & Audit Log" },
             { id: "physical", label: "Physical Location Monitoring" },
@@ -96,8 +96,8 @@ export default function RecordsManagement() {
               onClick={() => setActiveTab(tab.id as any)}
               className="px-4 py-2.5 text-sm font-medium border-b-2 transition-all"
               style={{
-                borderColor: activeTab === tab.id ? "oklch(0.58 0.20 240)" : "transparent",
-                color: activeTab === tab.id ? "oklch(0.70 0.18 240)" : "oklch(0.50 0.010 250)",
+                borderColor: activeTab === tab.id ? "oklch(0.45 0.20 240)" : "transparent",
+                color: activeTab === tab.id ? "oklch(0.40 0.18 240)" : "oklch(0.48 0.012 250)",
               }}
             >
               {tab.label}
@@ -115,16 +115,16 @@ export default function RecordsManagement() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="flex-1 px-3 py-2 rounded text-sm"
-                style={{ background: "oklch(0.16 0.014 250)", border: "1px solid oklch(1 0 0 / 12%)", color: "oklch(0.85 0.008 240)", outline: "none" }}
+                style={{ background: "oklch(1 0 0)", border: "1px solid oklch(1 0 0 / 12%)", color: "oklch(0.25 0.018 250)", outline: "none" }}
               />
             </div>
 
             {/* Records table */}
-            <div className="rounded-lg overflow-hidden" style={{ border: "1px solid oklch(1 0 0 / 8%)" }}>
+            <div className="rounded-lg overflow-hidden" style={{ border: "1px solid oklch(0 0 0 / 8%)" }}>
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
                   <thead>
-                    <tr style={{ background: "oklch(0.16 0.014 250)", borderBottom: "1px solid oklch(1 0 0 / 8%)" }}>
+                    <tr style={{ background: "oklch(1 0 0)", borderBottom: "1px solid oklch(0 0 0 / 8%)" }}>
                       {["Record ID", "Title", "Department", "Classification", "Location", "Blockchain Hash", "Retention", "Actions"].map((h) => (
                         <th key={h} className="px-3 py-2.5 text-left section-label">{h}</th>
                       ))}
@@ -132,11 +132,11 @@ export default function RecordsManagement() {
                   </thead>
                   <tbody>
                     {filtered.map((rec) => (
-                      <tr key={rec.id} className="border-b" style={{ background: "oklch(0.14 0.014 250)", borderColor: "oklch(1 0 0 / 6%)" }}>
-                        <td className="px-3 py-2.5 font-mono text-[10px]" style={{ color: "oklch(0.55 0.010 250)" }}>{rec.id}</td>
+                      <tr key={rec.id} className="border-b" style={{ background: "oklch(0.985 0.003 240)", borderColor: "oklch(0 0 0 / 6%)" }}>
+                        <td className="px-3 py-2.5 font-mono text-[10px]" style={{ color: "oklch(0.45 0.012 250)" }}>{rec.id}</td>
                         <td className="px-3 py-2.5 max-w-[200px]">
-                          <div className="truncate font-medium" style={{ color: "oklch(0.80 0.008 240)" }}>{rec.title}</div>
-                          <div className="text-[9px] mt-0.5" style={{ color: "oklch(0.40 0.008 250)" }}>{rec.size} · {rec.created}</div>
+                          <div className="truncate font-medium" style={{ color: "oklch(0.22 0.018 250)" }}>{rec.title}</div>
+                          <div className="text-[9px] mt-0.5" style={{ color: "oklch(0.48 0.012 250)" }}>{rec.size} · {rec.created}</div>
                         </td>
                         <td className="px-3 py-2.5" style={{ color: "oklch(0.60 0.010 250)" }}>{rec.dept}</td>
                         <td className="px-3 py-2.5">
@@ -144,15 +144,15 @@ export default function RecordsManagement() {
                             {rec.classification}
                           </span>
                         </td>
-                        <td className="px-3 py-2.5 text-[10px]" style={{ color: "oklch(0.50 0.010 250)" }}>{rec.location}</td>
-                        <td className="px-3 py-2.5 font-mono text-[9px]" style={{ color: "oklch(0.45 0.008 250)" }}>{rec.hash}</td>
-                        <td className="px-3 py-2.5 text-[10px]" style={{ color: "oklch(0.50 0.010 250)" }}>{rec.retention}</td>
+                        <td className="px-3 py-2.5 text-[10px]" style={{ color: "oklch(0.48 0.012 250)" }}>{rec.location}</td>
+                        <td className="px-3 py-2.5 font-mono text-[9px]" style={{ color: "oklch(0.52 0.010 250)" }}>{rec.hash}</td>
+                        <td className="px-3 py-2.5 text-[10px]" style={{ color: "oklch(0.48 0.012 250)" }}>{rec.retention}</td>
                         <td className="px-3 py-2.5">
                           <div className="flex gap-1">
-                            <button onClick={() => handleAccess(rec)} className="p-1 rounded" style={{ background: "oklch(0.58 0.20 240 / 15%)", color: "oklch(0.70 0.18 240)" }}>
+                            <button onClick={() => handleAccess(rec)} className="p-1 rounded" style={{ background: "oklch(0.45 0.20 240 / 12%)", color: "oklch(0.40 0.18 240)" }}>
                               <Eye className="w-3 h-3" />
                             </button>
-                            <button onClick={() => toast.info("Download logged to blockchain")} className="p-1 rounded" style={{ background: "oklch(1 0 0 / 8%)", color: "oklch(0.55 0.010 250)" }}>
+                            <button onClick={() => toast.info("Download logged to blockchain")} className="p-1 rounded" style={{ background: "oklch(0 0 0 / 8%)", color: "oklch(0.45 0.012 250)" }}>
                               <Download className="w-3 h-3" />
                             </button>
                           </div>
@@ -169,21 +169,21 @@ export default function RecordsManagement() {
               <div className="section-label mb-3">Blockchain Audit Log — Recent Events</div>
               <div className="space-y-1.5">
                 {AUDIT_LOG.map((log, i) => (
-                  <div key={i} className="flex items-center gap-3 px-3 py-2 rounded" style={{ background: "oklch(0.16 0.014 250)", border: "1px solid oklch(1 0 0 / 6%)" }}>
-                    <span className="text-[9px] font-mono w-36 flex-shrink-0" style={{ color: "oklch(0.40 0.008 250)" }}>{log.timestamp}</span>
+                  <div key={i} className="flex items-center gap-3 px-3 py-2 rounded" style={{ background: "oklch(1 0 0)", border: "1px solid oklch(0 0 0 / 6%)" }}>
+                    <span className="text-[9px] font-mono w-36 flex-shrink-0" style={{ color: "oklch(0.48 0.012 250)" }}>{log.timestamp}</span>
                     <span
                       className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded w-20 text-center flex-shrink-0"
                       style={{
-                        background: log.action === "EDIT" ? "oklch(0.75 0.18 75 / 15%)" : log.action === "DOWNLOAD" ? "oklch(0.58 0.20 240 / 15%)" : "oklch(0.65 0.18 145 / 15%)",
-                        color: log.action === "EDIT" ? "oklch(0.82 0.16 75)" : log.action === "DOWNLOAD" ? "oklch(0.70 0.18 240)" : "oklch(0.72 0.16 145)",
+                        background: log.action === "EDIT" ? "oklch(0.55 0.18 75 / 12%)" : log.action === "DOWNLOAD" ? "oklch(0.45 0.20 240 / 12%)" : "oklch(0.45 0.18 145 / 12%)",
+                        color: log.action === "EDIT" ? "oklch(0.50 0.18 75)" : log.action === "DOWNLOAD" ? "oklch(0.40 0.18 240)" : "oklch(0.42 0.18 145)",
                       }}
                     >
                       {log.action}
                     </span>
                     <span className="text-xs flex-1 truncate" style={{ color: "oklch(0.65 0.010 250)" }}>{log.record}</span>
-                    <span className="text-[10px]" style={{ color: "oklch(0.50 0.010 250)" }}>{log.user}</span>
-                    <span className="text-[9px] font-mono" style={{ color: "oklch(0.40 0.008 250)" }}>{log.ip}</span>
-                    <CheckCircle2 className="w-3 h-3 flex-shrink-0" style={{ color: "oklch(0.65 0.18 145)" }} />
+                    <span className="text-[10px]" style={{ color: "oklch(0.48 0.012 250)" }}>{log.user}</span>
+                    <span className="text-[9px] font-mono" style={{ color: "oklch(0.48 0.012 250)" }}>{log.ip}</span>
+                    <CheckCircle2 className="w-3 h-3 flex-shrink-0" style={{ color: "oklch(0.45 0.18 145)" }} />
                   </div>
                 ))}
               </div>
@@ -196,40 +196,40 @@ export default function RecordsManagement() {
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {PHYSICAL_LOCATIONS.map((loc) => (
-                <div key={loc.id} className="p-4 rounded-lg" style={{ background: "oklch(0.16 0.014 250)", border: `1px solid ${loc.status === "warning" ? "oklch(0.75 0.18 75 / 30%)" : "oklch(1 0 0 / 8%)"}` }}>
+                <div key={loc.id} className="p-4 rounded-lg" style={{ background: "oklch(1 0 0)", border: `1px solid ${loc.status === "warning" ? "oklch(0.75 0.18 75 / 30%)" : "oklch(0 0 0 / 8%)"}` }}>
                   <div className="flex items-start justify-between mb-3">
                     <div>
-                      <div className="text-sm font-semibold" style={{ color: "oklch(0.88 0.008 240)" }}>{loc.name}</div>
-                      <div className="text-[10px] font-mono mt-0.5" style={{ color: "oklch(0.45 0.008 250)" }}>{loc.node} · {loc.items} items</div>
+                      <div className="text-sm font-semibold" style={{ color: "oklch(0.18 0.018 250)" }}>{loc.name}</div>
+                      <div className="text-[10px] font-mono mt-0.5" style={{ color: "oklch(0.52 0.010 250)" }}>{loc.node} · {loc.items} items</div>
                     </div>
                     <span className={`status-dot ${loc.status === "warning" ? "amber" : "green"}`} />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="p-2.5 rounded" style={{ background: "oklch(0.13 0.013 250)" }}>
+                    <div className="p-2.5 rounded" style={{ background: "oklch(0.965 0.005 240)" }}>
                       <div className="flex items-center gap-1.5 mb-1">
-                        <Thermometer className="w-3 h-3" style={{ color: "oklch(0.70 0.18 240)" }} />
+                        <Thermometer className="w-3 h-3" style={{ color: "oklch(0.40 0.18 240)" }} />
                         <span className="section-label">Temperature</span>
                       </div>
-                      <div className="metric-value text-lg" style={{ color: loc.temp > 72 ? "oklch(0.75 0.18 75)" : "oklch(0.65 0.18 145)" }}>
+                      <div className="metric-value text-lg" style={{ color: loc.temp > 72 ? "oklch(0.55 0.18 75)" : "oklch(0.45 0.18 145)" }}>
                         {loc.temp}°F
                       </div>
-                      <div className="text-[9px] mt-0.5" style={{ color: "oklch(0.40 0.008 250)" }}>Target: 65–72°F</div>
+                      <div className="text-[9px] mt-0.5" style={{ color: "oklch(0.48 0.012 250)" }}>Target: 65–72°F</div>
                     </div>
-                    <div className="p-2.5 rounded" style={{ background: "oklch(0.13 0.013 250)" }}>
+                    <div className="p-2.5 rounded" style={{ background: "oklch(0.965 0.005 240)" }}>
                       <div className="flex items-center gap-1.5 mb-1">
-                        <Wifi className="w-3 h-3" style={{ color: "oklch(0.70 0.18 240)" }} />
+                        <Wifi className="w-3 h-3" style={{ color: "oklch(0.40 0.18 240)" }} />
                         <span className="section-label">Humidity</span>
                       </div>
-                      <div className="metric-value text-lg" style={{ color: loc.humidity > 50 ? "oklch(0.75 0.18 75)" : "oklch(0.65 0.18 145)" }}>
+                      <div className="metric-value text-lg" style={{ color: loc.humidity > 50 ? "oklch(0.55 0.18 75)" : "oklch(0.45 0.18 145)" }}>
                         {loc.humidity}%
                       </div>
-                      <div className="text-[9px] mt-0.5" style={{ color: "oklch(0.40 0.008 250)" }}>Target: 30–50% RH</div>
+                      <div className="text-[9px] mt-0.5" style={{ color: "oklch(0.48 0.012 250)" }}>Target: 30–50% RH</div>
                     </div>
                   </div>
-                  <div className="mt-2 text-[10px]" style={{ color: "oklch(0.45 0.008 250)" }}>
+                  <div className="mt-2 text-[10px]" style={{ color: "oklch(0.52 0.010 250)" }}>
                     Last access: {loc.lastAccess}
                     {loc.status === "warning" && (
-                      <span className="ml-2" style={{ color: "oklch(0.82 0.16 75)" }}>⚠ Humidity above target</span>
+                      <span className="ml-2" style={{ color: "oklch(0.50 0.18 75)" }}>⚠ Humidity above target</span>
                     )}
                   </div>
                 </div>
@@ -240,21 +240,21 @@ export default function RecordsManagement() {
 
         {/* Retention schedule tab */}
         {activeTab === "retention" && (
-          <div className="rounded-lg overflow-hidden" style={{ border: "1px solid oklch(1 0 0 / 8%)" }}>
-            <div className="px-4 py-3 border-b" style={{ background: "oklch(0.16 0.014 250)", borderColor: "oklch(1 0 0 / 8%)" }}>
-              <div className="text-sm font-semibold" style={{ color: "oklch(0.88 0.008 240)" }}>Iowa Code Retention Schedule</div>
-              <div className="text-xs mt-0.5" style={{ color: "oklch(0.50 0.010 250)" }}>Chapter 22 Open Records compliance</div>
+          <div className="rounded-lg overflow-hidden" style={{ border: "1px solid oklch(0 0 0 / 8%)" }}>
+            <div className="px-4 py-3 border-b" style={{ background: "oklch(1 0 0)", borderColor: "oklch(0 0 0 / 8%)" }}>
+              <div className="text-sm font-semibold" style={{ color: "oklch(0.18 0.018 250)" }}>Iowa Code Retention Schedule</div>
+              <div className="text-xs mt-0.5" style={{ color: "oklch(0.48 0.012 250)" }}>Chapter 22 Open Records compliance</div>
             </div>
             {RETENTION_SCHEDULE.map((item, i) => (
-              <div key={i} className="flex items-center gap-4 px-4 py-3 border-b last:border-b-0" style={{ background: "oklch(0.14 0.014 250)", borderColor: "oklch(1 0 0 / 6%)" }}>
+              <div key={i} className="flex items-center gap-4 px-4 py-3 border-b last:border-b-0" style={{ background: "oklch(0.985 0.003 240)", borderColor: "oklch(0 0 0 / 6%)" }}>
                 <div className="flex-1">
-                  <div className="text-sm font-medium" style={{ color: "oklch(0.80 0.008 240)" }}>{item.category}</div>
-                  <div className="text-[10px] mt-0.5" style={{ color: "oklch(0.45 0.008 250)" }}>{item.authority}</div>
+                  <div className="text-sm font-medium" style={{ color: "oklch(0.22 0.018 250)" }}>{item.category}</div>
+                  <div className="text-[10px] mt-0.5" style={{ color: "oklch(0.52 0.010 250)" }}>{item.authority}</div>
                 </div>
-                <div className="text-sm font-mono font-semibold" style={{ color: item.retention === "Permanent" ? "oklch(0.65 0.18 145)" : "oklch(0.70 0.18 240)" }}>
+                <div className="text-sm font-mono font-semibold" style={{ color: item.retention === "Permanent" ? "oklch(0.45 0.18 145)" : "oklch(0.40 0.18 240)" }}>
                   {item.retention}
                 </div>
-                <div className="text-sm font-mono" style={{ color: "oklch(0.55 0.010 250)" }}>
+                <div className="text-sm font-mono" style={{ color: "oklch(0.45 0.012 250)" }}>
                   {item.count.toLocaleString()} records
                 </div>
               </div>

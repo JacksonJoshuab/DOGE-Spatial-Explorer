@@ -36,15 +36,15 @@ export default function Contact() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: "oklch(0.11 0.012 250)" }}>
+    <div className="min-h-screen flex flex-col" style={{ background: "oklch(0.975 0.004 240)" }}>
       <Navbar />
 
-      <section className="py-16 border-b" style={{ background: "oklch(0.13 0.013 250)", borderColor: "oklch(1 0 0 / 8%)" }}>
+      <section className="py-16 border-b" style={{ background: "oklch(0.965 0.005 240)", borderColor: "oklch(0 0 0 / 8%)" }}>
         <div className="container">
           <div className="section-label mb-3">Request a Demo</div>
           <h1 className="text-4xl font-bold mb-3" style={{ fontFamily: "'Syne', sans-serif", color: "oklch(0.95 0.008 240)" }}>
             See the Platform<br />
-            <span style={{ color: "oklch(0.70 0.18 240)" }}>in Action</span>
+            <span style={{ color: "oklch(0.40 0.18 240)" }}>in Action</span>
           </h1>
           <p className="text-sm max-w-xl" style={{ color: "oklch(0.60 0.010 250)" }}>
             Schedule a live demo with your city's real data. We'll show you exactly how the platform
@@ -75,7 +75,7 @@ export default function Contact() {
                       value={(form as any)[field.key]}
                       onChange={(e) => setForm(prev => ({ ...prev, [field.key]: e.target.value }))}
                       className="w-full px-3 py-2 rounded text-sm"
-                      style={{ background: "oklch(0.16 0.014 250)", border: "1px solid oklch(1 0 0 / 12%)", color: "oklch(0.85 0.008 240)", outline: "none" }}
+                      style={{ background: "oklch(1 0 0)", border: "1px solid oklch(1 0 0 / 12%)", color: "oklch(0.25 0.018 250)", outline: "none" }}
                     />
                   </div>
                 ))}
@@ -91,9 +91,9 @@ export default function Contact() {
                       onClick={() => toggleDept(d)}
                       className="px-2.5 py-1 rounded text-xs transition-all"
                       style={{
-                        background: form.departments.includes(d) ? "oklch(0.58 0.20 240 / 20%)" : "oklch(0.16 0.014 250)",
-                        border: `1px solid ${form.departments.includes(d) ? "oklch(0.58 0.20 240 / 40%)" : "oklch(1 0 0 / 10%)"}`,
-                        color: form.departments.includes(d) ? "oklch(0.70 0.18 240)" : "oklch(0.55 0.010 250)",
+                        background: form.departments.includes(d) ? "oklch(0.45 0.20 240 / 15%)" : "oklch(1 0 0)",
+                        border: `1px solid ${form.departments.includes(d) ? "oklch(0.45 0.20 240 / 30%)" : "oklch(0 0 0 / 10%)"}`,
+                        color: form.departments.includes(d) ? "oklch(0.40 0.18 240)" : "oklch(0.45 0.012 250)",
                       }}
                     >
                       {d}
@@ -110,14 +110,14 @@ export default function Contact() {
                   onChange={(e) => setForm(prev => ({ ...prev, message: e.target.value }))}
                   placeholder="Tell us about your city's specific challenges..."
                   className="w-full px-3 py-2 rounded text-sm resize-none"
-                  style={{ background: "oklch(0.16 0.014 250)", border: "1px solid oklch(1 0 0 / 12%)", color: "oklch(0.85 0.008 240)", outline: "none" }}
+                  style={{ background: "oklch(1 0 0)", border: "1px solid oklch(1 0 0 / 12%)", color: "oklch(0.25 0.018 250)", outline: "none" }}
                 />
               </div>
 
               <button
                 type="submit"
                 className="flex items-center gap-2 px-6 py-3 rounded font-semibold"
-                style={{ background: "oklch(0.58 0.20 240)", color: "oklch(0.98 0.005 240)" }}
+                style={{ background: "oklch(0.45 0.20 240)", color: "oklch(0.18 0.018 250)" }}
               >
                 Request Demo <ArrowRight className="w-4 h-4" />
               </button>
@@ -126,15 +126,15 @@ export default function Contact() {
 
           {/* Contact info */}
           <div className="space-y-4">
-            <div className="p-5 rounded-xl" style={{ background: "oklch(0.16 0.014 250)", border: "1px solid oklch(1 0 0 / 8%)" }}>
+            <div className="p-5 rounded-xl" style={{ background: "oklch(1 0 0)", border: "1px solid oklch(0 0 0 / 8%)" }}>
               <div className="section-label mb-3">Example Contact</div>
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: "oklch(0.58 0.20 240 / 15%)", border: "1px solid oklch(0.58 0.20 240 / 25%)" }}>
-                  <Building2 className="w-5 h-5" style={{ color: "oklch(0.70 0.18 240)" }} />
+                <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: "oklch(0.45 0.20 240 / 12%)", border: "1px solid oklch(0.58 0.20 240 / 25%)" }}>
+                  <Building2 className="w-5 h-5" style={{ color: "oklch(0.40 0.18 240)" }} />
                 </div>
                 <div>
-                  <div className="text-sm font-semibold" style={{ color: "oklch(0.88 0.008 240)" }}>Matt Muckler</div>
-                  <div className="text-xs" style={{ color: "oklch(0.50 0.010 250)" }}>City Administrator, West Liberty</div>
+                  <div className="text-sm font-semibold" style={{ color: "oklch(0.18 0.018 250)" }}>Matt Muckler</div>
+                  <div className="text-xs" style={{ color: "oklch(0.48 0.012 250)" }}>City Administrator, West Liberty</div>
                 </div>
               </div>
               <div className="space-y-2.5">
@@ -144,14 +144,14 @@ export default function Contact() {
                   { icon: Mail, text: "mmuckler@westlibertyia.gov" },
                 ].map((item, i) => (
                   <div key={i} className="flex items-center gap-2.5 text-xs" style={{ color: "oklch(0.60 0.010 250)" }}>
-                    <item.icon className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "oklch(0.55 0.012 250)" }} />
+                    <item.icon className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "oklch(0.48 0.012 250)" }} />
                     {item.text}
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="p-5 rounded-xl" style={{ background: "oklch(0.16 0.014 250)", border: "1px solid oklch(1 0 0 / 8%)" }}>
+            <div className="p-5 rounded-xl" style={{ background: "oklch(1 0 0)", border: "1px solid oklch(0 0 0 / 8%)" }}>
               <div className="section-label mb-3">What to Expect</div>
               <div className="space-y-2 text-xs" style={{ color: "oklch(0.60 0.010 250)" }}>
                 <div>1. 30-minute discovery call to understand your city's needs</div>

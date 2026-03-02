@@ -27,7 +27,7 @@ const TIERS = [
     price: 25,
     earn: 8,
     earnMax: 8,
-    color: "oklch(0.65 0.18 145)",
+    color: "oklch(0.45 0.18 145)",
     description: "For West Liberty residents. Lease a small slice of city computing capacity and receive monthly ACH payments.",
     features: [
       "0.5 vCPU dedicated allocation",
@@ -46,7 +46,7 @@ const TIERS = [
     price: 149,
     earn: 45,
     earnMax: 45,
-    color: "oklch(0.58 0.20 240)",
+    color: "oklch(0.45 0.20 240)",
     description: "For West Liberty businesses. Larger compute allocation with priority scheduling and higher revenue share.",
     features: [
       "4 vCPU dedicated allocation",
@@ -67,7 +67,7 @@ const TIERS = [
     price: 895,
     earn: 280,
     earnMax: 280,
-    color: "oklch(0.75 0.18 75)",
+    color: "oklch(0.55 0.18 75)",
     description: "For organizations hosting a full node. Maximum revenue share with dedicated hardware and direct peering.",
     features: [
       "Full node co-location",
@@ -111,7 +111,7 @@ export default function DataCenter() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: "oklch(0.11 0.012 250)" }}>
+    <div className="min-h-screen flex flex-col" style={{ background: "oklch(0.975 0.004 240)" }}>
       <Navbar />
 
       {/* Hero */}
@@ -127,7 +127,7 @@ export default function DataCenter() {
           </div>
           <h1 className="text-4xl font-bold mb-3" style={{ fontFamily: "'Syne', sans-serif", color: "oklch(0.95 0.008 240)" }}>
             West Liberty<br />
-            <span style={{ color: "oklch(0.65 0.18 145)" }}>Distributed Data Center</span>
+            <span style={{ color: "oklch(0.45 0.18 145)" }}>Distributed Data Center</span>
           </h1>
           <p className="text-sm max-w-xl mb-6" style={{ color: "oklch(0.60 0.010 250)" }}>
             The city's idle computing capacity earns money for residents and businesses.
@@ -136,12 +136,12 @@ export default function DataCenter() {
           </p>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-2xl">
             {[
-              { label: "Total Nodes", value: "5", color: "oklch(0.65 0.18 145)" },
-              { label: "Active Participants", value: "57", color: "oklch(0.70 0.18 240)" },
-              { label: "Avg Monthly Payout", value: "$187", color: "oklch(0.65 0.18 145)" },
-              { label: "Network Uptime", value: "99.97%", color: "oklch(0.75 0.18 75)" },
+              { label: "Total Nodes", value: "5", color: "oklch(0.45 0.18 145)" },
+              { label: "Active Participants", value: "57", color: "oklch(0.40 0.18 240)" },
+              { label: "Avg Monthly Payout", value: "$187", color: "oklch(0.45 0.18 145)" },
+              { label: "Network Uptime", value: "99.97%", color: "oklch(0.55 0.18 75)" },
             ].map((stat) => (
-              <div key={stat.label} className="p-3 rounded-lg" style={{ background: "oklch(0.14 0.014 250 / 80%)", border: "1px solid oklch(1 0 0 / 10%)" }}>
+              <div key={stat.label} className="p-3 rounded-lg" style={{ background: "oklch(0.14 0.014 250 / 80%)", border: "1px solid oklch(0 0 0 / 10%)" }}>
                 <div className="metric-value text-xl" style={{ color: stat.color }}>{stat.value}</div>
                 <div className="section-label mt-1">{stat.label}</div>
               </div>
@@ -151,35 +151,35 @@ export default function DataCenter() {
       </section>
 
       {/* Node map */}
-      <section className="py-12 border-y" style={{ background: "oklch(0.13 0.013 250)", borderColor: "oklch(1 0 0 / 8%)" }}>
+      <section className="py-12 border-y" style={{ background: "oklch(0.965 0.005 240)", borderColor: "oklch(0 0 0 / 8%)" }}>
         <div className="container">
           <div className="section-label mb-4">Network Nodes — West Liberty, IA</div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {NODES.map((node) => (
-              <div key={node.id} className="p-4 rounded-lg" style={{ background: "oklch(0.16 0.014 250)", border: "1px solid oklch(1 0 0 / 8%)" }}>
+              <div key={node.id} className="p-4 rounded-lg" style={{ background: "oklch(1 0 0)", border: "1px solid oklch(0 0 0 / 8%)" }}>
                 <div className="flex items-start justify-between mb-2">
                   <div>
-                    <div className="text-sm font-semibold" style={{ color: "oklch(0.88 0.008 240)" }}>{node.name}</div>
-                    <div className="flex items-center gap-1 text-[10px] mt-0.5" style={{ color: "oklch(0.45 0.008 250)" }}>
+                    <div className="text-sm font-semibold" style={{ color: "oklch(0.18 0.018 250)" }}>{node.name}</div>
+                    <div className="flex items-center gap-1 text-[10px] mt-0.5" style={{ color: "oklch(0.52 0.010 250)" }}>
                       <MapPin className="w-3 h-3" />
                       {node.location}
                     </div>
                   </div>
                   <span className={`status-dot ${node.status === "online" ? "green" : "amber"}`} />
                 </div>
-                <div className="text-[10px] font-mono mb-2" style={{ color: "oklch(0.50 0.010 250)" }}>{node.capacity}</div>
+                <div className="text-[10px] font-mono mb-2" style={{ color: "oklch(0.48 0.012 250)" }}>{node.capacity}</div>
                 <div className="mb-1">
                   <div className="flex justify-between text-[10px] mb-0.5">
-                    <span style={{ color: "oklch(0.45 0.008 250)" }}>Utilization</span>
-                    <span className="font-mono" style={{ color: node.utilization > 80 ? "oklch(0.75 0.18 75)" : "oklch(0.65 0.18 145)" }}>{node.utilization}%</span>
+                    <span style={{ color: "oklch(0.52 0.010 250)" }}>Utilization</span>
+                    <span className="font-mono" style={{ color: node.utilization > 80 ? "oklch(0.55 0.18 75)" : "oklch(0.45 0.18 145)" }}>{node.utilization}%</span>
                   </div>
-                  <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "oklch(1 0 0 / 8%)" }}>
-                    <div className="h-full rounded-full" style={{ width: `${node.utilization}%`, background: node.utilization > 80 ? "oklch(0.75 0.18 75)" : "oklch(0.58 0.20 240)" }} />
+                  <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "oklch(0 0 0 / 8%)" }}>
+                    <div className="h-full rounded-full" style={{ width: `${node.utilization}%`, background: node.utilization > 80 ? "oklch(0.55 0.18 75)" : "oklch(0.45 0.20 240)" }} />
                   </div>
                 </div>
                 <div className="flex justify-between text-[10px] mt-2">
-                  <span style={{ color: "oklch(0.45 0.008 250)" }}>Uptime: <span className="font-mono" style={{ color: "oklch(0.65 0.18 145)" }}>{node.uptime}</span></span>
-                  <span style={{ color: "oklch(0.45 0.008 250)" }}><span className="font-mono" style={{ color: "oklch(0.70 0.18 240)" }}>{node.participants}</span> participants</span>
+                  <span style={{ color: "oklch(0.52 0.010 250)" }}>Uptime: <span className="font-mono" style={{ color: "oklch(0.45 0.18 145)" }}>{node.uptime}</span></span>
+                  <span style={{ color: "oklch(0.52 0.010 250)" }}><span className="font-mono" style={{ color: "oklch(0.40 0.18 240)" }}>{node.participants}</span> participants</span>
                 </div>
               </div>
             ))}
@@ -192,7 +192,7 @@ export default function DataCenter() {
         <div className="container">
           <div className="text-center mb-10">
             <div className="section-label mb-3">Participation Tiers</div>
-            <h2 className="text-3xl font-bold" style={{ fontFamily: "'Syne', sans-serif", color: "oklch(0.92 0.008 240)" }}>
+            <h2 className="text-3xl font-bold" style={{ fontFamily: "'Syne', sans-serif", color: "oklch(0.18 0.018 250)" }}>
               Choose your capacity level
             </h2>
           </div>
@@ -202,14 +202,14 @@ export default function DataCenter() {
                 key={t.id}
                 className="rounded-xl overflow-hidden cursor-pointer transition-all"
                 style={{
-                  background: t.featured ? "oklch(0.18 0.016 250)" : "oklch(0.16 0.014 250)",
-                  border: `1px solid ${selectedTier === t.id ? t.color.replace(")", " / 40%)") : t.featured ? "oklch(0.58 0.20 240 / 20%)" : "oklch(1 0 0 / 8%)"}`,
+                  background: t.featured ? "oklch(0.18 0.016 250)" : "oklch(1 0 0)",
+                  border: `1px solid ${selectedTier === t.id ? t.color.replace(")", " / 40%)") : t.featured ? "oklch(0.45 0.20 240 / 15%)" : "oklch(0 0 0 / 8%)"}`,
                   boxShadow: selectedTier === t.id ? `0 0 20px ${t.color.replace(")", " / 15%)")}` : "none",
                 }}
                 onClick={() => setSelectedTier(t.id)}
               >
                 {t.featured && (
-                  <div className="px-4 py-1.5 text-center text-[10px] font-bold tracking-wider" style={{ background: "oklch(0.58 0.20 240 / 20%)", color: "oklch(0.70 0.18 240)" }}>
+                  <div className="px-4 py-1.5 text-center text-[10px] font-bold tracking-wider" style={{ background: "oklch(0.45 0.20 240 / 15%)", color: "oklch(0.40 0.18 240)" }}>
                     MOST POPULAR
                   </div>
                 )}
@@ -219,22 +219,22 @@ export default function DataCenter() {
                       <t.icon className="w-4 h-4" style={{ color: t.color }} />
                     </div>
                     <div>
-                      <div className="text-sm font-bold" style={{ color: "oklch(0.88 0.008 240)" }}>{t.name}</div>
-                      <div className="text-[10px]" style={{ color: "oklch(0.45 0.008 250)" }}>For {t.target}</div>
+                      <div className="text-sm font-bold" style={{ color: "oklch(0.18 0.018 250)" }}>{t.name}</div>
+                      <div className="text-[10px]" style={{ color: "oklch(0.52 0.010 250)" }}>For {t.target}</div>
                     </div>
                   </div>
-                  <p className="text-xs leading-relaxed mb-4" style={{ color: "oklch(0.50 0.010 250)" }}>{t.description}</p>
+                  <p className="text-xs leading-relaxed mb-4" style={{ color: "oklch(0.48 0.012 250)" }}>{t.description}</p>
                   <div className="flex items-end gap-1 mb-1">
                     <span className="metric-value text-2xl" style={{ color: t.color }}>${t.price}</span>
-                    <span className="text-xs mb-1" style={{ color: "oklch(0.45 0.008 250)" }}>/month</span>
+                    <span className="text-xs mb-1" style={{ color: "oklch(0.52 0.010 250)" }}>/month</span>
                   </div>
                   <div className="flex items-center gap-1.5 mb-4">
-                    <DollarSign className="w-3.5 h-3.5" style={{ color: "oklch(0.65 0.18 145)" }} />
-                    <span className="text-xs font-semibold" style={{ color: "oklch(0.65 0.18 145)" }}>Earn up to ${t.earn}/month</span>
+                    <DollarSign className="w-3.5 h-3.5" style={{ color: "oklch(0.45 0.18 145)" }} />
+                    <span className="text-xs font-semibold" style={{ color: "oklch(0.45 0.18 145)" }}>Earn up to ${t.earn}/month</span>
                   </div>
                   <div className="space-y-1.5">
                     {t.features.map((f, i) => (
-                      <div key={i} className="flex items-center gap-1.5 text-[10px]" style={{ color: "oklch(0.55 0.010 250)" }}>
+                      <div key={i} className="flex items-center gap-1.5 text-[10px]" style={{ color: "oklch(0.45 0.012 250)" }}>
                         <CheckCircle2 className="w-3 h-3 flex-shrink-0" style={{ color: t.color }} />
                         {f}
                       </div>
@@ -246,11 +246,11 @@ export default function DataCenter() {
           </div>
 
           {/* Calculator */}
-          <div className="max-w-2xl mx-auto p-6 rounded-xl" style={{ background: "oklch(0.16 0.014 250)", border: "1px solid oklch(1 0 0 / 10%)" }}>
+          <div className="max-w-2xl mx-auto p-6 rounded-xl" style={{ background: "oklch(1 0 0)", border: "1px solid oklch(0 0 0 / 10%)" }}>
             <div className="section-label mb-4">Earnings Calculator — {tier.name}</div>
             <div className="mb-4">
               <label className="text-xs mb-2 block" style={{ color: "oklch(0.60 0.010 250)" }}>
-                Lease duration: <span className="font-mono font-bold" style={{ color: "oklch(0.70 0.18 240)" }}>{leaseMonths} months</span>
+                Lease duration: <span className="font-mono font-bold" style={{ color: "oklch(0.40 0.18 240)" }}>{leaseMonths} months</span>
               </label>
               <input
                 type="range" min={1} max={36} value={leaseMonths}
@@ -259,16 +259,16 @@ export default function DataCenter() {
               />
             </div>
             <div className="grid grid-cols-3 gap-3 mb-4">
-              <div className="p-3 rounded-lg text-center" style={{ background: "oklch(0.13 0.013 250)" }}>
-                <div className="metric-value text-lg" style={{ color: "oklch(0.62 0.22 25)" }}>${totalPaid.toLocaleString()}</div>
+              <div className="p-3 rounded-lg text-center" style={{ background: "oklch(0.965 0.005 240)" }}>
+                <div className="metric-value text-lg" style={{ color: "oklch(0.50 0.22 25)" }}>${totalPaid.toLocaleString()}</div>
                 <div className="section-label mt-1">Total Paid</div>
               </div>
-              <div className="p-3 rounded-lg text-center" style={{ background: "oklch(0.13 0.013 250)" }}>
-                <div className="metric-value text-lg" style={{ color: "oklch(0.65 0.18 145)" }}>${totalEarned.toLocaleString()}</div>
+              <div className="p-3 rounded-lg text-center" style={{ background: "oklch(0.965 0.005 240)" }}>
+                <div className="metric-value text-lg" style={{ color: "oklch(0.45 0.18 145)" }}>${totalEarned.toLocaleString()}</div>
                 <div className="section-label mt-1">Total Earned</div>
               </div>
-              <div className="p-3 rounded-lg text-center" style={{ background: "oklch(0.13 0.013 250)" }}>
-                <div className="metric-value text-lg" style={{ color: netCost > 0 ? "oklch(0.75 0.18 75)" : "oklch(0.65 0.18 145)" }}>
+              <div className="p-3 rounded-lg text-center" style={{ background: "oklch(0.965 0.005 240)" }}>
+                <div className="metric-value text-lg" style={{ color: netCost > 0 ? "oklch(0.55 0.18 75)" : "oklch(0.45 0.18 145)" }}>
                   ${Math.abs(netCost).toLocaleString()}
                 </div>
                 <div className="section-label mt-1">{netCost > 0 ? "Net Cost" : "Net Profit"}</div>
@@ -286,20 +286,20 @@ export default function DataCenter() {
       </section>
 
       {/* Leaderboard */}
-      <section className="py-12 border-y" style={{ background: "oklch(0.13 0.013 250)", borderColor: "oklch(1 0 0 / 8%)" }}>
+      <section className="py-12 border-y" style={{ background: "oklch(0.965 0.005 240)", borderColor: "oklch(0 0 0 / 8%)" }}>
         <div className="container">
           <div className="section-label mb-4">Top Earners — West Liberty Participants</div>
-          <div className="rounded-lg overflow-hidden" style={{ border: "1px solid oklch(1 0 0 / 8%)" }}>
+          <div className="rounded-lg overflow-hidden" style={{ border: "1px solid oklch(0 0 0 / 8%)" }}>
             {LEADERBOARD.map((p, i) => (
-              <div key={i} className="flex items-center gap-4 px-4 py-3 border-b last:border-b-0" style={{ background: "oklch(0.16 0.014 250)", borderColor: "oklch(1 0 0 / 6%)" }}>
-                <span className="text-sm font-mono font-bold w-6 text-center" style={{ color: "oklch(0.45 0.008 250)" }}>#{i + 1}</span>
+              <div key={i} className="flex items-center gap-4 px-4 py-3 border-b last:border-b-0" style={{ background: "oklch(1 0 0)", borderColor: "oklch(0 0 0 / 6%)" }}>
+                <span className="text-sm font-mono font-bold w-6 text-center" style={{ color: "oklch(0.52 0.010 250)" }}>#{i + 1}</span>
                 <div className="flex-1">
-                  <div className="text-sm font-medium" style={{ color: "oklch(0.80 0.008 240)" }}>{p.name}</div>
-                  <div className="text-[10px]" style={{ color: "oklch(0.45 0.008 250)" }}>{p.type} · {p.tier} · {p.months} months</div>
+                  <div className="text-sm font-medium" style={{ color: "oklch(0.22 0.018 250)" }}>{p.name}</div>
+                  <div className="text-[10px]" style={{ color: "oklch(0.52 0.010 250)" }}>{p.type} · {p.tier} · {p.months} months</div>
                 </div>
                 <div className="text-right">
-                  <div className="text-sm font-mono font-bold" style={{ color: "oklch(0.65 0.18 145)" }}>${p.earned.toLocaleString()}</div>
-                  <div className="text-[10px]" style={{ color: "oklch(0.45 0.008 250)" }}>total earned</div>
+                  <div className="text-sm font-mono font-bold" style={{ color: "oklch(0.45 0.18 145)" }}>${p.earned.toLocaleString()}</div>
+                  <div className="text-[10px]" style={{ color: "oklch(0.52 0.010 250)" }}>total earned</div>
                 </div>
               </div>
             ))}
@@ -313,10 +313,10 @@ export default function DataCenter() {
           <div className="section-label mb-6">Who Uses West Liberty's Compute Capacity</div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {USE_CASES.map((uc) => (
-              <div key={uc.title} className="p-4 rounded-lg" style={{ background: "oklch(0.16 0.014 250)", border: "1px solid oklch(1 0 0 / 8%)" }}>
-                <uc.icon className="w-5 h-5 mb-3" style={{ color: "oklch(0.70 0.18 240)" }} />
-                <div className="text-sm font-semibold mb-1.5" style={{ color: "oklch(0.85 0.008 240)" }}>{uc.title}</div>
-                <p className="text-xs leading-relaxed" style={{ color: "oklch(0.50 0.010 250)" }}>{uc.desc}</p>
+              <div key={uc.title} className="p-4 rounded-lg" style={{ background: "oklch(1 0 0)", border: "1px solid oklch(0 0 0 / 8%)" }}>
+                <uc.icon className="w-5 h-5 mb-3" style={{ color: "oklch(0.40 0.18 240)" }} />
+                <div className="text-sm font-semibold mb-1.5" style={{ color: "oklch(0.25 0.018 250)" }}>{uc.title}</div>
+                <p className="text-xs leading-relaxed" style={{ color: "oklch(0.48 0.012 250)" }}>{uc.desc}</p>
               </div>
             ))}
           </div>

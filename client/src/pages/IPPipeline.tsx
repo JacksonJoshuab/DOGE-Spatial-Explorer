@@ -9,13 +9,13 @@ import { FileText, TrendingUp, DollarSign, CheckCircle2, Clock, ArrowRight, Shie
 import { toast } from "sonner";
 
 const PIPELINE_STAGES = [
-  { id: 1, name: "Invention Disclosure", count: 3, color: "oklch(0.65 0.18 145)" },
-  { id: 2, name: "Prior Art Search", count: 2, color: "oklch(0.70 0.18 240)" },
-  { id: 3, name: "Patent Drafting", count: 4, color: "oklch(0.75 0.18 75)" },
-  { id: 4, name: "USPTO Filed", count: 7, color: "oklch(0.58 0.20 240)" },
-  { id: 5, name: "Office Action", count: 2, color: "oklch(0.75 0.18 25)" },
-  { id: 6, name: "Granted", count: 0, color: "oklch(0.65 0.18 145)" },
-  { id: 7, name: "Licensed", count: 0, color: "oklch(0.65 0.18 145)" },
+  { id: 1, name: "Invention Disclosure", count: 3, color: "oklch(0.45 0.18 145)" },
+  { id: 2, name: "Prior Art Search", count: 2, color: "oklch(0.40 0.18 240)" },
+  { id: 3, name: "Patent Drafting", count: 4, color: "oklch(0.55 0.18 75)" },
+  { id: 4, name: "USPTO Filed", count: 7, color: "oklch(0.45 0.20 240)" },
+  { id: 5, name: "Office Action", count: 2, color: "oklch(0.50 0.22 25)" },
+  { id: 6, name: "Granted", count: 0, color: "oklch(0.45 0.18 145)" },
+  { id: 7, name: "Licensed", count: 0, color: "oklch(0.45 0.18 145)" },
 ];
 
 const PATENTS = [
@@ -45,11 +45,11 @@ const totalProjected = PATENTS.reduce((s, p) => s + p.projectedRevenue, 0);
 
 export default function IPPipeline() {
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: "oklch(0.11 0.012 250)" }}>
+    <div className="min-h-screen flex flex-col" style={{ background: "oklch(0.975 0.004 240)" }}>
       <Navbar />
 
       {/* Header */}
-      <section className="py-14 border-b" style={{ background: "oklch(0.13 0.013 250)", borderColor: "oklch(1 0 0 / 8%)" }}>
+      <section className="py-14 border-b" style={{ background: "oklch(0.965 0.005 240)", borderColor: "oklch(0 0 0 / 8%)" }}>
         <div className="container">
           <div className="flex items-center gap-2 mb-4">
             <span className="badge-info">12 PATENTS IN PIPELINE</span>
@@ -57,7 +57,7 @@ export default function IPPipeline() {
           </div>
           <h1 className="text-4xl font-bold mb-3" style={{ fontFamily: "'Syne', sans-serif", color: "oklch(0.95 0.008 240)" }}>
             IP Management<br />
-            <span style={{ color: "oklch(0.70 0.18 240)" }}>Pipeline</span>
+            <span style={{ color: "oklch(0.40 0.18 240)" }}>Pipeline</span>
           </h1>
           <p className="text-sm max-w-xl" style={{ color: "oklch(0.60 0.010 250)" }}>
             Track West Liberty's 12 patentable IoT devices from invention disclosure through USPTO filing,
@@ -67,18 +67,18 @@ export default function IPPipeline() {
       </section>
 
       {/* Pipeline stages */}
-      <section className="py-10 border-b" style={{ borderColor: "oklch(1 0 0 / 8%)" }}>
+      <section className="py-10 border-b" style={{ borderColor: "oklch(0 0 0 / 8%)" }}>
         <div className="container">
           <div className="section-label mb-4">Pipeline Overview</div>
           <div className="flex items-center gap-0 overflow-x-auto pb-2">
             {PIPELINE_STAGES.map((stage, i) => (
               <div key={stage.id} className="flex items-center flex-shrink-0">
-                <div className="flex flex-col items-center px-4 py-3 rounded-lg" style={{ background: "oklch(0.16 0.014 250)", border: `1px solid ${stage.color.replace(")", " / 20%)")}`, minWidth: 120 }}>
+                <div className="flex flex-col items-center px-4 py-3 rounded-lg" style={{ background: "oklch(1 0 0)", border: `1px solid ${stage.color.replace(")", " / 20%)")}`, minWidth: 120 }}>
                   <div className="metric-value text-2xl" style={{ color: stage.color }}>{stage.count}</div>
-                  <div className="text-[10px] text-center mt-1" style={{ color: "oklch(0.50 0.010 250)" }}>{stage.name}</div>
+                  <div className="text-[10px] text-center mt-1" style={{ color: "oklch(0.48 0.012 250)" }}>{stage.name}</div>
                 </div>
                 {i < PIPELINE_STAGES.length - 1 && (
-                  <ArrowRight className="w-4 h-4 mx-1 flex-shrink-0" style={{ color: "oklch(0.35 0.008 250)" }} />
+                  <ArrowRight className="w-4 h-4 mx-1 flex-shrink-0" style={{ color: "oklch(0.45 0.012 250)" }} />
                 )}
               </div>
             ))}
@@ -91,11 +91,11 @@ export default function IPPipeline() {
         <div className="container space-y-8">
           <div>
             <div className="section-label mb-4">Patent Portfolio</div>
-            <div className="rounded-lg overflow-hidden" style={{ border: "1px solid oklch(1 0 0 / 8%)" }}>
+            <div className="rounded-lg overflow-hidden" style={{ border: "1px solid oklch(0 0 0 / 8%)" }}>
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
                   <thead>
-                    <tr style={{ background: "oklch(0.16 0.014 250)", borderBottom: "1px solid oklch(1 0 0 / 8%)" }}>
+                    <tr style={{ background: "oklch(1 0 0)", borderBottom: "1px solid oklch(0 0 0 / 8%)" }}>
                       {["Application No.", "Device", "Stage", "Filed", "IPC Class", "Royalty Rate", "5-Yr Projected Revenue"].map((h) => (
                         <th key={h} className="px-3 py-2.5 text-left section-label">{h}</th>
                       ))}
@@ -103,23 +103,23 @@ export default function IPPipeline() {
                   </thead>
                   <tbody>
                     {PATENTS.map((p) => (
-                      <tr key={p.id} className="border-b" style={{ background: "oklch(0.14 0.014 250)", borderColor: "oklch(1 0 0 / 6%)" }}>
-                        <td className="px-3 py-2.5 font-mono text-[10px]" style={{ color: "oklch(0.55 0.010 250)" }}>{p.id}</td>
-                        <td className="px-3 py-2.5 font-medium" style={{ color: "oklch(0.80 0.008 240)" }}>{p.name}</td>
+                      <tr key={p.id} className="border-b" style={{ background: "oklch(0.985 0.003 240)", borderColor: "oklch(0 0 0 / 6%)" }}>
+                        <td className="px-3 py-2.5 font-mono text-[10px]" style={{ color: "oklch(0.45 0.012 250)" }}>{p.id}</td>
+                        <td className="px-3 py-2.5 font-medium" style={{ color: "oklch(0.22 0.018 250)" }}>{p.name}</td>
                         <td className="px-3 py-2.5">
                           <span className={`badge-${p.stage === "USPTO Filed" ? "info" : p.stage === "Patent Drafting" ? "warning" : "success"}`}>
                             {p.stage}
                           </span>
                         </td>
-                        <td className="px-3 py-2.5 font-mono text-[10px]" style={{ color: "oklch(0.50 0.010 250)" }}>{p.filed}</td>
-                        <td className="px-3 py-2.5 font-mono text-[10px]" style={{ color: "oklch(0.50 0.010 250)" }}>{p.class}</td>
-                        <td className="px-3 py-2.5 font-mono font-bold" style={{ color: "oklch(0.65 0.18 145)" }}>{p.royaltyRate}</td>
-                        <td className="px-3 py-2.5 font-mono font-bold" style={{ color: "oklch(0.70 0.18 240)" }}>${p.projectedRevenue.toLocaleString()}</td>
+                        <td className="px-3 py-2.5 font-mono text-[10px]" style={{ color: "oklch(0.48 0.012 250)" }}>{p.filed}</td>
+                        <td className="px-3 py-2.5 font-mono text-[10px]" style={{ color: "oklch(0.48 0.012 250)" }}>{p.class}</td>
+                        <td className="px-3 py-2.5 font-mono font-bold" style={{ color: "oklch(0.45 0.18 145)" }}>{p.royaltyRate}</td>
+                        <td className="px-3 py-2.5 font-mono font-bold" style={{ color: "oklch(0.40 0.18 240)" }}>${p.projectedRevenue.toLocaleString()}</td>
                       </tr>
                     ))}
-                    <tr style={{ background: "oklch(0.16 0.014 250)", borderTop: "1px solid oklch(1 0 0 / 12%)" }}>
+                    <tr style={{ background: "oklch(1 0 0)", borderTop: "1px solid oklch(1 0 0 / 12%)" }}>
                       <td colSpan={6} className="px-3 py-2.5 text-right text-xs font-bold" style={{ color: "oklch(0.65 0.010 250)" }}>Total 5-Year Projected Royalties</td>
-                      <td className="px-3 py-2.5 font-mono font-bold text-sm" style={{ color: "oklch(0.65 0.18 145)" }}>${totalProjected.toLocaleString()}</td>
+                      <td className="px-3 py-2.5 font-mono font-bold text-sm" style={{ color: "oklch(0.45 0.18 145)" }}>${totalProjected.toLocaleString()}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -132,23 +132,23 @@ export default function IPPipeline() {
             <div className="section-label mb-4">Licensing Prospects — Iowa Municipalities</div>
             <div className="space-y-3">
               {LICENSING_PROSPECTS.map((p) => (
-                <div key={p.city} className="flex items-center gap-4 p-4 rounded-lg" style={{ background: "oklch(0.16 0.014 250)", border: "1px solid oklch(1 0 0 / 8%)" }}>
+                <div key={p.city} className="flex items-center gap-4 p-4 rounded-lg" style={{ background: "oklch(1 0 0)", border: "1px solid oklch(0 0 0 / 8%)" }}>
                   <div className="flex-1">
-                    <div className="text-sm font-semibold" style={{ color: "oklch(0.85 0.008 240)" }}>{p.city}</div>
-                    <div className="text-[10px] mt-0.5" style={{ color: "oklch(0.45 0.008 250)" }}>
+                    <div className="text-sm font-semibold" style={{ color: "oklch(0.25 0.018 250)" }}>{p.city}</div>
+                    <div className="text-[10px] mt-0.5" style={{ color: "oklch(0.52 0.010 250)" }}>
                       Pop. {p.pop.toLocaleString()} · Devices: {p.devices.join(", ")}
                     </div>
                   </div>
                   <span className={`badge-${p.status === "LOI Signed" ? "success" : p.status === "In Negotiation" ? "warning" : "info"}`}>
                     {p.status}
                   </span>
-                  <div className="text-sm font-mono font-bold" style={{ color: "oklch(0.65 0.18 145)" }}>
+                  <div className="text-sm font-mono font-bold" style={{ color: "oklch(0.45 0.18 145)" }}>
                     ${p.value.toLocaleString()}
                   </div>
                   <button
                     onClick={() => toast.success(`Opening deal file for ${p.city}`)}
                     className="px-3 py-1.5 rounded text-xs font-semibold"
-                    style={{ background: "oklch(0.58 0.20 240 / 15%)", border: "1px solid oklch(0.58 0.20 240 / 25%)", color: "oklch(0.70 0.18 240)" }}
+                    style={{ background: "oklch(0.45 0.20 240 / 12%)", border: "1px solid oklch(0.58 0.20 240 / 25%)", color: "oklch(0.40 0.18 240)" }}
                   >
                     View Deal
                   </button>

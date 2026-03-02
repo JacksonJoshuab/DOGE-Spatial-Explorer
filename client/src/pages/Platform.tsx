@@ -11,7 +11,7 @@ const LAYERS = [
     id: "data",
     name: "Data Collection Layer",
     icon: Wifi,
-    color: "oklch(0.65 0.18 145)",
+    color: "oklch(0.45 0.18 145)",
     description: "12 patented IoT device families deployed across all city departments. LoRaWAN, NB-IoT, and LTE-M connectivity with edge preprocessing.",
     components: ["SmartValve Pro sensors", "DOGE Sentinel Nodes", "RoadSense pavement monitors", "ParkPulse occupancy nodes", "SCADA integration (water/sewer)", "BACnet building automation"],
   },
@@ -19,7 +19,7 @@ const LAYERS = [
     id: "transport",
     name: "Transport & Security Layer",
     icon: Lock,
-    color: "oklch(0.58 0.20 240)",
+    color: "oklch(0.45 0.20 240)",
     description: "End-to-end encrypted data transport with zero-trust network architecture. All device communications authenticated via X.509 certificates.",
     components: ["Azure IoT Hub", "TLS 1.3 encryption", "X.509 device certificates", "Azure Private Link", "VPN gateway (city network)", "FIPS 140-2 key management"],
   },
@@ -27,7 +27,7 @@ const LAYERS = [
     id: "platform",
     name: "Platform Core",
     icon: Cloud,
-    color: "oklch(0.70 0.18 240)",
+    color: "oklch(0.40 0.18 240)",
     description: "Azure-hosted platform with multi-tenant isolation, automatic scaling, and 99.99% SLA. West Liberty data never leaves Iowa-region Azure datacenters.",
     components: ["Azure Government Cloud", "Kubernetes orchestration", "PostgreSQL (Azure Managed)", "Redis cache layer", "Azure Service Bus", "Event-driven microservices"],
   },
@@ -35,7 +35,7 @@ const LAYERS = [
     id: "intelligence",
     name: "Intelligence Layer",
     icon: Cpu,
-    color: "oklch(0.75 0.18 75)",
+    color: "oklch(0.55 0.18 75)",
     description: "AI/ML models trained on municipal data for predictive maintenance, budget anomaly detection, and operational optimization.",
     components: ["Azure OpenAI (GPT-4o)", "Budget anomaly detection ML", "Predictive maintenance models", "Spatial analysis (Azure Maps)", "Natural language query interface", "Automated audit flagging"],
   },
@@ -43,7 +43,7 @@ const LAYERS = [
     id: "identity",
     name: "Identity & Access",
     icon: Shield,
-    color: "oklch(0.62 0.22 25)",
+    color: "oklch(0.50 0.22 25)",
     description: "Microsoft Entra ID integration with role-based access control mapped to municipal org chart. MFA enforced for all privileged access.",
     components: ["Microsoft Entra ID (Azure AD)", "RBAC — 8 municipal roles", "MFA enforced (FIDO2/TOTP)", "Conditional access policies", "Privileged Identity Management", "SCIF biometric integration"],
   },
@@ -51,7 +51,7 @@ const LAYERS = [
     id: "ui",
     name: "Presentation Layer",
     icon: Map,
-    color: "oklch(0.70 0.18 240)",
+    color: "oklch(0.40 0.18 240)",
     description: "Responsive web application with real-time dashboards, spatial mapping, and AI-assisted workflows. Accessible on any device.",
     components: ["React 19 + TypeScript", "Real-time WebSocket updates", "Google Maps / Azure Maps GIS", "Recharts analytics", "Mobile-responsive design", "WCAG 2.1 AA accessibility"],
   },
@@ -81,11 +81,11 @@ const COMPLIANCE = [
 
 export default function Platform() {
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: "oklch(0.11 0.012 250)" }}>
+    <div className="min-h-screen flex flex-col" style={{ background: "oklch(0.975 0.004 240)" }}>
       <Navbar />
 
       {/* Header */}
-      <section className="py-16 border-b" style={{ background: "oklch(0.13 0.013 250)", borderColor: "oklch(1 0 0 / 8%)" }}>
+      <section className="py-16 border-b" style={{ background: "oklch(0.965 0.005 240)", borderColor: "oklch(0 0 0 / 8%)" }}>
         <div className="container">
           <div className="flex items-center gap-2 mb-4">
             <span className="badge-info">AZURE GOVERNMENT</span>
@@ -112,7 +112,7 @@ export default function Platform() {
                 key={layer.id}
                 className="p-5 rounded-xl"
                 style={{
-                  background: "oklch(0.16 0.014 250)",
+                  background: "oklch(1 0 0)",
                   border: `1px solid ${layer.color.replace(")", " / 20%)")}`,
                   borderLeft: `3px solid ${layer.color}`,
                 }}
@@ -126,11 +126,11 @@ export default function Platform() {
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-1.5">
-                      <h3 className="text-sm font-bold" style={{ color: "oklch(0.88 0.008 240)", fontFamily: "'Syne', sans-serif" }}>
+                      <h3 className="text-sm font-bold" style={{ color: "oklch(0.18 0.018 250)", fontFamily: "'Syne', sans-serif" }}>
                         Layer {i + 1}: {layer.name}
                       </h3>
                     </div>
-                    <p className="text-xs leading-relaxed mb-3" style={{ color: "oklch(0.55 0.010 250)" }}>{layer.description}</p>
+                    <p className="text-xs leading-relaxed mb-3" style={{ color: "oklch(0.45 0.012 250)" }}>{layer.description}</p>
                     <div className="flex flex-wrap gap-2">
                       {layer.components.map((c) => (
                         <span
@@ -152,16 +152,16 @@ export default function Platform() {
       </section>
 
       {/* Integrations + Compliance */}
-      <section className="py-12 border-t" style={{ borderColor: "oklch(1 0 0 / 8%)" }}>
+      <section className="py-12 border-t" style={{ borderColor: "oklch(0 0 0 / 8%)" }}>
         <div className="container grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div>
             <div className="section-label mb-4">Certified Integrations</div>
             <div className="space-y-2">
               {INTEGRATIONS.map((int) => (
-                <div key={int.name} className="flex items-center gap-3 p-3 rounded-lg" style={{ background: "oklch(0.16 0.014 250)", border: "1px solid oklch(1 0 0 / 8%)" }}>
+                <div key={int.name} className="flex items-center gap-3 p-3 rounded-lg" style={{ background: "oklch(1 0 0)", border: "1px solid oklch(0 0 0 / 8%)" }}>
                   <div className="flex-1">
-                    <div className="text-sm font-medium" style={{ color: "oklch(0.80 0.008 240)" }}>{int.name}</div>
-                    <div className="text-[10px]" style={{ color: "oklch(0.45 0.008 250)" }}>{int.category}</div>
+                    <div className="text-sm font-medium" style={{ color: "oklch(0.22 0.018 250)" }}>{int.name}</div>
+                    <div className="text-[10px]" style={{ color: "oklch(0.52 0.010 250)" }}>{int.category}</div>
                   </div>
                   <span className={`badge-${int.status === "Certified" ? "success" : "warning"}`}>{int.status}</span>
                 </div>
@@ -172,8 +172,8 @@ export default function Platform() {
             <div className="section-label mb-4">Compliance & Certifications</div>
             <div className="space-y-2">
               {COMPLIANCE.map((c) => (
-                <div key={c} className="flex items-center gap-2.5 p-3 rounded-lg" style={{ background: "oklch(0.16 0.014 250)", border: "1px solid oklch(1 0 0 / 8%)" }}>
-                  <CheckCircle2 className="w-4 h-4 flex-shrink-0" style={{ color: "oklch(0.65 0.18 145)" }} />
+                <div key={c} className="flex items-center gap-2.5 p-3 rounded-lg" style={{ background: "oklch(1 0 0)", border: "1px solid oklch(0 0 0 / 8%)" }}>
+                  <CheckCircle2 className="w-4 h-4 flex-shrink-0" style={{ color: "oklch(0.45 0.18 145)" }} />
                   <span className="text-sm" style={{ color: "oklch(0.70 0.010 250)" }}>{c}</span>
                 </div>
               ))}

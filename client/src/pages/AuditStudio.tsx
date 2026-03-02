@@ -77,16 +77,16 @@ const FINDINGS = [
 ];
 
 const SEVERITY_CONFIG = {
-  critical: { color: "oklch(0.62 0.22 25)", label: "Critical", bg: "oklch(0.62 0.22 25 / 12%)" },
-  high: { color: "oklch(0.75 0.18 75)", label: "High", bg: "oklch(0.75 0.18 75 / 12%)" },
-  medium: { color: "oklch(0.70 0.18 240)", label: "Medium", bg: "oklch(0.70 0.18 240 / 12%)" },
-  low: { color: "oklch(0.65 0.18 145)", label: "Low", bg: "oklch(0.65 0.18 145 / 12%)" },
+  critical: { color: "oklch(0.50 0.22 25)", label: "Critical", bg: "oklch(0.50 0.22 25 / 10%)" },
+  high: { color: "oklch(0.55 0.18 75)", label: "High", bg: "oklch(0.55 0.18 75 / 10%)" },
+  medium: { color: "oklch(0.40 0.18 240)", label: "Medium", bg: "oklch(0.70 0.18 240 / 12%)" },
+  low: { color: "oklch(0.45 0.18 145)", label: "Low", bg: "oklch(0.45 0.18 145 / 10%)" },
 };
 
 const STATUS_CONFIG = {
-  open: { color: "oklch(0.62 0.22 25)", label: "Open" },
-  "in-progress": { color: "oklch(0.75 0.18 75)", label: "In Progress" },
-  resolved: { color: "oklch(0.65 0.18 145)", label: "Resolved" },
+  open: { color: "oklch(0.50 0.22 25)", label: "Open" },
+  "in-progress": { color: "oklch(0.55 0.18 75)", label: "In Progress" },
+  resolved: { color: "oklch(0.45 0.18 145)", label: "Resolved" },
 };
 
 export default function AuditStudio() {
@@ -107,15 +107,15 @@ export default function AuditStudio() {
         {/* Summary cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {[
-            { label: "Open Findings", value: openCount, icon: AlertTriangle, color: "oklch(0.62 0.22 25)" },
-            { label: "In Progress", value: inProgressCount, icon: Clock, color: "oklch(0.75 0.18 75)" },
-            { label: "Resolved", value: resolvedCount, icon: CheckCircle2, color: "oklch(0.65 0.18 145)" },
-            { label: "Financial Exposure", value: `$${totalExposure.toLocaleString()}`, icon: DollarSign, color: "oklch(0.62 0.22 25)" },
+            { label: "Open Findings", value: openCount, icon: AlertTriangle, color: "oklch(0.50 0.22 25)" },
+            { label: "In Progress", value: inProgressCount, icon: Clock, color: "oklch(0.55 0.18 75)" },
+            { label: "Resolved", value: resolvedCount, icon: CheckCircle2, color: "oklch(0.45 0.18 145)" },
+            { label: "Financial Exposure", value: `$${totalExposure.toLocaleString()}`, icon: DollarSign, color: "oklch(0.50 0.22 25)" },
           ].map((stat) => (
-            <div key={stat.label} className="p-4 rounded-lg" style={{ background: "oklch(0.16 0.014 250)", border: "1px solid oklch(1 0 0 / 8%)" }}>
+            <div key={stat.label} className="p-4 rounded-lg" style={{ background: "oklch(1 0 0)", border: "1px solid oklch(0 0 0 / 8%)" }}>
               <stat.icon className="w-4 h-4 mb-2" style={{ color: stat.color }} />
               <div className="metric-value text-2xl" style={{ color: stat.color }}>{stat.value}</div>
-              <div className="text-[10px] mt-0.5" style={{ color: "oklch(0.45 0.008 250)" }}>{stat.label}</div>
+              <div className="text-[10px] mt-0.5" style={{ color: "oklch(0.52 0.010 250)" }}>{stat.label}</div>
             </div>
           ))}
         </div>
@@ -128,9 +128,9 @@ export default function AuditStudio() {
               onClick={() => setFilter(f)}
               className="px-3 py-1 rounded text-xs font-medium capitalize transition-all"
               style={{
-                background: filter === f ? "oklch(0.58 0.20 240 / 20%)" : "oklch(0.16 0.014 250)",
-                border: `1px solid ${filter === f ? "oklch(0.58 0.20 240 / 40%)" : "oklch(1 0 0 / 8%)"}`,
-                color: filter === f ? "oklch(0.70 0.18 240)" : "oklch(0.55 0.010 250)",
+                background: filter === f ? "oklch(0.45 0.20 240 / 15%)" : "oklch(1 0 0)",
+                border: `1px solid ${filter === f ? "oklch(0.45 0.20 240 / 30%)" : "oklch(0 0 0 / 8%)"}`,
+                color: filter === f ? "oklch(0.40 0.18 240)" : "oklch(0.45 0.012 250)",
               }}
             >
               {f}
@@ -150,23 +150,23 @@ export default function AuditStudio() {
                   onClick={() => setSelected(finding.id === selected ? null : finding.id)}
                   className="w-full text-left p-4 rounded-lg transition-all"
                   style={{
-                    background: selected === finding.id ? "oklch(0.20 0.016 250)" : "oklch(0.16 0.014 250)",
-                    border: `1px solid ${selected === finding.id ? "oklch(0.58 0.20 240 / 30%)" : "oklch(1 0 0 / 8%)"}`,
+                    background: selected === finding.id ? "oklch(0.96 0.006 240)" : "oklch(1 0 0)",
+                    border: `1px solid ${selected === finding.id ? "oklch(0.45 0.20 240 / 20%)" : "oklch(0 0 0 / 8%)"}`,
                     borderLeft: `3px solid ${sev.color}`,
                   }}
                 >
                   <div className="flex items-start justify-between gap-2 mb-1.5">
-                    <div className="text-xs font-mono" style={{ color: "oklch(0.45 0.008 250)" }}>{finding.id}</div>
+                    <div className="text-xs font-mono" style={{ color: "oklch(0.52 0.010 250)" }}>{finding.id}</div>
                     <div className="flex gap-1.5 flex-shrink-0">
                       <span className="text-[9px] px-1.5 py-0.5 rounded font-bold uppercase" style={{ background: sev.bg, color: sev.color }}>{sev.label}</span>
                       <span className="text-[9px] px-1.5 py-0.5 rounded font-bold uppercase" style={{ background: `${sta.color.replace(")", " / 12%)")}`, color: sta.color }}>{sta.label}</span>
                     </div>
                   </div>
-                  <div className="text-sm font-semibold mb-1" style={{ color: "oklch(0.85 0.008 240)" }}>{finding.title}</div>
+                  <div className="text-sm font-semibold mb-1" style={{ color: "oklch(0.25 0.018 250)" }}>{finding.title}</div>
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px]" style={{ color: "oklch(0.45 0.008 250)" }}>{finding.dept}</span>
+                    <span className="text-[10px]" style={{ color: "oklch(0.52 0.010 250)" }}>{finding.dept}</span>
                     {finding.amount > 0 && (
-                      <span className="text-[10px] font-mono font-bold" style={{ color: "oklch(0.62 0.22 25)" }}>
+                      <span className="text-[10px] font-mono font-bold" style={{ color: "oklch(0.50 0.22 25)" }}>
                         ${finding.amount.toLocaleString()} exposure
                       </span>
                     )}
@@ -179,9 +179,9 @@ export default function AuditStudio() {
           {/* Detail panel */}
           <div>
             {selectedFinding ? (
-              <div className="p-5 rounded-xl sticky top-4" style={{ background: "oklch(0.16 0.014 250)", border: "1px solid oklch(1 0 0 / 8%)" }}>
-                <div className="text-xs font-mono mb-1" style={{ color: "oklch(0.45 0.008 250)" }}>{selectedFinding.id}</div>
-                <h3 className="text-base font-bold mb-3" style={{ color: "oklch(0.88 0.008 240)", fontFamily: "'Syne', sans-serif" }}>{selectedFinding.title}</h3>
+              <div className="p-5 rounded-xl sticky top-4" style={{ background: "oklch(1 0 0)", border: "1px solid oklch(0 0 0 / 8%)" }}>
+                <div className="text-xs font-mono mb-1" style={{ color: "oklch(0.52 0.010 250)" }}>{selectedFinding.id}</div>
+                <h3 className="text-base font-bold mb-3" style={{ color: "oklch(0.18 0.018 250)", fontFamily: "'Syne', sans-serif" }}>{selectedFinding.title}</h3>
                 <div className="space-y-4">
                   <div>
                     <div className="section-label mb-1.5">Finding</div>
@@ -194,28 +194,28 @@ export default function AuditStudio() {
                   <div className="flex gap-3">
                     <div>
                       <div className="section-label mb-0.5">Due Date</div>
-                      <div className="text-xs font-mono" style={{ color: "oklch(0.70 0.18 240)" }}>{selectedFinding.dueDate}</div>
+                      <div className="text-xs font-mono" style={{ color: "oklch(0.40 0.18 240)" }}>{selectedFinding.dueDate}</div>
                     </div>
                     {selectedFinding.amount > 0 && (
                       <div>
                         <div className="section-label mb-0.5">Financial Exposure</div>
-                        <div className="text-xs font-mono font-bold" style={{ color: "oklch(0.62 0.22 25)" }}>${selectedFinding.amount.toLocaleString()}</div>
+                        <div className="text-xs font-mono font-bold" style={{ color: "oklch(0.50 0.22 25)" }}>${selectedFinding.amount.toLocaleString()}</div>
                       </div>
                     )}
                   </div>
                   <button
                     onClick={() => toast.success(`Remediation plan opened for ${selectedFinding.id}`)}
                     className="w-full py-2 rounded text-xs font-semibold"
-                    style={{ background: "oklch(0.58 0.20 240)", color: "oklch(0.98 0.005 240)" }}
+                    style={{ background: "oklch(0.45 0.20 240)", color: "oklch(0.18 0.018 250)" }}
                   >
                     Open Remediation Plan
                   </button>
                 </div>
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center h-48 rounded-xl" style={{ background: "oklch(0.16 0.014 250)", border: "1px solid oklch(1 0 0 / 8%)" }}>
-                <Shield className="w-8 h-8 mb-2" style={{ color: "oklch(0.35 0.008 250)" }} />
-                <div className="text-xs" style={{ color: "oklch(0.40 0.008 250)" }}>Select a finding to view details</div>
+              <div className="flex flex-col items-center justify-center h-48 rounded-xl" style={{ background: "oklch(1 0 0)", border: "1px solid oklch(0 0 0 / 8%)" }}>
+                <Shield className="w-8 h-8 mb-2" style={{ color: "oklch(0.45 0.012 250)" }} />
+                <div className="text-xs" style={{ color: "oklch(0.48 0.012 250)" }}>Select a finding to view details</div>
               </div>
             )}
           </div>

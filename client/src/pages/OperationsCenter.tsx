@@ -21,17 +21,17 @@ const WORK_ORDERS = [
 ];
 
 const PRIORITY_CONFIG = {
-  emergency: { color: "oklch(0.62 0.22 25)", label: "Emergency" },
-  high: { color: "oklch(0.75 0.18 75)", label: "High" },
-  medium: { color: "oklch(0.70 0.18 240)", label: "Medium" },
-  low: { color: "oklch(0.65 0.18 145)", label: "Low" },
+  emergency: { color: "oklch(0.50 0.22 25)", label: "Emergency" },
+  high: { color: "oklch(0.55 0.18 75)", label: "High" },
+  medium: { color: "oklch(0.40 0.18 240)", label: "Medium" },
+  low: { color: "oklch(0.45 0.18 145)", label: "Low" },
 };
 
 const STATUS_CONFIG = {
-  "in-progress": { color: "oklch(0.75 0.18 75)", label: "In Progress" },
-  open: { color: "oklch(0.62 0.22 25)", label: "Open" },
-  scheduled: { color: "oklch(0.70 0.18 240)", label: "Scheduled" },
-  complete: { color: "oklch(0.65 0.18 145)", label: "Complete" },
+  "in-progress": { color: "oklch(0.55 0.18 75)", label: "In Progress" },
+  open: { color: "oklch(0.50 0.22 25)", label: "Open" },
+  scheduled: { color: "oklch(0.40 0.18 240)", label: "Scheduled" },
+  complete: { color: "oklch(0.45 0.18 145)", label: "Complete" },
 };
 
 export default function OperationsCenter() {
@@ -49,15 +49,15 @@ export default function OperationsCenter() {
         {/* Summary */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {[
-            { label: "Emergency Orders", value: emergencyCount, color: "oklch(0.62 0.22 25)", icon: AlertTriangle },
-            { label: "Open (Unassigned)", value: openCount, color: "oklch(0.75 0.18 75)", icon: Clock },
-            { label: "IoT-Triggered Alerts", value: iotAlerts, color: "oklch(0.70 0.18 240)", icon: Wrench },
-            { label: "Completed (30d)", value: WORK_ORDERS.filter(w => w.status === "complete").length, color: "oklch(0.65 0.18 145)", icon: CheckCircle2 },
+            { label: "Emergency Orders", value: emergencyCount, color: "oklch(0.50 0.22 25)", icon: AlertTriangle },
+            { label: "Open (Unassigned)", value: openCount, color: "oklch(0.55 0.18 75)", icon: Clock },
+            { label: "IoT-Triggered Alerts", value: iotAlerts, color: "oklch(0.40 0.18 240)", icon: Wrench },
+            { label: "Completed (30d)", value: WORK_ORDERS.filter(w => w.status === "complete").length, color: "oklch(0.45 0.18 145)", icon: CheckCircle2 },
           ].map((stat) => (
-            <div key={stat.label} className="p-4 rounded-lg" style={{ background: "oklch(0.16 0.014 250)", border: "1px solid oklch(1 0 0 / 8%)" }}>
+            <div key={stat.label} className="p-4 rounded-lg" style={{ background: "oklch(1 0 0)", border: "1px solid oklch(0 0 0 / 8%)" }}>
               <stat.icon className="w-4 h-4 mb-2" style={{ color: stat.color }} />
               <div className="metric-value text-2xl" style={{ color: stat.color }}>{stat.value}</div>
-              <div className="text-[10px] mt-0.5" style={{ color: "oklch(0.45 0.008 250)" }}>{stat.label}</div>
+              <div className="text-[10px] mt-0.5" style={{ color: "oklch(0.52 0.010 250)" }}>{stat.label}</div>
             </div>
           ))}
         </div>
@@ -70,9 +70,9 @@ export default function OperationsCenter() {
               onClick={() => setFilter(f)}
               className="px-3 py-1 rounded text-xs font-medium capitalize transition-all"
               style={{
-                background: filter === f ? "oklch(0.58 0.20 240 / 20%)" : "oklch(0.16 0.014 250)",
-                border: `1px solid ${filter === f ? "oklch(0.58 0.20 240 / 40%)" : "oklch(1 0 0 / 8%)"}`,
-                color: filter === f ? "oklch(0.70 0.18 240)" : "oklch(0.55 0.010 250)",
+                background: filter === f ? "oklch(0.45 0.20 240 / 15%)" : "oklch(1 0 0)",
+                border: `1px solid ${filter === f ? "oklch(0.45 0.20 240 / 30%)" : "oklch(0 0 0 / 8%)"}`,
+                color: filter === f ? "oklch(0.40 0.18 240)" : "oklch(0.45 0.012 250)",
               }}
             >
               {f}
@@ -81,18 +81,18 @@ export default function OperationsCenter() {
           <button
             onClick={() => toast.success("New work order form opened")}
             className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-semibold"
-            style={{ background: "oklch(0.58 0.20 240)", color: "oklch(0.98 0.005 240)" }}
+            style={{ background: "oklch(0.45 0.20 240)", color: "oklch(0.18 0.018 250)" }}
           >
             <Plus className="w-3.5 h-3.5" /> New Work Order
           </button>
         </div>
 
         {/* Work orders table */}
-        <div className="rounded-xl overflow-hidden" style={{ border: "1px solid oklch(1 0 0 / 8%)" }}>
+        <div className="rounded-xl overflow-hidden" style={{ border: "1px solid oklch(0 0 0 / 8%)" }}>
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr style={{ background: "oklch(0.16 0.014 250)", borderBottom: "1px solid oklch(1 0 0 / 8%)" }}>
+                <tr style={{ background: "oklch(1 0 0)", borderBottom: "1px solid oklch(0 0 0 / 8%)" }}>
                   {["ID", "Title", "Department", "Priority", "Status", "Assignee", "IoT Alert", ""].map((h) => (
                     <th key={h} className="px-3 py-2.5 text-left section-label">{h}</th>
                   ))}
@@ -103,15 +103,15 @@ export default function OperationsCenter() {
                   const pri = PRIORITY_CONFIG[wo.priority as keyof typeof PRIORITY_CONFIG];
                   const sta = STATUS_CONFIG[wo.status as keyof typeof STATUS_CONFIG];
                   return (
-                    <tr key={wo.id} className="border-b" style={{ background: "oklch(0.14 0.014 250)", borderColor: "oklch(1 0 0 / 6%)" }}>
-                      <td className="px-3 py-2.5 font-mono text-[10px]" style={{ color: "oklch(0.50 0.010 250)" }}>{wo.id}</td>
+                    <tr key={wo.id} className="border-b" style={{ background: "oklch(0.985 0.003 240)", borderColor: "oklch(0 0 0 / 6%)" }}>
+                      <td className="px-3 py-2.5 font-mono text-[10px]" style={{ color: "oklch(0.48 0.012 250)" }}>{wo.id}</td>
                       <td className="px-3 py-2.5">
-                        <div className="font-medium text-xs" style={{ color: "oklch(0.80 0.008 240)" }}>{wo.title}</div>
-                        <div className="flex items-center gap-1 mt-0.5 text-[10px]" style={{ color: "oklch(0.40 0.008 250)" }}>
+                        <div className="font-medium text-xs" style={{ color: "oklch(0.22 0.018 250)" }}>{wo.title}</div>
+                        <div className="flex items-center gap-1 mt-0.5 text-[10px]" style={{ color: "oklch(0.48 0.012 250)" }}>
                           <MapPin className="w-2.5 h-2.5" />{wo.location}
                         </div>
                       </td>
-                      <td className="px-3 py-2.5 text-[10px]" style={{ color: "oklch(0.50 0.010 250)" }}>{wo.dept}</td>
+                      <td className="px-3 py-2.5 text-[10px]" style={{ color: "oklch(0.48 0.012 250)" }}>{wo.dept}</td>
                       <td className="px-3 py-2.5">
                         <span className="text-[9px] px-1.5 py-0.5 rounded font-bold uppercase" style={{ background: `${pri.color.replace(")", " / 12%)")}`, color: pri.color }}>{pri.label}</span>
                       </td>
@@ -119,13 +119,13 @@ export default function OperationsCenter() {
                         <span className="text-[9px] px-1.5 py-0.5 rounded font-bold uppercase" style={{ background: `${sta.color.replace(")", " / 12%)")}`, color: sta.color }}>{sta.label}</span>
                       </td>
                       <td className="px-3 py-2.5">
-                        <div className="flex items-center gap-1 text-[10px]" style={{ color: wo.assignee === "Unassigned" ? "oklch(0.62 0.22 25)" : "oklch(0.55 0.010 250)" }}>
+                        <div className="flex items-center gap-1 text-[10px]" style={{ color: wo.assignee === "Unassigned" ? "oklch(0.50 0.22 25)" : "oklch(0.45 0.012 250)" }}>
                           <User className="w-2.5 h-2.5" />{wo.assignee}
                         </div>
                       </td>
                       <td className="px-3 py-2.5 max-w-[180px]">
                         {wo.iotAlert && (
-                          <div className="text-[9px] leading-tight" style={{ color: "oklch(0.70 0.18 240)" }}>
+                          <div className="text-[9px] leading-tight" style={{ color: "oklch(0.40 0.18 240)" }}>
                             {wo.iotAlert}
                           </div>
                         )}
@@ -134,7 +134,7 @@ export default function OperationsCenter() {
                         <button
                           onClick={() => toast.success(`Opening work order ${wo.id}`)}
                           className="px-2 py-1 rounded text-[10px] font-semibold"
-                          style={{ background: "oklch(0.58 0.20 240 / 15%)", color: "oklch(0.70 0.18 240)", border: "1px solid oklch(0.58 0.20 240 / 25%)" }}
+                          style={{ background: "oklch(0.45 0.20 240 / 12%)", color: "oklch(0.40 0.18 240)", border: "1px solid oklch(0.58 0.20 240 / 25%)" }}
                         >
                           View
                         </button>

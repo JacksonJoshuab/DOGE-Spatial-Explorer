@@ -26,18 +26,18 @@ const IOT_ASSETS = [
 ];
 
 const LAYER_CONFIG = {
-  water: { label: "Water Utility", icon: Droplets, color: "oklch(0.58 0.20 240)" },
-  sewer: { label: "Sewer/Wastewater", icon: Wrench, color: "oklch(0.75 0.18 75)" },
-  roads: { label: "Public Works", icon: Wrench, color: "oklch(0.65 0.18 145)" },
-  parks: { label: "Parks & Rec", icon: TreePine, color: "oklch(0.65 0.18 145)" },
-  le: { label: "Law Enforcement", icon: Shield, color: "oklch(0.62 0.22 25)" },
+  water: { label: "Water Utility", icon: Droplets, color: "oklch(0.45 0.20 240)" },
+  sewer: { label: "Sewer/Wastewater", icon: Wrench, color: "oklch(0.55 0.18 75)" },
+  roads: { label: "Public Works", icon: Wrench, color: "oklch(0.45 0.18 145)" },
+  parks: { label: "Parks & Rec", icon: TreePine, color: "oklch(0.45 0.18 145)" },
+  le: { label: "Law Enforcement", icon: Shield, color: "oklch(0.50 0.22 25)" },
 };
 
 const STATUS_COLOR = {
-  online: "oklch(0.65 0.18 145)",
-  warning: "oklch(0.75 0.18 75)",
-  alert: "oklch(0.62 0.22 25)",
-  offline: "oklch(0.45 0.008 250)",
+  online: "oklch(0.45 0.18 145)",
+  warning: "oklch(0.55 0.18 75)",
+  alert: "oklch(0.50 0.22 25)",
+  offline: "oklch(0.52 0.010 250)",
 };
 
 export default function SpatialMap() {
@@ -99,35 +99,35 @@ export default function SpatialMap() {
     <DashboardLayout title="Spatial Map — West Liberty, IA">
       <div className="flex flex-col h-full" style={{ minHeight: "calc(100vh - 120px)" }}>
         {/* Status bar */}
-        <div className="flex items-center gap-4 px-6 py-2.5 border-b text-xs" style={{ background: "oklch(0.13 0.013 250)", borderColor: "oklch(1 0 0 / 8%)" }}>
+        <div className="flex items-center gap-4 px-6 py-2.5 border-b text-xs" style={{ background: "oklch(0.965 0.005 240)", borderColor: "oklch(0 0 0 / 8%)" }}>
           <div className="flex items-center gap-1.5">
-            <Wifi className="w-3 h-3" style={{ color: "oklch(0.65 0.18 145)" }} />
-            <span style={{ color: "oklch(0.65 0.18 145)" }}>{visibleAssets.filter(a => a.status === "online").length} Online</span>
+            <Wifi className="w-3 h-3" style={{ color: "oklch(0.45 0.18 145)" }} />
+            <span style={{ color: "oklch(0.45 0.18 145)" }}>{visibleAssets.filter(a => a.status === "online").length} Online</span>
           </div>
           {alertCount > 0 && (
             <div className="flex items-center gap-1.5">
               <span className="status-dot red" />
-              <span style={{ color: "oklch(0.62 0.22 25)" }}>{alertCount} Alert{alertCount > 1 ? "s" : ""}</span>
+              <span style={{ color: "oklch(0.50 0.22 25)" }}>{alertCount} Alert{alertCount > 1 ? "s" : ""}</span>
             </div>
           )}
           {warningCount > 0 && (
             <div className="flex items-center gap-1.5">
               <span className="status-dot amber" />
-              <span style={{ color: "oklch(0.75 0.18 75)" }}>{warningCount} Warning{warningCount > 1 ? "s" : ""}</span>
+              <span style={{ color: "oklch(0.55 0.18 75)" }}>{warningCount} Warning{warningCount > 1 ? "s" : ""}</span>
             </div>
           )}
           {offlineCount > 0 && (
             <div className="flex items-center gap-1.5">
-              <span className="status-dot" style={{ background: "oklch(0.45 0.008 250)" }} />
-              <span style={{ color: "oklch(0.45 0.008 250)" }}>{offlineCount} Offline</span>
+              <span className="status-dot" style={{ background: "oklch(0.52 0.010 250)" }} />
+              <span style={{ color: "oklch(0.52 0.010 250)" }}>{offlineCount} Offline</span>
             </div>
           )}
-          <span className="ml-auto font-mono" style={{ color: "oklch(0.40 0.008 250)" }}>West Liberty, IA · 41.5703°N 91.2629°W</span>
+          <span className="ml-auto font-mono" style={{ color: "oklch(0.48 0.012 250)" }}>West Liberty, IA · 41.5703°N 91.2629°W</span>
         </div>
 
         <div className="flex flex-1 overflow-hidden">
           {/* Layer controls */}
-          <div className="w-48 flex-shrink-0 border-r overflow-y-auto p-3 space-y-4" style={{ background: "oklch(0.13 0.013 250)", borderColor: "oklch(1 0 0 / 8%)" }}>
+          <div className="w-48 flex-shrink-0 border-r overflow-y-auto p-3 space-y-4" style={{ background: "oklch(0.965 0.005 240)", borderColor: "oklch(0 0 0 / 8%)" }}>
             <div className="section-label flex items-center gap-1.5">
               <Layers className="w-3 h-3" /> Layers
             </div>
@@ -142,13 +142,13 @@ export default function SpatialMap() {
                   className="w-full flex items-center gap-2 p-2.5 rounded text-left transition-all"
                   style={{
                     background: active ? `${cfg.color.replace(")", " / 10%)")}` : "transparent",
-                    border: `1px solid ${active ? cfg.color.replace(")", " / 25%)") : "oklch(1 0 0 / 8%)"}`,
+                    border: `1px solid ${active ? cfg.color.replace(")", " / 25%)") : "oklch(0 0 0 / 8%)"}`,
                   }}
                 >
-                  {active ? <Eye className="w-3 h-3 flex-shrink-0" style={{ color: cfg.color }} /> : <EyeOff className="w-3 h-3 flex-shrink-0" style={{ color: "oklch(0.35 0.008 250)" }} />}
+                  {active ? <Eye className="w-3 h-3 flex-shrink-0" style={{ color: cfg.color }} /> : <EyeOff className="w-3 h-3 flex-shrink-0" style={{ color: "oklch(0.45 0.012 250)" }} />}
                   <div className="flex-1 min-w-0">
-                    <div className="text-[11px] font-medium truncate" style={{ color: active ? "oklch(0.80 0.008 240)" : "oklch(0.40 0.008 250)" }}>{cfg.label}</div>
-                    <div className="text-[9px]" style={{ color: "oklch(0.40 0.008 250)" }}>{layerAssets.length} nodes{layerAlerts > 0 ? ` · ${layerAlerts} alert` : ""}</div>
+                    <div className="text-[11px] font-medium truncate" style={{ color: active ? "oklch(0.22 0.018 250)" : "oklch(0.48 0.012 250)" }}>{cfg.label}</div>
+                    <div className="text-[9px]" style={{ color: "oklch(0.48 0.012 250)" }}>{layerAssets.length} nodes{layerAlerts > 0 ? ` · ${layerAlerts} alert` : ""}</div>
                   </div>
                 </button>
               );
@@ -159,9 +159,9 @@ export default function SpatialMap() {
               <div className="section-label mb-2">Active Alerts</div>
               <div className="space-y-1.5">
                 {IOT_ASSETS.filter(a => (a.status === "alert" || a.status === "warning" || a.status === "offline") && activeLayers.has(a.type)).map(a => (
-                  <div key={a.id} className="p-2 rounded text-[10px]" style={{ background: "oklch(0.16 0.014 250)", border: `1px solid ${STATUS_COLOR[a.status as keyof typeof STATUS_COLOR].replace(")", " / 20%)")}` }}>
+                  <div key={a.id} className="p-2 rounded text-[10px]" style={{ background: "oklch(1 0 0)", border: `1px solid ${STATUS_COLOR[a.status as keyof typeof STATUS_COLOR].replace(")", " / 20%)")}` }}>
                     <div className="font-mono font-bold" style={{ color: STATUS_COLOR[a.status as keyof typeof STATUS_COLOR] }}>{a.id}</div>
-                    <div style={{ color: "oklch(0.50 0.010 250)" }}>{a.alert}</div>
+                    <div style={{ color: "oklch(0.48 0.012 250)" }}>{a.alert}</div>
                   </div>
                 ))}
               </div>

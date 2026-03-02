@@ -12,7 +12,7 @@ const PHASES = [
     title: "Foundation",
     period: "Q1–Q2 2024",
     status: "complete",
-    color: "oklch(0.65 0.18 145)",
+    color: "oklch(0.45 0.18 145)",
     items: [
       { name: "Executive Dashboard (budget vs. actual)", done: true },
       { name: "9-department data model", done: true },
@@ -26,7 +26,7 @@ const PHASES = [
     title: "IoT & Operations",
     period: "Q3–Q4 2024",
     status: "complete",
-    color: "oklch(0.65 0.18 145)",
+    color: "oklch(0.45 0.18 145)",
     items: [
       { name: "SmartValve Pro deployment (12 nodes)", done: true },
       { name: "AquaSentinel water quality network", done: true },
@@ -40,7 +40,7 @@ const PHASES = [
     title: "Compliance & Security",
     period: "Q1 2025",
     status: "complete",
-    color: "oklch(0.65 0.18 145)",
+    color: "oklch(0.45 0.18 145)",
     items: [
       { name: "Records Management (Iowa Code §22)", done: true },
       { name: "Blockchain audit trail", done: true },
@@ -54,7 +54,7 @@ const PHASES = [
     title: "IP & Capital Markets",
     period: "Q2 2025",
     status: "active",
-    color: "oklch(0.70 0.18 240)",
+    color: "oklch(0.40 0.18 240)",
     items: [
       { name: "IoT Hardware Marketplace launch", done: true },
       { name: "USPTO patent filing (7 of 12)", done: true },
@@ -68,7 +68,7 @@ const PHASES = [
     title: "AI & Predictive",
     period: "Q3–Q4 2025",
     status: "planned",
-    color: "oklch(0.75 0.18 75)",
+    color: "oklch(0.55 0.18 75)",
     items: [
       { name: "Predictive maintenance ML models", done: false },
       { name: "Budget anomaly detection AI", done: false },
@@ -82,7 +82,7 @@ const PHASES = [
     title: "Multi-City Network",
     period: "Q1 2026",
     status: "planned",
-    color: "oklch(0.62 0.22 25)",
+    color: "oklch(0.50 0.22 25)",
     items: [
       { name: "Iowa municipal network (50+ cities)", done: false },
       { name: "Cross-city IP licensing exchange", done: false },
@@ -95,10 +95,10 @@ const PHASES = [
 
 export default function Roadmap() {
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: "oklch(0.11 0.012 250)" }}>
+    <div className="min-h-screen flex flex-col" style={{ background: "oklch(0.975 0.004 240)" }}>
       <Navbar />
 
-      <section className="py-16 border-b" style={{ background: "oklch(0.13 0.013 250)", borderColor: "oklch(1 0 0 / 8%)" }}>
+      <section className="py-16 border-b" style={{ background: "oklch(0.965 0.005 240)", borderColor: "oklch(0 0 0 / 8%)" }}>
         <div className="container">
           <div className="section-label mb-3">Product Roadmap</div>
           <h1 className="text-4xl font-bold mb-3" style={{ fontFamily: "'Syne', sans-serif", color: "oklch(0.95 0.008 240)" }}>
@@ -115,7 +115,7 @@ export default function Roadmap() {
         <div className="container">
           <div className="relative">
             {/* Timeline line */}
-            <div className="absolute left-4 top-0 bottom-0 w-px" style={{ background: "oklch(1 0 0 / 10%)" }} />
+            <div className="absolute left-4 top-0 bottom-0 w-px" style={{ background: "oklch(0 0 0 / 10%)" }} />
 
             <div className="space-y-8 pl-12">
               {PHASES.map((phase) => (
@@ -138,11 +138,11 @@ export default function Roadmap() {
                     )}
                   </div>
 
-                  <div className="p-5 rounded-xl" style={{ background: "oklch(0.16 0.014 250)", border: `1px solid ${phase.color.replace(")", " / 20%)")}` }}>
+                  <div className="p-5 rounded-xl" style={{ background: "oklch(1 0 0)", border: `1px solid ${phase.color.replace(")", " / 20%)")}` }}>
                     <div className="flex items-start justify-between mb-3">
                       <div>
                         <div className="text-[10px] font-mono mb-0.5" style={{ color: phase.color }}>{phase.phase} · {phase.period}</div>
-                        <h3 className="text-lg font-bold" style={{ color: "oklch(0.88 0.008 240)", fontFamily: "'Syne', sans-serif" }}>{phase.title}</h3>
+                        <h3 className="text-lg font-bold" style={{ color: "oklch(0.18 0.018 250)", fontFamily: "'Syne', sans-serif" }}>{phase.title}</h3>
                       </div>
                       <span className={`badge-${phase.status === "complete" ? "success" : phase.status === "active" ? "info" : "warning"}`}>
                         {phase.status === "complete" ? "Complete" : phase.status === "active" ? "In Progress" : "Planned"}
@@ -150,8 +150,8 @@ export default function Roadmap() {
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                       {phase.items.map((item) => (
-                        <div key={item.name} className="flex items-center gap-2 text-xs" style={{ color: item.done ? "oklch(0.65 0.010 250)" : "oklch(0.45 0.008 250)" }}>
-                          <CheckCircle2 className="w-3 h-3 flex-shrink-0" style={{ color: item.done ? phase.color : "oklch(0.35 0.008 250)" }} />
+                        <div key={item.name} className="flex items-center gap-2 text-xs" style={{ color: item.done ? "oklch(0.65 0.010 250)" : "oklch(0.52 0.010 250)" }}>
+                          <CheckCircle2 className="w-3 h-3 flex-shrink-0" style={{ color: item.done ? phase.color : "oklch(0.45 0.012 250)" }} />
                           {item.name}
                         </div>
                       ))}

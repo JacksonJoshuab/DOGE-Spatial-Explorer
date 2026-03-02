@@ -1,7 +1,7 @@
 /**
- * Navbar — Civic Intelligence Dark
+ * Navbar — Civic Intelligence Light
  * Sticky top nav with platform branding, main nav links, and dashboard CTA
- * Dark slate bg with cold blue accents
+ * White background with institutional blue accents
  */
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
@@ -39,8 +39,8 @@ export default function Navbar() {
     <header
       className="sticky top-0 z-50 border-b"
       style={{
-        background: "oklch(0.11 0.012 250 / 96%)",
-        borderColor: "oklch(1 0 0 / 8%)",
+        background: "oklch(1 0 0 / 96%)",
+        borderColor: "oklch(0 0 0 / 8%)",
         backdropFilter: "blur(12px)",
       }}
     >
@@ -49,18 +49,18 @@ export default function Navbar() {
         <Link href="/" className="flex items-center gap-2.5 no-underline flex-shrink-0 group">
           <div
             className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0"
-            style={{ background: "oklch(0.58 0.20 240 / 20%)", border: "1px solid oklch(0.58 0.20 240 / 30%)" }}
+            style={{ background: "oklch(0.45 0.20 240 / 12%)", border: "1px solid oklch(0.45 0.20 240 / 25%)" }}
           >
-            <Building2 className="w-3.5 h-3.5" style={{ color: "oklch(0.70 0.18 240)" }} />
+            <Building2 className="w-3.5 h-3.5" style={{ color: "oklch(0.40 0.18 240)" }} />
           </div>
           <div className="hidden sm:block">
             <div
               className="text-sm font-bold leading-none tracking-tight"
-              style={{ fontFamily: "'Syne', sans-serif", color: "oklch(0.92 0.008 240)" }}
+              style={{ fontFamily: "'Syne', sans-serif", color: "oklch(0.18 0.018 250)" }}
             >
               DOGE & Associates
             </div>
-            <div className="text-[9px] uppercase tracking-[0.18em] mt-0.5" style={{ color: "oklch(0.55 0.012 250)" }}>
+            <div className="text-[9px] uppercase tracking-[0.18em] mt-0.5" style={{ color: "oklch(0.50 0.012 250)" }}>
               Municipal Platform
             </div>
           </div>
@@ -74,8 +74,8 @@ export default function Navbar() {
               href={link.href}
               className="px-3 py-1.5 text-[13px] rounded transition-all no-underline"
               style={{
-                color: location === link.href ? "oklch(0.70 0.18 240)" : "oklch(0.60 0.010 250)",
-                background: location === link.href ? "oklch(0.58 0.20 240 / 12%)" : "transparent",
+                color: location === link.href ? "oklch(0.38 0.18 240)" : "oklch(0.35 0.014 250)",
+                background: location === link.href ? "oklch(0.45 0.20 240 / 10%)" : "transparent",
                 fontWeight: location === link.href ? "500" : "400",
               }}
             >
@@ -92,9 +92,9 @@ export default function Navbar() {
               onClick={() => setDashOpen(!dashOpen)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded text-[13px] font-medium transition-all"
               style={{
-                background: isDashboard ? "oklch(0.58 0.20 240 / 18%)" : "oklch(0.58 0.20 240 / 10%)",
-                color: "oklch(0.70 0.18 240)",
-                border: "1px solid oklch(0.58 0.20 240 / 20%)",
+                background: isDashboard ? "oklch(0.45 0.20 240 / 14%)" : "oklch(0.45 0.20 240 / 8%)",
+                color: "oklch(0.38 0.18 240)",
+                border: "1px solid oklch(0.45 0.20 240 / 20%)",
               }}
             >
               <LayoutDashboard className="w-3.5 h-3.5" />
@@ -110,9 +110,9 @@ export default function Navbar() {
                   transition={{ duration: 0.15 }}
                   className="absolute right-0 top-full mt-1.5 w-52 rounded-lg overflow-hidden z-50"
                   style={{
-                    background: "oklch(0.16 0.014 250)",
-                    border: "1px solid oklch(1 0 0 / 10%)",
-                    boxShadow: "0 8px 32px oklch(0 0 0 / 50%)",
+                    background: "oklch(1 0 0)",
+                    border: "1px solid oklch(0 0 0 / 10%)",
+                    boxShadow: "0 8px 32px oklch(0 0 0 / 12%)",
                   }}
                 >
                   <div className="p-1">
@@ -123,8 +123,8 @@ export default function Navbar() {
                         onClick={() => setDashOpen(false)}
                         className="flex items-center gap-2 px-3 py-2 rounded text-[13px] transition-all no-underline"
                         style={{
-                          color: location === link.href ? "oklch(0.70 0.18 240)" : "oklch(0.65 0.010 250)",
-                          background: location === link.href ? "oklch(0.58 0.20 240 / 12%)" : "transparent",
+                          color: location === link.href ? "oklch(0.38 0.18 240)" : "oklch(0.35 0.014 250)",
+                          background: location === link.href ? "oklch(0.45 0.20 240 / 10%)" : "transparent",
                         }}
                       >
                         {link.label}
@@ -140,8 +140,8 @@ export default function Navbar() {
             href="/contact"
             className="hidden sm:inline-flex items-center px-3 py-1.5 rounded text-[13px] font-semibold no-underline transition-all"
             style={{
-              background: "oklch(0.58 0.20 240)",
-              color: "oklch(0.98 0.005 240)",
+              background: "oklch(0.45 0.20 240)",
+              color: "oklch(0.18 0.018 250)",
             }}
           >
             Request Demo
@@ -151,7 +151,7 @@ export default function Navbar() {
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
             className="lg:hidden p-1.5 rounded transition-colors"
-            style={{ color: "oklch(0.60 0.010 250)" }}
+            style={{ color: "oklch(0.35 0.014 250)" }}
           >
             {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
@@ -166,7 +166,7 @@ export default function Navbar() {
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             className="lg:hidden border-t overflow-hidden"
-            style={{ borderColor: "oklch(1 0 0 / 8%)", background: "oklch(0.13 0.013 250)" }}
+            style={{ borderColor: "oklch(0 0 0 / 8%)", background: "oklch(0.975 0.004 240)" }}
           >
             <div className="container py-3 space-y-0.5">
               {NAV_LINKS.map((link) => (
@@ -175,12 +175,12 @@ export default function Navbar() {
                   href={link.href}
                   onClick={() => setMobileOpen(false)}
                   className="block px-3 py-2 rounded text-sm transition-all no-underline"
-                  style={{ color: "oklch(0.65 0.010 250)" }}
+                  style={{ color: "oklch(0.35 0.014 250)" }}
                 >
                   {link.label}
                 </Link>
               ))}
-              <div className="border-t pt-2 mt-2" style={{ borderColor: "oklch(1 0 0 / 8%)" }}>
+              <div className="border-t pt-2 mt-2" style={{ borderColor: "oklch(0 0 0 / 8%)" }}>
                 <div className="section-label px-3 mb-1">Dashboard</div>
                 {DROPDOWN_LINKS.map((link) => (
                   <Link
@@ -188,7 +188,7 @@ export default function Navbar() {
                     href={link.href}
                     onClick={() => setMobileOpen(false)}
                     className="block px-3 py-2 rounded text-sm transition-all no-underline"
-                    style={{ color: "oklch(0.65 0.18 240)" }}
+                    style={{ color: "oklch(0.38 0.18 240)" }}
                   >
                     {link.label}
                   </Link>
@@ -198,7 +198,7 @@ export default function Navbar() {
                 href="/contact"
                 onClick={() => setMobileOpen(false)}
                 className="block mt-2 px-3 py-2 rounded text-sm font-semibold text-center no-underline"
-                style={{ background: "oklch(0.58 0.20 240)", color: "oklch(0.98 0.005 240)" }}
+                style={{ background: "oklch(0.45 0.20 240)", color: "oklch(0.18 0.018 250)" }}
               >
                 Request Demo
               </Link>

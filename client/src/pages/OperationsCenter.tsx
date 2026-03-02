@@ -52,9 +52,25 @@ const STATUS_TRANSITIONS: Record<string, string[]> = {
   cancelled:   [],
 };
 
+const STAFF_ROSTER = [
+  "Mayor Jill Dodds",
+  "City Admin Mark Stutzman",
+  "Finance Director Lisa Yoder",
+  "Police Chief Dan Striegel",
+  "Public Works Dir. Tom Ruiz",
+  "Parks Director Sarah Chen",
+  "City Clerk Maria Gonzalez",
+  "IT Director James Park",
+  "Dave Kline",
+  "Mike Hanson",
+  "Jim Torres",
+  "Unassigned",
+];
+
 export default function OperationsCenter() {
   const [filter, setFilter] = useState("all");
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [assigningId, setAssigningId] = useState<string | null>(null);
 
   // Fetch live DB work orders
   const { data: dbOrders, refetch } = trpc.workOrders.list.useQuery({ limit: 200 }, { refetchInterval: 30_000 });
@@ -62,6 +78,11 @@ export default function OperationsCenter() {
     onSuccess: () => { refetch(); },
     onError: (err) => toast.error(`Update failed: ${err.message}`),
     onSettled: () => setUpdatingId(null),
+  });
+  const updateAssigneeMutation = trpc.workOrders.updateAssignee.useMutation({
+    onSuccess: () => { refetch(); toast.success("Assignee updated"); },
+    onError: (err) => toast.error(`Reassign failed: ${err.message}`),
+    onSettled: () => setAssigningId(null),
   });
 
   // Merge DB orders (shown first, tagged with source) with seed orders
@@ -226,10 +247,35 @@ export default function OperationsCenter() {
                       </td>
 
                       <td className="px-3 py-2.5">
-                        <div className="flex items-center gap-1 text-[10px]"
-                          style={{ color: wo.assignee === "Unassigned" ? "oklch(0.50 0.22 25)" : "oklch(0.45 0.012 250)" }}>
-                          <User className="w-2.5 h-2.5" />{wo.assignee}
-                        </div>
+                        {wo.isLive ? (
+                          <div className="flex items-center gap-1">
+                            <User className="w-2.5 h-2.5 shrink-0" style={{ color: wo.assignee === "Unassigned" ? "oklch(0.50 0.22 25)" : "oklch(0.45 0.012 250)" }} />
+                            <select
+                              value={wo.assignee}
+                              disabled={assigningId === wo.id}
+                              onChange={(e) => {
+                                setAssigningId(wo.id);
+                                updateAssigneeMutation.mutate({ woNumber: wo.id, assignee: e.target.value });
+                              }}
+                              className="text-[9px] rounded border px-1 py-0.5 cursor-pointer"
+                              style={{
+                                background: "oklch(0.97 0.003 240)",
+                                border: "1px solid oklch(0 0 0 / 12%)",
+                                color: wo.assignee === "Unassigned" ? "oklch(0.50 0.22 25)" : "oklch(0.30 0.012 250)",
+                                maxWidth: "120px",
+                              }}
+                            >
+                              {STAFF_ROSTER.map(s => (
+                                <option key={s} value={s}>{s}</option>
+                              ))}
+                            </select>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1 text-[10px]"
+                            style={{ color: wo.assignee === "Unassigned" ? "oklch(0.50 0.22 25)" : "oklch(0.45 0.012 250)" }}>
+                            <User className="w-2.5 h-2.5" />{wo.assignee}
+                          </div>
+                        )}
                       </td>
 
                       <td className="px-3 py-2.5 max-w-[160px]">

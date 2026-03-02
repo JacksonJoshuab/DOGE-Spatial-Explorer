@@ -16,11 +16,21 @@
 - [x] Live IoT polling via useIoTSensors hook (WebSocket + exponential backoff)
 - [x] Persistent Postgres audit_log table via tRPC (audit.append/list/clear)
 - [x] AuthContext persists audit entries to DB, fetches 200 rows on mount
-- [x] MFA enforcement modal in RouteGuard for /secure, /le-hub, /admin/roles (demo bypass)
-- [x] Push notifications for critical audit events via notifyOwner
-
-## In Progress
-- [ ] Real TOTP secret storage — totpSecret column in users table, otplib, auth.verifyMfa tRPC procedure
-- [ ] Wire MFA modal to call server-side verifyMfa instead of demo bypass
-- [ ] Audit log date-range picker + category/severity filter UI in Audit Studio
-- [ ] IoT sensor alert → audit pipeline (useIoTSensors calls appendAudit on alert transitions)
+- [x] MFA enforcement modal in RouteGuard for /secure, /le-hub, /admin/roles
+- [x] Real TOTP secret storage — totpSecret/mfaEnabled columns, otplib, mfa.verifyCode tRPC
+- [x] MFA modal calls server-side mfa.verifyCode for real validation
+- [x] TOTP enrollment modal in AdminRoles staff table (QR code + mfa.verifyAndEnroll)
+- [x] Push notifications for critical audit events via dispatchCriticalAlert
+- [x] Audit log date-range picker + category/severity filter UI in Audit Studio
+- [x] Filtered CSV export in Audit Studio (exports only visible filtered rows)
+- [x] IoT sensor alert → audit pipeline (useIoTSensors fires appendAudit on alert transitions)
+- [x] work_orders Postgres table + tRPC workOrders router (create/list/updateStatus/bySensor)
+- [x] sensor_readings Postgres table + tRPC sensorReadings router (record/getLast24h/prune)
+- [x] SensorDetail drill-down page at /map/sensor/:id with sparkline + audit history + work order form
+- [x] Operations Center shows live DB work orders with status update controls
+- [x] IoT alert dispatcher (alertDispatcher.ts) — Manus push + SendGrid + Twilio channels
+- [x] Sensor telemetry seeding — useIoTSensors onTick writes to Postgres every 4s
+- [x] Work order assignment dropdown in Operations Center (updateAssignee tRPC)
+- [x] Microsoft Graph integration module (OAuth2 PKCE, Teams, Outlook, Calendar) at /ms-graph
+- [x] MsGraphCallback page at /ms-graph/callback for PKCE token exchange
+- [x] Microsoft 365 nav link in DashboardLayout Administration section

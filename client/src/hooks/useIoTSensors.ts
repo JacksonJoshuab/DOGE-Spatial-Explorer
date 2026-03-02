@@ -224,13 +224,17 @@ export interface UseIoTSensorsOptions {
   alertInterval?: number;
   /** Called when any sensor transitions into "alert" or "warning" status */
   onAlert?: (sensor: SensorReading, prevStatus: SensorReading["status"]) => void;
+  /** Called after every telemetry tick with the full updated sensors array — use to persist readings to DB */
+  onTick?: (sensors: SensorReading[]) => void;
 }
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 export function useIoTSensors(options: UseIoTSensorsOptions = {}) {
-  const { sensorInterval = 4000, alertInterval = 6000, onAlert } = options;
+  const { sensorInterval = 4000, alertInterval = 6000, onAlert, onTick } = options;
   const onAlertRef = useRef(onAlert);
+  const onTickRef  = useRef(onTick);
   useEffect(() => { onAlertRef.current = onAlert; }, [onAlert]);
+  useEffect(() => { onTickRef.current  = onTick;  }, [onTick]);
 
   const [sensors, setSensors] = useState<SensorReading[]>(SEED_SENSORS.map(s => ({ ...s, tick: 0 })));
   const [alerts, setAlerts]   = useState<AlertItem[]>(INITIAL_ALERTS);
@@ -269,6 +273,8 @@ export function useIoTSensors(options: UseIoTSensorsOptions = {}) {
 
         return updated;
       });
+      // Fire onTick with the updated snapshot for DB persistence
+      setTimeout(() => onTickRef.current?.(next), 0);
       return next;
     });
     setLastUpdated(new Date());

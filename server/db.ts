@@ -238,3 +238,11 @@ export async function pruneOldSensorReadings(olderThanTs: number): Promise<void>
   if (!db) return;
   await db.delete(sensorReadings).where(lte(sensorReadings.ts, olderThanTs));
 }
+
+export async function updateWorkOrderAssignee(woNumber: string, assignee: string): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(workOrders)
+    .set({ assignee })
+    .where(eq(workOrders.woNumber, woNumber));
+}

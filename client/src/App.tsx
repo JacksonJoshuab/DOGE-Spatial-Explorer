@@ -50,6 +50,8 @@ import UtilityBillQR from "./pages/UtilityBillQR";
 import Transparency from "./pages/Transparency";
 import AdminRoles from "./pages/AdminRoles";
 import SensorDetail from "./pages/SensorDetail";
+import MsGraphExplorer from "./pages/MsGraphExplorer";
+import MsGraphCallback from "./pages/MsGraphCallback";
 
 function AppShell() {
   return (
@@ -106,6 +108,10 @@ function Router() {
 
       {/* Admin */}
       <Route path="/admin/roles">{() => <RouteGuard path="/admin/roles"><AdminRoles /></RouteGuard>}</Route>
+
+      {/* Microsoft Graph integration */}
+      <Route path="/ms-graph">{() => <RouteGuard path="/ms-graph"><MsGraphExplorer /></RouteGuard>}</Route>
+      <Route path="/ms-graph/callback" component={MsGraphCallback} />
 
       {/* Access denied */}
       <Route path="/access-denied" component={AccessDenied} />

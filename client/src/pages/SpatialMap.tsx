@@ -20,6 +20,7 @@ import {
 import { toast } from "sonner";
 import { useIoTSensors, type SensorReading } from "@/hooks/useIoTSensors";
 import { useAuth } from "@/contexts/AuthContext";
+import { trpc } from "@/lib/trpc";
 
 // ─── Icon map (cannot serialize React components through the hook) ─────────────
 const SENSOR_ICONS: Record<string, React.ElementType> = {
@@ -109,6 +110,30 @@ export default function SpatialMap() {
     });
   }, [appendAudit]);
 
+  // ── Sensor telemetry seeding → Postgres ─────────────────────────────────────
+  const recordReading = trpc.sensorReadings.record.useMutation();
+  const handleTick = useCallback((updatedSensors: SensorReading[]) => {
+    const now = Date.now();
+    updatedSensors.forEach(s => {
+      const match = s.reading.match(/[\d.]+/);
+      const value = match ? match[0] : "0";
+      recordReading.mutate({
+        sensorId: s.id,
+        sensorName: s.name,
+        sensorType: s.type,
+        value,
+        reading: s.reading,
+        status: s.status,
+        ts: now,
+      });
+    });
+  }, [recordReading]);
+  const tickCountRef = useRef(0);
+  const throttledTick = useCallback((updatedSensors: SensorReading[]) => {
+    tickCountRef.current += 1;
+    if (tickCountRef.current % 3 === 0) handleTick(updatedSensors);
+  }, [handleTick]);
+
   // ── Live IoT sensor hook ───────────────────────────────────────────────────────
   const {
     sensors,
@@ -123,7 +148,7 @@ export default function SpatialMap() {
     dispatchAlert,
     dispatchAll,
     toggleLive,
-  } = useIoTSensors({ sensorInterval: 4000, alertInterval: 6000, onAlert: handleSensorAlert }); const wsStatusLabel = wsStatus === "connected" ? "WS CONNECTED"
+  } = useIoTSensors({ sensorInterval: 4000, alertInterval: 6000, onAlert: handleSensorAlert, onTick: throttledTick }); const wsStatusLabel = wsStatus === "connected" ? "WS CONNECTED"
     : wsStatus === "reconnecting" ? "WS RECONNECTING…"
     : wsStatus === "failed" ? "WS FAILED"
     : wsStatus === "simulation" ? "SIMULATION MODE"

@@ -9,7 +9,7 @@ import Navbar from "@/components/Navbar";
 import {
   LayoutDashboard, Map, Shield, Wrench, FileText, Lock,
   Building2, Wifi, AlertTriangle, ChevronRight, ShieldCheck, Droplets,
-  Menu, X, Trees, HardHat, DollarSign, Users, BookOpen, UserCog
+  Menu, X, Trees, HardHat, DollarSign, Users, BookOpen, UserCog, Network
 } from "lucide-react";
 import RoleSwitcher from "@/components/RoleSwitcher";
 
@@ -51,6 +51,7 @@ const SIDEBAR_SECTIONS = [
     label: "Administration",
     links: [
       { href: "/admin/roles", label: "RBAC — Roles", icon: UserCog },
+      { href: "/ms-graph", label: "Microsoft 365", icon: Network },
     ],
   },
 ];

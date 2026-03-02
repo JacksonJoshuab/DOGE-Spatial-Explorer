@@ -5,7 +5,7 @@ import { publicProcedure, router } from "./_core/trpc";
 import {
   insertAuditEntry, queryAuditLog, clearAuditLog,
   saveTotpSecret, enableMfa, getTotpSecret,
-  createWorkOrder, listWorkOrders, updateWorkOrderStatus, getWorkOrdersBySensor,
+  createWorkOrder, listWorkOrders, updateWorkOrderStatus, updateWorkOrderAssignee, getWorkOrdersBySensor,
   recordSensorReading, getSensorReadings, pruneOldSensorReadings,
 } from "./db";
 import { z } from "zod";
@@ -87,6 +87,17 @@ const workOrdersRouter = router({
     }))
     .mutation(async ({ input }) => {
       await updateWorkOrderStatus(input.woNumber, input.status);
+      return { success: true };
+    }),
+
+  /** Reassign a work order to a different staff member. */
+  updateAssignee: publicProcedure
+    .input(z.object({
+      woNumber: z.string(),
+      assignee: z.string().min(1).max(128),
+    }))
+    .mutation(async ({ input }) => {
+      await updateWorkOrderAssignee(input.woNumber, input.assignee);
       return { success: true };
     }),
 

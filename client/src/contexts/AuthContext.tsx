@@ -1,10 +1,10 @@
 /**
  * AuthContext — Role-Based Authentication for DOGE Municipal Platform
  *
- * In production this context would validate a JWT from the city's IdP
- * (Iowa OCIO SSO, Okta, or Azure AD) and decode the role claim.
- * For the demo environment it persists the selected role in sessionStorage
- * so field crews can switch personas without a full login flow.
+ * Audit entries are now persisted to Postgres via tRPC (audit.append).
+ * On mount the provider fetches the last 200 entries from the DB so the
+ * log survives page refreshes.  The in-memory list is kept as a fast
+ * optimistic cache; the DB is the source of truth.
  *
  * Supported roles mirror the RBAC matrix in AdminRoles.tsx:
  *   city-admin | mayor | finance-director | police-chief |
@@ -12,6 +12,7 @@
  */
 import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from "react";
 import { ROLES } from "@/pages/AdminRoles";
+import { trpc } from "@/lib/trpc";
 
 // ─── Module permission map (mirrors DEFAULT_PERMISSIONS in AdminRoles.tsx) ────
 const ROLE_MODULES: Record<string, string[]> = {
@@ -47,7 +48,7 @@ export const ROUTE_MODULE_MAP: Record<string, string> = {
   "/dashboard":      "dashboard",
 };
 
-// ─── Audit log entry ──────────────────────────────────────────────────────────
+// ─── Audit log entry (client-side shape) ──────────────────────────────────────
 export interface AuditEntry {
   id: string;
   timestamp: Date;
@@ -55,7 +56,7 @@ export interface AuditEntry {
   actorRole: string;
   action: string;
   target: string;
-  category: "access" | "rbac" | "auth" | "data";
+  category: "access" | "rbac" | "auth" | "data" | "iot";
   severity: "info" | "warning" | "critical";
   detail: string;
 }
@@ -71,72 +72,13 @@ interface AuthContextValue {
   canAccessRoute: (path: string) => boolean;
   switchRole: (roleId: string) => void;
   auditLog: AuditEntry[];
+  auditLoading: boolean;
   appendAudit: (entry: Omit<AuditEntry, "id" | "timestamp" | "actor" | "actorRole">) => void;
   clearAuditLog: () => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-// ─── Seed audit entries ───────────────────────────────────────────────────────
-const SEED_AUDIT: AuditEntry[] = [
-  {
-    id: "AUD-0001",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 3),
-    actor: "Leigh Ann Erickson",
-    actorRole: "City Administrator",
-    action: "ROLE_GRANTED",
-    target: "Police Chief — SCIF Management",
-    category: "rbac",
-    severity: "warning",
-    detail: "Module 'SCIF Management' granted to role 'Police Chief' by City Administrator.",
-  },
-  {
-    id: "AUD-0002",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2),
-    actor: "Priya Nair",
-    actorRole: "IT Administrator",
-    action: "STAFF_DEACTIVATED",
-    target: "Officer K. Thompson (SA-010)",
-    category: "rbac",
-    severity: "warning",
-    detail: "Staff account SA-010 deactivated. All active sessions invalidated.",
-  },
-  {
-    id: "AUD-0003",
-    timestamp: new Date(Date.now() - 1000 * 60 * 45),
-    actor: "Brenda Sherwood",
-    actorRole: "Finance Director",
-    action: "DATA_EXPORT",
-    target: "General Ledger FY2024",
-    category: "data",
-    severity: "info",
-    detail: "CSV export of General Ledger (9 accounts, FY2024) downloaded.",
-  },
-  {
-    id: "AUD-0004",
-    timestamp: new Date(Date.now() - 1000 * 60 * 20),
-    actor: "Leigh Ann Erickson",
-    actorRole: "City Administrator",
-    action: "ROLE_REVOKED",
-    target: "Community Dev Director — Finance Hub",
-    category: "rbac",
-    severity: "warning",
-    detail: "Module 'Finance Hub' revoked from role 'Community Dev Director'.",
-  },
-  {
-    id: "AUD-0005",
-    timestamp: new Date(Date.now() - 1000 * 60 * 5),
-    actor: "System",
-    actorRole: "IoT Gateway",
-    action: "SENSOR_ALERT",
-    target: "WL-VALVE-001 — Water Pressure",
-    category: "access",
-    severity: "critical",
-    detail: "IoT sensor WL-VALVE-001 reported pressure anomaly: 42 PSI (threshold: 45 PSI).",
-  },
-];
-
-// ─── Provider ─────────────────────────────────────────────────────────────────
 const ACTOR_NAMES: Record<string, string> = {
   "city-admin":       "Leigh Ann Erickson",
   "mayor":            "Kevin Ollendieck",
@@ -148,14 +90,57 @@ const ACTOR_NAMES: Record<string, string> = {
   "it-admin":         "Priya Nair",
 };
 
+/** Convert a DB row (from audit.list) to the client AuditEntry shape */
+function rowToEntry(row: {
+  clientId: string;
+  ts: number;
+  isoTime: string;
+  actor: string;
+  actorRole: string;
+  action: string;
+  target: string;
+  category: string;
+  severity: string;
+  detail: string | null;
+}): AuditEntry {
+  return {
+    id: row.clientId,
+    timestamp: new Date(row.ts),
+    actor: row.actor,
+    actorRole: row.actorRole,
+    action: row.action,
+    target: row.target,
+    category: row.category as AuditEntry["category"],
+    severity: row.severity as AuditEntry["severity"],
+    detail: row.detail ?? "",
+  };
+}
+
+// ─── Provider ─────────────────────────────────────────────────────────────────
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [roleId, setRoleId] = useState<string>(() => {
     return sessionStorage.getItem("wl_role") ?? "city-admin";
   });
-  const [auditLog, setAuditLog] = useState<AuditEntry[]>(SEED_AUDIT);
+  const [localLog, setLocalLog] = useState<AuditEntry[]>([]);
 
   const role = ROLES.find(r => r.id === roleId) ?? ROLES[0];
   const actorName = ACTOR_NAMES[roleId] ?? "Unknown User";
+
+  // ── Fetch persisted log from DB on mount ──────────────────────────────────
+  const { data: dbRows, isLoading: auditLoading, refetch } = trpc.audit.list.useQuery(
+    { limit: 200 },
+    { refetchOnWindowFocus: false }
+  );
+
+  // Merge DB rows into local log (DB is source of truth; local adds optimistic entries)
+  const dbEntries: AuditEntry[] = (dbRows ?? []).map(rowToEntry);
+
+  // Combine: local optimistic entries that aren't yet in DB + DB entries
+  const dbIds = new Set(dbEntries.map(e => e.id));
+  const optimisticOnly = localLog.filter(e => !dbIds.has(e.id));
+  const auditLog = [...optimisticOnly, ...dbEntries].sort(
+    (a, b) => b.timestamp.getTime() - a.timestamp.getTime()
+  );
 
   useEffect(() => {
     sessionStorage.setItem("wl_role", roleId);
@@ -172,14 +157,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return canAccess(moduleId);
   }, [canAccess]);
 
+  // ── tRPC mutations ────────────────────────────────────────────────────────
+  const appendMutation = trpc.audit.append.useMutation({
+    onSuccess: () => { refetch(); },
+  });
+  const clearMutation = trpc.audit.clear.useMutation({
+    onSuccess: () => { setLocalLog([]); refetch(); },
+  });
+
   const switchRole = useCallback((newRoleId: string) => {
     const newRole = ROLES.find(r => r.id === newRoleId);
     const oldRole = ROLES.find(r => r.id === roleId);
     setRoleId(newRoleId);
-    // Append auth audit entry
-    setAuditLog(prev => [{
-      id: `AUD-${String(prev.length + 1).padStart(4, "0")}`,
-      timestamp: new Date(),
+    const now = Date.now();
+    const clientId = `AUD-SW-${now}`;
+    const entry: AuditEntry = {
+      id: clientId,
+      timestamp: new Date(now),
       actor: ACTOR_NAMES[newRoleId] ?? "Unknown",
       actorRole: newRole?.name ?? newRoleId,
       action: "ROLE_SWITCH",
@@ -187,20 +181,54 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       category: "auth",
       severity: "info",
       detail: `Session role switched from '${oldRole?.name}' to '${newRole?.name}' for demo purposes.`,
-    }, ...prev]);
-  }, [roleId]);
+    };
+    // Optimistic local update
+    setLocalLog(prev => [entry, ...prev]);
+    // Persist to DB
+    appendMutation.mutate({
+      clientId,
+      ts: now,
+      isoTime: new Date(now).toISOString(),
+      actor: entry.actor,
+      actorRole: entry.actorRole,
+      action: entry.action,
+      target: entry.target,
+      category: entry.category,
+      severity: entry.severity,
+      detail: entry.detail,
+    });
+  }, [roleId, appendMutation]);
 
   const appendAudit = useCallback((entry: Omit<AuditEntry, "id" | "timestamp" | "actor" | "actorRole">) => {
-    setAuditLog(prev => [{
+    const now = Date.now();
+    const clientId = `AUD-${now}-${Math.random().toString(36).slice(2, 6)}`;
+    const full: AuditEntry = {
       ...entry,
-      id: `AUD-${String(prev.length + 1).padStart(4, "0")}`,
-      timestamp: new Date(),
+      id: clientId,
+      timestamp: new Date(now),
       actor: actorName,
       actorRole: role.name,
-    }, ...prev]);
-  }, [actorName, role.name]);
+    };
+    // Optimistic local update
+    setLocalLog(prev => [full, ...prev]);
+    // Persist to DB (also triggers push notification for critical events server-side)
+    appendMutation.mutate({
+      clientId,
+      ts: now,
+      isoTime: new Date(now).toISOString(),
+      actor: actorName,
+      actorRole: role.name,
+      action: entry.action,
+      target: entry.target,
+      category: entry.category,
+      severity: entry.severity,
+      detail: entry.detail,
+    });
+  }, [actorName, role.name, appendMutation]);
 
-  const clearAuditLog = useCallback(() => setAuditLog([]), []);
+  const clearAuditLog = useCallback(() => {
+    clearMutation.mutate();
+  }, [clearMutation]);
 
   return (
     <AuthContext.Provider value={{
@@ -213,6 +241,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       canAccessRoute,
       switchRole,
       auditLog,
+      auditLoading,
       appendAudit,
       clearAuditLog,
     }}>

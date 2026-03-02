@@ -214,6 +214,7 @@ const CATEGORY_CONFIG: Record<AuditEntry["category"], { label: string; color: st
   access: { label: "Access", color: "oklch(0.55 0.22 25)",  icon: ShieldAlert },
   auth:   { label: "Auth",   color: "oklch(0.50 0.18 240)", icon: Lock },
   data:   { label: "Data",   color: "oklch(0.45 0.18 145)", icon: Database },
+  iot:    { label: "IoT",    color: "oklch(0.50 0.18 75)",  icon: Activity },
 };
 
 const SEVERITY_AUDIT_CONFIG: Record<AuditEntry["severity"], { color: string; bg: string }> = {

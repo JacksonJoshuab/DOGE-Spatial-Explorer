@@ -12,9 +12,10 @@ import { Progress } from "@/components/ui/progress";
 import {
   TrendingUp, TrendingDown, AlertTriangle, Building2, FileText,
   DollarSign, MapPin, Clock, CheckCircle2, XCircle, Plus,
-  BarChart3, Users, Calendar, ExternalLink, GitBranch
+  BarChart3, Users, Calendar, ExternalLink, GitBranch, Sparkles
 } from "lucide-react";
 import BudgetAmendmentWorkflow from "@/components/BudgetAmendmentWorkflow";
+import GrantAutoFill from "@/components/GrantAutoFill";
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, ReferenceLine, LineChart, Line, Legend
@@ -257,6 +258,9 @@ export default function CommunityDevHub() {
             </TabsTrigger>
             <TabsTrigger value="grants">
               <DollarSign className="w-3.5 h-3.5 mr-1.5" />Grants
+            </TabsTrigger>
+            <TabsTrigger value="autofill">
+              <Sparkles className="w-3 h-3 mr-1" />Auto-Fill
             </TabsTrigger>
             <TabsTrigger value="amendment">
               <GitBranch className="w-3.5 h-3.5 mr-1.5" />
@@ -588,6 +592,11 @@ export default function CommunityDevHub() {
                 );
               })}
             </div>
+          </TabsContent>
+
+          {/* Grant Auto-Fill Tab */}
+          <TabsContent value="autofill" className="mt-4">
+            <GrantAutoFill />
           </TabsContent>
 
           {/* Budget Amendment Tab */}

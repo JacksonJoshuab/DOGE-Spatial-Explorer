@@ -39,6 +39,7 @@ const DROPDOWN_LINKS = [
 
 const PUBLIC_PORTAL_LINKS = [
   { href: "/resident", label: "Resident Portal" },
+  { href: "/transparency", label: "Transparency Portal" },
   { href: "/roi", label: "ROI Calculator" },
   { href: "/contact", label: "Request Demo" },
 ];

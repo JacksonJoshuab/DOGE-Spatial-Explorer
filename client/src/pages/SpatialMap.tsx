@@ -11,7 +11,7 @@ import { useLocation } from "wouter";
 import {
   Droplets, Zap, Shield, Wrench, TreePine, AlertTriangle,
   CheckCircle2, Clock, ChevronRight, Radio, X,
-  Layers, Activity, Send, Eye, EyeOff, Wifi
+  Layers, Activity, Send, Eye, EyeOff, Wifi, GitBranch
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -178,6 +178,54 @@ const LAYER_CONFIG: Record<string, { label: string; color: string }> = {
   le: { label: "Law Enforcement", color: "#dc2626" },
 };
 
+// GIS infrastructure polyline routes for West Liberty, IA
+const GIS_LAYERS = {
+  water_main: {
+    label: "Water Mains",
+    color: "#2563eb",
+    weight: 4,
+    opacity: 0.7,
+    paths: [
+      // N Calhoun St water main (north-south trunk)
+      [{ lat: 41.5770, lng: -91.2635 }, { lat: 41.5742, lng: -91.2635 }, { lat: 41.5715, lng: -91.2635 }],
+      // W 7th St water main (east-west)
+      [{ lat: 41.5742, lng: -91.2680 }, { lat: 41.5742, lng: -91.2635 }, { lat: 41.5742, lng: -91.2590 }],
+      // E 3rd St lateral
+      [{ lat: 41.5730, lng: -91.2660 }, { lat: 41.5730, lng: -91.2610 }],
+      // Iowa Ave lateral
+      [{ lat: 41.5760, lng: -91.2620 }, { lat: 41.5720, lng: -91.2620 }],
+    ],
+  },
+  sewer_line: {
+    label: "Sewer Lines",
+    color: "#7c3aed",
+    weight: 3,
+    opacity: 0.65,
+    paths: [
+      // Main sewer trunk to lift station
+      [{ lat: 41.5760, lng: -91.2640 }, { lat: 41.5742, lng: -91.2645 }, { lat: 41.5720, lng: -91.2658 }],
+      // E side collector
+      [{ lat: 41.5755, lng: -91.2600 }, { lat: 41.5735, lng: -91.2610 }, { lat: 41.5720, lng: -91.2630 }],
+      // W side collector
+      [{ lat: 41.5750, lng: -91.2670 }, { lat: 41.5730, lng: -91.2665 }, { lat: 41.5720, lng: -91.2658 }],
+    ],
+  },
+  fiber_route: {
+    label: "Fiber Routes",
+    color: "#f59e0b",
+    weight: 2,
+    opacity: 0.8,
+    paths: [
+      // Municipal fiber ring — City Hall to Police to Utilities
+      [{ lat: 41.5742, lng: -91.2635 }, { lat: 41.5742, lng: -91.2635 }, { lat: 41.5758, lng: -91.2650 }, { lat: 41.5762, lng: -91.2618 }, { lat: 41.5748, lng: -91.2601 }, { lat: 41.5742, lng: -91.2635 }],
+      // Last-mile to park sensors
+      [{ lat: 41.5742, lng: -91.2635 }, { lat: 41.5730, lng: -91.2645 }],
+    ],
+  },
+};
+
+type GisLayerKey = keyof typeof GIS_LAYERS;
+
 const INITIAL_ALERTS = [
   { id: "A001", sensorId: "WL-STORM-001", type: "alert" as const, msg: "Storm drain 78% full — debris blockage detected", time: "just now", dispatched: false },
   { id: "A002", sensorId: "WL-VALVE-002", type: "warning" as const, msg: "Low water pressure on N Calhoun — possible leak", time: "2m ago", dispatched: false },
@@ -206,8 +254,10 @@ export default function SpatialMap() {
   const [selectedSensor, setSelectedSensor] = useState<typeof IOT_SENSORS[0] | null>(null);
   const [alerts, setAlerts] = useState<AlertItem[]>(INITIAL_ALERTS);
   const [activeLayers, setActiveLayers] = useState<Set<string>>(new Set(["water", "sewer", "roads", "parks", "le"]));
+  const [activeGisLayers, setActiveGisLayers] = useState<Set<GisLayerKey>>(new Set());
   const mapRef = useRef<google.maps.Map | null>(null);
   const markersRef = useRef<Map<string, google.maps.Marker>>(new Map());
+  const polylinesRef = useRef<Map<string, google.maps.Polyline[]>>(new Map());
 
   // Simulate new alerts arriving every 6 seconds
   useEffect(() => {
@@ -283,6 +333,39 @@ export default function SpatialMap() {
       markersRef.current.set(sensor.id, marker);
     });
   }, []);
+
+  const toggleGisLayer = (layer: GisLayerKey) => {
+    setActiveGisLayers(prev => {
+      const next = new Set(prev);
+      if (next.has(layer)) {
+        next.delete(layer);
+        polylinesRef.current.get(layer)?.forEach(p => p.setVisible(false));
+      } else {
+        next.add(layer);
+        const map = mapRef.current;
+        if (map) {
+          const existing = polylinesRef.current.get(layer);
+          if (existing && existing.length > 0) {
+            existing.forEach(p => p.setVisible(true));
+          } else {
+            const cfg = GIS_LAYERS[layer];
+            const polylines = cfg.paths.map(path =>
+              new google.maps.Polyline({
+                path,
+                geodesic: true,
+                strokeColor: cfg.color,
+                strokeOpacity: cfg.opacity,
+                strokeWeight: cfg.weight,
+                map,
+              })
+            );
+            polylinesRef.current.set(layer, polylines);
+          }
+        }
+      }
+      return next;
+    });
+  };
 
   const toggleLayer = (layer: string) => {
     setActiveLayers(prev => {
@@ -375,7 +458,7 @@ export default function SpatialMap() {
           >
             <div className="px-3 py-2.5 border-b" style={{ borderColor: "oklch(0 0 0 / 8%)" }}>
               <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider" style={{ color: "oklch(0.52 0.010 250)" }}>
-                <Layers className="w-3 h-3" /> Layers
+                <Layers className="w-3 h-3" /> IoT Sensors
               </div>
             </div>
             <div className="p-2 space-y-1">
@@ -408,6 +491,43 @@ export default function SpatialMap() {
                   </button>
                 );
               })}
+            </div>
+
+            {/* GIS Infrastructure Layers */}
+            <div className="px-3 py-2 border-t" style={{ borderColor: "oklch(0 0 0 / 8%)" }}>
+              <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: "oklch(0.52 0.010 250)" }}>
+                <GitBranch className="w-3 h-3" /> Infrastructure
+              </div>
+              <div className="space-y-1">
+                {(Object.entries(GIS_LAYERS) as [GisLayerKey, typeof GIS_LAYERS[GisLayerKey]][]).map(([key, cfg]) => {
+                  const active = activeGisLayers.has(key);
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => toggleGisLayer(key)}
+                      className="w-full flex items-center gap-2 p-2 rounded text-left transition-all"
+                      style={{
+                        background: active ? `${cfg.color}12` : "transparent",
+                        border: `1px solid ${active ? `${cfg.color}30` : "oklch(0 0 0 / 8%)"}`,
+                      }}
+                    >
+                      {active
+                        ? <Eye className="w-3 h-3 flex-shrink-0" style={{ color: cfg.color }} />
+                        : <EyeOff className="w-3 h-3 flex-shrink-0" style={{ color: "oklch(0.52 0.010 250)" }} />
+                      }
+                      <div className="flex-1 min-w-0">
+                        <div className="text-[10px] font-semibold" style={{ color: active ? "oklch(0.22 0.018 250)" : "oklch(0.52 0.010 250)" }}>
+                          {cfg.label}
+                        </div>
+                        <div className="text-[9px] font-mono" style={{ color: "oklch(0.52 0.010 250)" }}>
+                          {cfg.paths.length} segment{cfg.paths.length > 1 ? "s" : ""}
+                        </div>
+                      </div>
+                      <div className="w-3 h-1 rounded-full flex-shrink-0" style={{ background: active ? cfg.color : "oklch(0.75 0.005 250)" }} />
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             {/* Active alerts in sidebar */}

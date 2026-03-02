@@ -52,6 +52,7 @@ import AdminRoles from "./pages/AdminRoles";
 import SensorDetail from "./pages/SensorDetail";
 import MsGraphExplorer from "./pages/MsGraphExplorer";
 import MsGraphCallback from "./pages/MsGraphCallback";
+import IntelFeedHub from "./pages/IntelFeedHub";
 
 function AppShell() {
   return (
@@ -108,6 +109,9 @@ function Router() {
 
       {/* Admin */}
       <Route path="/admin/roles">{() => <RouteGuard path="/admin/roles"><AdminRoles /></RouteGuard>}</Route>
+
+      {/* Intelligence Feed Hub */}
+      <Route path="/feeds">{() => <RouteGuard path="/feeds"><IntelFeedHub /></RouteGuard>}</Route>
 
       {/* Microsoft Graph integration */}
       <Route path="/ms-graph">{() => <RouteGuard path="/ms-graph"><MsGraphExplorer /></RouteGuard>}</Route>

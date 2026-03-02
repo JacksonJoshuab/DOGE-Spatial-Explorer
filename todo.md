@@ -34,3 +34,8 @@
 - [x] Microsoft Graph integration module (OAuth2 PKCE, Teams, Outlook, Calendar) at /ms-graph
 - [x] MsGraphCallback page at /ms-graph/callback for PKCE token exchange
 - [x] Microsoft 365 nav link in DashboardLayout Administration section
+
+## In Progress
+- [ ] Intelligence Feed Hub at /feeds — social media, news RSS, Federal Register, Census ACS, BLS economic data
+- [ ] Sensor telemetry retention cron — prune sensor_readings older than 30 days
+- [ ] Work order email notifications via dispatchCriticalAlert on create/reassign

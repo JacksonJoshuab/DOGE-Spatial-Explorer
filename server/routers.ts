@@ -9,6 +9,15 @@ import {
   recordSensorReading, getSensorReadings, pruneOldSensorReadings,
 } from "./db";
 import { z } from "zod";
+import {
+  fetchFederalRegister,
+  fetchCensusData,
+  fetchBlsData,
+  fetchIowaGovFeeds,
+  fetchLocalNewsFeeds,
+  fetchSocialFeeds,
+  fetchGrantsGov,
+} from "./feeds";
 import { notifyOwner } from "./_core/notification";
 import { dispatchCriticalAlert } from "./alertDispatcher";
 import {
@@ -61,15 +70,20 @@ const workOrdersRouter = router({
         estimatedHours: input.estimatedHours ?? null,
         createdBy: input.createdBy,
       });
-      if (input.priority === "critical") {
-        try {
-          await notifyOwner({
-            title: `🔧 Critical Work Order — ${woNumber}`,
-            content: `**Title:** ${input.title}\n**Assignee:** ${input.assignee}\n**Sensor:** ${input.sensorName ?? "Manual"}\n**Created by:** ${input.createdBy}`,
-          });
-        } catch (err) {
-          console.warn("[WorkOrders] Failed to notify owner:", err);
-        }
+      // Notify on all new work orders — critical ones also trigger email/SMS
+      try {
+        await dispatchCriticalAlert({
+          action: "WORK_ORDER_CREATED",
+          actor: input.createdBy,
+          actorRole: "staff",
+          target: woNumber,
+          isoTime: new Date().toISOString(),
+          category: "work_order",
+          severity: input.priority === "critical" ? "critical" : "info",
+          detail: `${input.title} | Assignee: ${input.assignee} | Priority: ${input.priority.toUpperCase()}`,
+        });
+      } catch (err) {
+        console.warn("[WorkOrders] Failed to dispatch alert:", err);
       }
       return { success: true, woNumber };
     }),
@@ -95,9 +109,24 @@ const workOrdersRouter = router({
     .input(z.object({
       woNumber: z.string(),
       assignee: z.string().min(1).max(128),
+      reassignedBy: z.string().optional(),
     }))
     .mutation(async ({ input }) => {
       await updateWorkOrderAssignee(input.woNumber, input.assignee);
+      try {
+        await dispatchCriticalAlert({
+          action: "WORK_ORDER_REASSIGNED",
+          actor: input.reassignedBy ?? "system",
+          actorRole: "staff",
+          target: input.woNumber,
+          isoTime: new Date().toISOString(),
+          category: "work_order",
+          severity: "info",
+          detail: `Reassigned to ${input.assignee}`,
+        });
+      } catch (err) {
+        console.warn("[WorkOrders] Failed to dispatch reassign alert:", err);
+      }
       return { success: true };
     }),
 
@@ -244,6 +273,39 @@ export const appRouter = router({
   // ─── Feature sub-routers ──────────────────────────────────────────────────
   workOrders: workOrdersRouter,
   sensorReadings: sensorReadingsRouter,
+
+  // ─── Intelligence Feed Hub ────────────────────────────────────────────────
+  feeds: router({
+    /** Federal Register — regulations, executive orders, rules */
+    federalRegister: publicProcedure
+      .input(z.object({ query: z.string().optional() }))
+      .query(async ({ input }) => fetchFederalRegister(input.query ?? "municipal infrastructure Iowa")),
+
+    /** US Census ACS — Muscatine County demographic & economic data */
+    census: publicProcedure
+      .query(async () => fetchCensusData()),
+
+    /** BLS — Muscatine County unemployment, CPI, employment */
+    bls: publicProcedure
+      .query(async () => fetchBlsData()),
+
+    /** Iowa state government news & policy RSS */
+    iowaGov: publicProcedure
+      .query(async () => fetchIowaGovFeeds()),
+
+    /** Local news RSS — Muscatine Journal, Iowa Public Radio, Radio Iowa */
+    localNews: publicProcedure
+      .query(async () => fetchLocalNewsFeeds()),
+
+    /** Social media — Reddit r/Iowa, r/IowaCity */
+    social: publicProcedure
+      .query(async () => fetchSocialFeeds()),
+
+    /** Grants.gov — open opportunities for Iowa municipal infrastructure */
+    grants: publicProcedure
+      .input(z.object({ keyword: z.string().optional() }))
+      .query(async ({ input }) => fetchGrantsGov(input.keyword ?? "Iowa municipal infrastructure")),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

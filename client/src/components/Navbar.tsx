@@ -26,6 +26,12 @@ const DROPDOWN_LINKS = [
   { href: "/secure", label: "Secure Modules" },
 ];
 
+const PUBLIC_PORTAL_LINKS = [
+  { href: "/resident", label: "Resident Portal" },
+  { href: "/roi", label: "ROI Calculator" },
+  { href: "/contact", label: "Request Demo" },
+];
+
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [dashOpen, setDashOpen] = useState(false);
@@ -137,6 +143,18 @@ export default function Navbar() {
           </div>
 
           <Link
+            href="/resident"
+            className="hidden sm:inline-flex items-center px-3 py-1.5 rounded text-[13px] font-medium no-underline transition-all"
+            style={{
+              background: "oklch(0.45 0.18 145 / 12%)",
+              color: "oklch(0.32 0.18 145)",
+              border: "1px solid oklch(0.45 0.18 145 / 25%)",
+            }}
+          >
+            Resident Portal
+          </Link>
+
+          <Link
             href="/contact"
             className="hidden sm:inline-flex items-center px-3 py-1.5 rounded text-[13px] font-semibold no-underline transition-all"
             style={{
@@ -180,6 +198,16 @@ export default function Navbar() {
                   {link.label}
                 </Link>
               ))}
+              <div className="border-t pt-2 mt-2" style={{ borderColor: "oklch(0 0 0 / 8%)" }}>
+                <Link
+                  href="/resident"
+                  onClick={() => setMobileOpen(false)}
+                  className="block px-3 py-2 rounded text-sm font-medium no-underline mb-1"
+                  style={{ color: "oklch(0.32 0.18 145)", background: "oklch(0.45 0.18 145 / 8%)" }}
+                >
+                  Resident Portal
+                </Link>
+              </div>
               <div className="border-t pt-2 mt-2" style={{ borderColor: "oklch(0 0 0 / 8%)" }}>
                 <div className="section-label px-3 mb-1">Dashboard</div>
                 {DROPDOWN_LINKS.map((link) => (

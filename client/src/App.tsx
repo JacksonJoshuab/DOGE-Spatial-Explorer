@@ -29,6 +29,9 @@ import SpatialMap from "./pages/SpatialMap";
 import RecordsManagement from "./pages/RecordsManagement";
 import SecureModules from "./pages/SecureModules";
 
+// Resident portal
+import ResidentPortal from "./pages/ResidentPortal";
+
 function Router() {
   return (
     <Switch>
@@ -55,6 +58,9 @@ function Router() {
       {/* Compliance & secure */}
       <Route path="/records" component={RecordsManagement} />
       <Route path="/secure" component={SecureModules} />
+
+      {/* Resident portal */}
+      <Route path="/resident" component={ResidentPortal} />
 
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />

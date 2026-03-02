@@ -3,9 +3,128 @@
  * Audit findings management with West Liberty FY2024 data
  */
 import DashboardLayout from "@/components/DashboardLayout";
-import { AlertTriangle, CheckCircle2, Clock, Shield, FileText, TrendingUp, DollarSign } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Clock, Shield, FileText, TrendingUp, DollarSign, Download, Printer } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+
+function exportAuditPDF(findings: typeof FINDINGS) {
+  const now = new Date();
+  const dateStr = now.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+  const openFindings = findings.filter(f => f.status === "open");
+  const inProgress = findings.filter(f => f.status === "in-progress");
+  const resolved = findings.filter(f => f.status === "resolved");
+  const totalExposure = findings.filter(f => f.status !== "resolved").reduce((s, f) => s + f.amount, 0);
+
+  const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>West Liberty FY2024 Audit Findings Report</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&display=swap');
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'DM Sans', Arial, sans-serif; font-size: 11px; color: #1a1f2e; background: white; padding: 40px; }
+    .header { border-bottom: 3px solid #1e40af; padding-bottom: 16px; margin-bottom: 24px; }
+    .city-name { font-size: 20px; font-weight: 700; color: #1e40af; letter-spacing: -0.5px; }
+    .report-title { font-size: 14px; font-weight: 600; color: #374151; margin-top: 4px; }
+    .meta { font-size: 10px; color: #6b7280; margin-top: 6px; }
+    .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+    .summary-card { border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px; }
+    .summary-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.05em; color: #6b7280; margin-bottom: 4px; }
+    .summary-value { font-size: 22px; font-weight: 700; }
+    .section-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #374151; border-bottom: 1px solid #e5e7eb; padding-bottom: 6px; margin-bottom: 12px; margin-top: 24px; }
+    .finding { border: 1px solid #e5e7eb; border-radius: 6px; padding: 14px; margin-bottom: 10px; page-break-inside: avoid; }
+    .finding-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+    .finding-id { font-family: monospace; font-size: 10px; color: #6b7280; }
+    .badges { display: flex; gap: 6px; }
+    .badge { font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 3px; text-transform: uppercase; }
+    .badge-critical { background: #fef2f2; color: #dc2626; }
+    .badge-high { background: #fffbeb; color: #d97706; }
+    .badge-medium { background: #eff6ff; color: #2563eb; }
+    .badge-low { background: #f0fdf4; color: #16a34a; }
+    .badge-open { background: #fef2f2; color: #dc2626; }
+    .badge-in-progress { background: #fffbeb; color: #d97706; }
+    .badge-resolved { background: #f0fdf4; color: #16a34a; }
+    .finding-title { font-size: 12px; font-weight: 700; color: #111827; margin-bottom: 4px; }
+    .finding-dept { font-size: 10px; color: #6b7280; margin-bottom: 8px; }
+    .label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #9ca3af; margin-bottom: 3px; }
+    .text { font-size: 10px; color: #374151; line-height: 1.5; margin-bottom: 8px; }
+    .meta-row { display: flex; gap: 24px; margin-top: 8px; }
+    .meta-item { font-size: 10px; }
+    .exposure { font-weight: 700; color: #dc2626; font-family: monospace; }
+    .footer { margin-top: 32px; border-top: 1px solid #e5e7eb; padding-top: 12px; font-size: 9px; color: #9ca3af; display: flex; justify-content: space-between; }
+    @media print { body { padding: 20px; } }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="city-name">City of West Liberty, Iowa</div>
+    <div class="report-title">FY2024 Audit Findings Report — City Council Packet</div>
+    <div class="meta">Prepared by: DOGE Municipal Platform · Generated: ${dateStr} · Confidential — For Official Use Only</div>
+  </div>
+
+  <div class="summary-grid">
+    <div class="summary-card">
+      <div class="summary-label">Open Findings</div>
+      <div class="summary-value" style="color:#dc2626">${openFindings.length}</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-label">In Progress</div>
+      <div class="summary-value" style="color:#d97706">${inProgress.length}</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-label">Resolved</div>
+      <div class="summary-value" style="color:#16a34a">${resolved.length}</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-label">Total Exposure</div>
+      <div class="summary-value" style="color:#dc2626;font-size:16px">\$${totalExposure.toLocaleString()}</div>
+    </div>
+  </div>
+
+  ${["open", "in-progress", "resolved"].map(status => {
+    const group = findings.filter(f => f.status === status);
+    if (group.length === 0) return "";
+    return `
+    <div class="section-title">${status === "in-progress" ? "In Progress" : status.charAt(0).toUpperCase() + status.slice(1)} Findings (${group.length})</div>
+    ${group.map(f => `
+    <div class="finding">
+      <div class="finding-header">
+        <div class="finding-id">${f.id}</div>
+        <div class="badges">
+          <span class="badge badge-${f.severity}">${f.severity}</span>
+          <span class="badge badge-${f.status}">${f.status}</span>
+        </div>
+      </div>
+      <div class="finding-title">${f.title}</div>
+      <div class="finding-dept">${f.dept}</div>
+      <div class="label">Finding</div>
+      <div class="text">${f.description}</div>
+      <div class="label">Recommendation</div>
+      <div class="text">${f.recommendation}</div>
+      <div class="meta-row">
+        <div class="meta-item"><strong>Due Date:</strong> ${f.dueDate}</div>
+        ${f.amount > 0 ? `<div class="meta-item"><strong>Financial Exposure:</strong> <span class="exposure">\$${f.amount.toLocaleString()}</span></div>` : ""}
+      </div>
+    </div>`).join("")}
+    `;
+  }).join("")}
+
+  <div class="footer">
+    <span>City of West Liberty, Iowa · 111 W 7th Street · (319) 627-2418 · cityhall@westlibertyia.gov</span>
+    <span>DOGE Municipal Platform · FY2024 Audit Report · Page 1 of 1</span>
+  </div>
+</body>
+</html>`;
+
+  const win = window.open("", "_blank");
+  if (win) {
+    win.document.write(html);
+    win.document.close();
+    setTimeout(() => win.print(), 500);
+  }
+  toast.success("Audit report opened — use Print → Save as PDF for City Council packet");
+}
 
 const FINDINGS = [
   {
@@ -92,8 +211,8 @@ const STATUS_CONFIG = {
 export default function AuditStudio() {
   const [filter, setFilter] = useState<string>("all");
   const [selected, setSelected] = useState<string | null>(null);
-
   const filtered = filter === "all" ? FINDINGS : FINDINGS.filter(f => f.status === filter || f.severity === filter);
+
   const selectedFinding = FINDINGS.find(f => f.id === selected);
 
   const openCount = FINDINGS.filter(f => f.status === "open").length;
@@ -104,6 +223,31 @@ export default function AuditStudio() {
   return (
     <DashboardLayout title="Audit Studio — FY2024">
       <div className="p-6 space-y-6">
+        {/* Export toolbar */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-lg font-bold" style={{ fontFamily: "'Syne', sans-serif", color: "oklch(0.18 0.018 250)" }}>Audit Studio</h1>
+            <p className="text-xs mt-0.5" style={{ color: "oklch(0.52 0.010 250)" }}>FY2024 Audit Findings · City of West Liberty, Iowa</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => exportAuditPDF(FINDINGS)}
+              className="flex items-center gap-1.5 px-3 py-2 rounded text-xs font-semibold transition-all"
+              style={{ background: "oklch(0.40 0.18 240)", color: "oklch(0.97 0.004 240)" }}
+            >
+              <Printer className="w-3.5 h-3.5" />
+              Export for City Council
+            </button>
+            <button
+              onClick={() => exportAuditPDF(FINDINGS.filter(f => f.status !== "resolved"))}
+              className="flex items-center gap-1.5 px-3 py-2 rounded text-xs font-semibold transition-all"
+              style={{ background: "oklch(0 0 0 / 5%)", border: "1px solid oklch(0 0 0 / 10%)", color: "oklch(0.35 0.018 250)" }}
+            >
+              <Download className="w-3.5 h-3.5" />
+              Open Findings Only
+            </button>
+          </div>
+        </div>
         {/* Summary cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {[

@@ -5,6 +5,7 @@
  */
 import DashboardLayout from "@/components/DashboardLayout";
 import SecureAuthGate from "@/components/SecureAuthGate";
+import OSIStackPanel from "@/components/OSIStackPanel";
 import { useState } from "react";
 import { Shield, Lock, Eye, AlertTriangle, CheckCircle2, Clock, Radio, Thermometer, Camera, Users, Key, Activity } from "lucide-react";
 import { toast } from "sonner";
@@ -283,6 +284,14 @@ export default function SecureModules() {
           </div>
         )}
 
+        {/* OSI Stack Panel — always visible below active module */}
+        <div className="mt-6 pt-6" style={{ borderTop: "1px solid oklch(0 0 0 / 8%)" }}>
+          <div className="section-label mb-3 flex items-center gap-2">
+            <span>Communication Security Stack</span>
+            <span className="text-[9px] px-1.5 py-0.5 rounded font-bold" style={{ background: "oklch(0.42 0.18 145 / 15%)", color: "oklch(0.42 0.18 145)" }}>LIVE</span>
+          </div>
+          <OSIStackPanel />
+        </div>
         {/* Detention Center */}
         {activeModule === "detention" && (
           <div className="space-y-4">

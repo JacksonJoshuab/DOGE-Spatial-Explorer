@@ -43,6 +43,7 @@ import CouncilReport from "./pages/CouncilReport";
 import StaffDirectory from "./pages/StaffDirectory";
 import FinanceHub from "./pages/FinanceHub";
 import ResidentMobile from "./pages/ResidentMobile";
+import UtilityBillQR from "./pages/UtilityBillQR";
 
 function AppShell() {
   return (
@@ -93,6 +94,7 @@ function Router() {
       <Route path="/staff" component={StaffDirectory} />
       <Route path="/finance" component={FinanceHub} />
       <Route path="/resident/m" component={ResidentMobile} />
+      <Route path="/utility-bill-qr" component={UtilityBillQR} />
 
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />

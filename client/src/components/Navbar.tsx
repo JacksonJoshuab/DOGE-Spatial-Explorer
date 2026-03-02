@@ -34,6 +34,7 @@ const DROPDOWN_LINKS = [
   { href: "/staff", label: "Staff Directory" },
   { href: "/council-report", label: "Council Report" },
   { href: "/finance", label: "Finance Hub" },
+  { href: "/utility-bill-qr", label: "Bill QR Generator" },
 ];
 
 const PUBLIC_PORTAL_LINKS = [
@@ -55,7 +56,8 @@ export default function Navbar() {
     location.startsWith("/le-hub") || location.startsWith("/utilities") ||
     location.startsWith("/parks") || location.startsWith("/community-dev") ||
     location.startsWith("/staff") || location.startsWith("/council-report") ||
-    location.startsWith("/finance");
+    location.startsWith("/finance") ||
+    location.startsWith("/utility-bill-qr");
 
   return (
     <header

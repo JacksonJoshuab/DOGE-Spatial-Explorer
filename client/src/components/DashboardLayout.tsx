@@ -7,7 +7,7 @@ import { Link, useLocation } from "wouter";
 import Navbar from "@/components/Navbar";
 import {
   LayoutDashboard, Map, Shield, Wrench, FileText, Lock,
-  Building2, Wifi, AlertTriangle, ChevronRight
+  Building2, Wifi, AlertTriangle, ChevronRight, ShieldCheck, Droplets
 } from "lucide-react";
 
 const SIDEBAR_SECTIONS = [
@@ -18,6 +18,13 @@ const SIDEBAR_SECTIONS = [
       { href: "/audit", label: "Audit Studio", icon: Shield },
       { href: "/operations", label: "Operations Center", icon: Wrench },
       { href: "/map", label: "Spatial Map", icon: Map },
+    ],
+  },
+  {
+    label: "Department Hubs",
+    links: [
+      { href: "/le-hub", label: "LE Hub", icon: ShieldCheck },
+      { href: "/utilities", label: "Utilities Hub", icon: Droplets },
     ],
   },
   {

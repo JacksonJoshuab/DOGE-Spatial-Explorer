@@ -309,6 +309,22 @@ export default function SpatialMap() {
     setTimeout(() => navigate("/operations"), 800);
   };
 
+  const dispatchAllAlerts = () => {
+    const activeAlerts = alerts.filter(a => (a.type === "alert" || a.type === "warning") && !a.dispatched);
+    if (activeAlerts.length === 0) {
+      toast.info("No active alerts to dispatch.");
+      return;
+    }
+    setAlerts(prev => prev.map(a =>
+      (a.type === "alert" || a.type === "warning") && !a.dispatched ? { ...a, dispatched: true } : a
+    ));
+    toast.success(
+      `Batch work order created — ${activeAlerts.length} alert${activeAlerts.length > 1 ? "s" : ""} dispatched to Operations Center.`,
+      { duration: 4000 }
+    );
+    setTimeout(() => navigate("/operations"), 1200);
+  };
+
   const alertCount = alerts.filter(a => a.type === "alert" && !a.dispatched).length;
   const warningCount = alerts.filter(a => a.type === "warning" && !a.dispatched).length;
   const onlineCount = IOT_SENSORS.filter(s => s.status === "online").length;
@@ -576,7 +592,15 @@ export default function SpatialMap() {
               <Activity className="w-3 h-3" style={{ color: "#16a34a" }} />
               <span className="text-[9px] font-mono font-bold uppercase tracking-wider" style={{ color: "#16a34a" }}>LIVE</span>
             </div>
-            <div className="flex items-center gap-6 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
+            <button
+              onClick={dispatchAllAlerts}
+              className="flex items-center gap-1.5 flex-shrink-0 mr-3 pr-3 border-r text-[9px] font-bold px-2 py-1 rounded transition-all"
+              style={{ borderColor: "oklch(1 0 0 / 12%)", background: alertCount + warningCount > 0 ? "oklch(0.58 0.22 25 / 25%)" : "oklch(1 0 0 / 5%)", border: `1px solid ${alertCount + warningCount > 0 ? "oklch(0.58 0.22 25 / 40%)" : "oklch(1 0 0 / 10%)"}`, color: alertCount + warningCount > 0 ? "oklch(0.72 0.22 25)" : "oklch(0.50 0.010 250)" }}
+            >
+              <Send className="w-2.5 h-2.5" />
+              DISPATCH ALL ({alertCount + warningCount})
+            </button>
+          <div className="flex items-center gap-6 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
               {alerts.map((alert) => {
                 const colors = getAlertTypeStyle(alert.type);
                 const sensor = IOT_SENSORS.find(s => s.id === alert.sensorId);

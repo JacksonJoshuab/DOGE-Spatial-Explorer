@@ -32,6 +32,10 @@ import SecureModules from "./pages/SecureModules";
 // Resident portal
 import ResidentPortal from "./pages/ResidentPortal";
 
+// Expanded department hubs
+import LEHub from "./pages/LEHub";
+import UtilitiesHub from "./pages/UtilitiesHub";
+
 function Router() {
   return (
     <Switch>
@@ -61,6 +65,10 @@ function Router() {
 
       {/* Resident portal */}
       <Route path="/resident" component={ResidentPortal} />
+
+      {/* Department hubs */}
+      <Route path="/le-hub" component={LEHub} />
+      <Route path="/utilities" component={UtilitiesHub} />
 
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />

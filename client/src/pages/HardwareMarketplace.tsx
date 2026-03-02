@@ -659,23 +659,77 @@ export default function HardwareMarketplace() {
               </div>
             )}
 
-            {/* Submitted step */}
+            {/* Submitted step — Capital Hub Funding Status Tracker */}
             {poStep === "submitted" && (
-              <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
-                <div
-                  className="w-14 h-14 rounded-full flex items-center justify-center mb-4"
-                  style={{ background: "oklch(0.38 0.18 145 / 12%)", border: "2px solid oklch(0.38 0.18 145 / 30%)" }}
-                >
-                  <CheckCircle2 className="w-7 h-7" style={{ color: "oklch(0.32 0.18 145)" }} />
+              <div className="flex-1 overflow-y-auto px-5 py-5 space-y-5">
+                {/* Confirmation header */}
+                <div className="flex items-center gap-3 p-4 rounded-xl" style={{ background: "oklch(0.38 0.18 145 / 8%)", border: "1px solid oklch(0.38 0.18 145 / 22%)" }}>
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "oklch(0.38 0.18 145 / 18%)" }}>
+                    <CheckCircle2 className="w-5 h-5" style={{ color: "oklch(0.32 0.18 145)" }} />
+                  </div>
+                  <div>
+                    <div className="text-sm font-bold" style={{ fontFamily: "'Syne', sans-serif", color: "oklch(0.18 0.018 250)" }}>PO Submitted to Capital Hub</div>
+                    <div className="text-[10px] font-mono mt-0.5" style={{ color: "oklch(0.52 0.010 250)" }}>Ref: WL-PO-{new Date().getFullYear()}-{String(new Date().getMonth() + 1).padStart(2, "0")}{String(new Date().getDate()).padStart(2, "0")}-{Math.floor(Math.random() * 9000 + 1000)}</div>
+                  </div>
                 </div>
-                <h3 className="text-base font-bold mb-2" style={{ fontFamily: "'Syne', sans-serif", color: "oklch(0.18 0.018 250)" }}>
-                  PO Submitted to Capital Hub
-                </h3>
-                <p className="text-xs leading-relaxed mb-5" style={{ color: "oklch(0.42 0.012 250)" }}>
-                  Your purchase order has been submitted to the Capital Hub for funding review.
-                  City Administrator Matt Muckler will receive a notification for approval.
-                </p>
-                <div className="flex flex-col gap-2 w-full">
+
+                {/* Live status tracker */}
+                <div>
+                  <div className="section-label mb-3">Capital Hub Funding Status</div>
+                  <div className="space-y-0">
+                    {[
+                      { step: 1, label: "PO Submitted", desc: "Purchase order received by Capital Hub", status: "complete", time: "Just now" },
+                      { step: 2, label: "Under Review", desc: "City Administrator reviewing funding request", status: "active", time: "Est. 24 hrs" },
+                      { step: 3, label: "Council Approval", desc: "Iowa Code §384 procurement approval", status: "pending", time: "Est. 3–5 days" },
+                      { step: 4, label: "Approved", desc: "Funds released — vendor notified", status: "pending", time: "Est. 5–7 days" },
+                    ].map((s, i, arr) => (
+                      <div key={s.step} className="flex gap-3">
+                        <div className="flex flex-col items-center">
+                          <div
+                            className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-[10px] font-bold"
+                            style={{
+                              background: s.status === "complete" ? "oklch(0.38 0.18 145)" : s.status === "active" ? "oklch(0.40 0.18 240)" : "oklch(0.92 0.004 250)",
+                              color: s.status === "pending" ? "oklch(0.55 0.010 250)" : "oklch(0.98 0.004 0)",
+                              border: s.status === "active" ? "2px solid oklch(0.40 0.18 240 / 40%)" : "none",
+                            }}
+                          >
+                            {s.status === "complete" ? <CheckCircle2 className="w-3.5 h-3.5" /> : s.step}
+                          </div>
+                          {i < arr.length - 1 && (
+                            <div className="w-0.5 h-8 my-0.5" style={{ background: s.status === "complete" ? "oklch(0.38 0.18 145 / 40%)" : "oklch(0 0 0 / 8%)" }} />
+                          )}
+                        </div>
+                        <div className="pb-4">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-semibold" style={{ color: s.status === "pending" ? "oklch(0.52 0.010 250)" : "oklch(0.18 0.018 250)" }}>{s.label}</span>
+                            {s.status === "active" && (
+                              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded animate-pulse" style={{ background: "oklch(0.40 0.18 240 / 12%)", color: "oklch(0.40 0.18 240)" }}>IN PROGRESS</span>
+                            )}
+                          </div>
+                          <div className="text-[10px] mt-0.5" style={{ color: "oklch(0.52 0.010 250)" }}>{s.desc}</div>
+                          <div className="text-[9px] font-mono mt-0.5" style={{ color: "oklch(0.62 0.010 250)" }}>{s.time}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Order amount summary */}
+                <div className="rounded-lg p-3" style={{ background: "oklch(0.965 0.005 240)", border: "1px solid oklch(0 0 0 / 8%)" }}>
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <div className="text-[10px] uppercase tracking-wider" style={{ color: "oklch(0.52 0.010 250)" }}>Funding Requested</div>
+                      <div className="text-lg font-mono font-bold mt-0.5" style={{ color: "oklch(0.40 0.18 240)" }}>${(cartTotal * 1.07).toFixed(2)}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-[10px] uppercase tracking-wider" style={{ color: "oklch(0.52 0.010 250)" }}>Dept</div>
+                      <div className="text-xs font-semibold mt-0.5" style={{ color: "oklch(0.28 0.018 250)" }}>{poForm.dept || "City Administration"}</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex flex-col gap-2">
                   <button
                     onClick={downloadPO}
                     className="flex items-center justify-center gap-2 w-full py-2 rounded text-sm font-semibold"

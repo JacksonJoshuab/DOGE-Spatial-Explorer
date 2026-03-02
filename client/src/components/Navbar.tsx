@@ -22,6 +22,8 @@ const DROPDOWN_LINKS = [
   { href: "/audit", label: "Audit Studio" },
   { href: "/operations", label: "Operations Center" },
   { href: "/map", label: "Spatial Map" },
+  { href: "/le-hub", label: "LE Hub" },
+  { href: "/utilities", label: "Utilities Hub" },
   { href: "/records", label: "Records Management" },
   { href: "/secure", label: "Secure Modules" },
 ];
@@ -39,7 +41,8 @@ export default function Navbar() {
 
   const isDashboard = location.startsWith("/dashboard") || location.startsWith("/audit") ||
     location.startsWith("/operations") || location.startsWith("/map") ||
-    location.startsWith("/records") || location.startsWith("/secure");
+    location.startsWith("/records") || location.startsWith("/secure") ||
+    location.startsWith("/le-hub") || location.startsWith("/utilities");
 
   return (
     <header

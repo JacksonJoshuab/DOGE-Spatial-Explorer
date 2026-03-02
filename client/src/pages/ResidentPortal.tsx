@@ -11,9 +11,10 @@ import Footer from "@/components/Footer";
 import {
   Server, DollarSign, Zap, CheckCircle2, ArrowRight, TrendingUp,
   Wifi, BarChart3, User, Mail, MapPin, Phone, ChevronRight,
-  Clock, Activity, CreditCard, Shield, AlertCircle, Download
+  Clock, Activity, CreditCard, Shield, AlertCircle, Download, X, Inbox
 } from "lucide-react";
 import { toast } from "sonner";
+import { motion, AnimatePresence } from "framer-motion";
 
 // ─── Tier definitions ────────────────────────────────────────────────────────
 const TIERS = [
@@ -118,6 +119,7 @@ export default function ResidentPortal() {
   const [form, setForm] = useState({ name: "", email: "", address: "", phone: "", tier: "standard" });
   const [liveEvents, setLiveEvents] = useState(LIVE_EVENTS);
   const [networkTotal, setNetworkTotal] = useState(2425.58);
+  const [showEmailModal, setShowEmailModal] = useState(false);
 
   // Simulate live earnings ticking up
   useEffect(() => {
@@ -145,7 +147,8 @@ export default function ResidentPortal() {
       return;
     }
     setStep("confirmed");
-    toast.success("Application submitted! You'll receive an ACH setup link within 24 hours.");
+    setShowEmailModal(true);
+    toast.success("Application submitted! Check your welcome email preview.");
   }
 
   return (
@@ -587,6 +590,123 @@ export default function ResidentPortal() {
       </section>
 
       <Footer />
+
+      {/* ─── Email Confirmation Modal ──────────────────────────────────────── */}
+      <AnimatePresence>
+        {showEmailModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style={{ background: "oklch(0 0 0 / 55%)" }}
+            onClick={() => setShowEmailModal(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.94, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.94, y: 16 }}
+              transition={{ type: "spring", stiffness: 380, damping: 30 }}
+              className="w-full max-w-lg rounded-2xl overflow-hidden"
+              style={{ background: "oklch(1 0 0)", boxShadow: "0 24px 64px oklch(0 0 0 / 28%)" }}
+              onClick={e => e.stopPropagation()}
+            >
+              {/* Modal header */}
+              <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: "oklch(0 0 0 / 8%)" }}>
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "oklch(0.38 0.18 145 / 12%)" }}>
+                    <Inbox className="w-4 h-4" style={{ color: "oklch(0.32 0.18 145)" }} />
+                  </div>
+                  <div>
+                    <div className="text-sm font-bold" style={{ color: "oklch(0.18 0.018 250)" }}>Welcome Email Preview</div>
+                    <div className="text-[10px]" style={{ color: "oklch(0.52 0.010 250)" }}>Sent to {form.email || "your email"}</div>
+                  </div>
+                </div>
+                <button onClick={() => setShowEmailModal(false)} className="p-1.5 rounded transition-colors" style={{ color: "oklch(0.52 0.010 250)" }}>
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Simulated email client chrome */}
+              <div className="px-5 py-3 border-b" style={{ background: "oklch(0.975 0.004 240)", borderColor: "oklch(0 0 0 / 8%)" }}>
+                <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-[11px]">
+                  <span style={{ color: "oklch(0.52 0.010 250)" }}>From:</span>
+                  <span style={{ color: "oklch(0.25 0.018 250)" }}>West Liberty Data Center &lt;datacenter@westlibertyia.gov&gt;</span>
+                  <span style={{ color: "oklch(0.52 0.010 250)" }}>To:</span>
+                  <span style={{ color: "oklch(0.25 0.018 250)" }}>{form.email || "resident@example.com"}</span>
+                  <span style={{ color: "oklch(0.52 0.010 250)" }}>Subject:</span>
+                  <span className="font-semibold" style={{ color: "oklch(0.18 0.018 250)" }}>Welcome to the West Liberty Distributed Data Center — Next Steps</span>
+                </div>
+              </div>
+
+              {/* Email body */}
+              <div className="px-5 py-5 space-y-4 text-[13px]" style={{ color: "oklch(0.28 0.014 250)", maxHeight: "360px", overflowY: "auto" }}>
+                <p>Hi <strong>{form.name || "Resident"}</strong>,</p>
+                <p>
+                  Thank you for enrolling in the <strong>West Liberty Distributed Data Center</strong> program
+                  under the <strong>{TIERS.find(t => t.id === form.tier)?.name}</strong> tier.
+                  Your application has been received and is under review by City Hall staff.
+                </p>
+
+                {/* Plan summary box */}
+                <div className="rounded-lg p-4" style={{ background: "oklch(0.38 0.18 145 / 8%)", border: "1px solid oklch(0.38 0.18 145 / 20%)" }}>
+                  <div className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: "oklch(0.32 0.18 145)" }}>Your Plan Summary</div>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    {[
+                      { label: "Plan", value: TIERS.find(t => t.id === form.tier)?.name || "" },
+                      { label: "Monthly Cost", value: `$${TIERS.find(t => t.id === form.tier)?.price}/mo` },
+                      { label: "Est. Earnings", value: `$${TIERS.find(t => t.id === form.tier)?.earnMin}–$${TIERS.find(t => t.id === form.tier)?.earnMax}/mo` },
+                      { label: "Storage", value: TIERS.find(t => t.id === form.tier)?.storage || "" },
+                      { label: "Bandwidth", value: TIERS.find(t => t.id === form.tier)?.bandwidth || "" },
+                      { label: "Address", value: form.address || "On file" },
+                    ].map(row => (
+                      <div key={row.label}>
+                        <div className="text-[10px] uppercase tracking-wider" style={{ color: "oklch(0.45 0.010 250)" }}>{row.label}</div>
+                        <div className="font-semibold" style={{ color: "oklch(0.22 0.018 250)" }}>{row.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <p><strong>What happens next:</strong></p>
+                <ol className="space-y-2 pl-4 list-decimal">
+                  <li><strong>Within 24 hours:</strong> A City Hall staff member will review your application and send you an approval notice.</li>
+                  <li><strong>Day 2–3:</strong> You'll receive a secure Plaid link to connect your bank account for ACH payments. No account numbers are stored by the city.</li>
+                  <li><strong>Day 3–5:</strong> Our technical team will email you a node configuration guide specific to your hardware and internet provider.</li>
+                  <li><strong>End of month:</strong> Your first ACH payment will be deposited directly into your bank account.</li>
+                </ol>
+
+                <div className="rounded-lg p-3" style={{ background: "oklch(0.40 0.18 240 / 8%)", border: "1px solid oklch(0.40 0.18 240 / 18%)" }}>
+                  <p className="text-xs" style={{ color: "oklch(0.35 0.018 250)" }}>
+                    <strong>Questions?</strong> Contact the West Liberty Data Center team at{" "}
+                    <span style={{ color: "oklch(0.40 0.18 240)" }}>datacenter@westlibertyia.gov</span> or call City Hall at{" "}
+                    <span style={{ color: "oklch(0.40 0.18 240)" }}>(319) 627-2418</span>.
+                  </p>
+                </div>
+
+                <p>Thank you for helping build West Liberty's digital infrastructure.</p>
+                <p style={{ color: "oklch(0.42 0.012 250)" }}>
+                  — Matt Muckler, City Administrator<br />
+                  City of West Liberty, Iowa<br />
+                  111 W 7th St · West Liberty, IA 52776
+                </p>
+              </div>
+
+              {/* Modal footer */}
+              <div className="flex items-center justify-between px-5 py-4 border-t" style={{ borderColor: "oklch(0 0 0 / 8%)", background: "oklch(0.975 0.004 240)" }}>
+                <p className="text-[10px]" style={{ color: "oklch(0.55 0.010 250)" }}>This is a preview of the email that will be sent to {form.email || "your inbox"}</p>
+                <button
+                  onClick={() => setShowEmailModal(false)}
+                  className="px-4 py-1.5 rounded text-xs font-semibold transition-all"
+                  style={{ background: "oklch(0.38 0.18 145)", color: "oklch(0.98 0.004 145)" }}
+                >
+                  Got it
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

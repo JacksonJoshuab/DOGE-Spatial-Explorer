@@ -49,6 +49,7 @@ import ResidentMobile from "./pages/ResidentMobile";
 import UtilityBillQR from "./pages/UtilityBillQR";
 import Transparency from "./pages/Transparency";
 import AdminRoles from "./pages/AdminRoles";
+import SensorDetail from "./pages/SensorDetail";
 
 function AppShell() {
   return (
@@ -82,6 +83,7 @@ function Router() {
       <Route path="/audit">{() => <RouteGuard path="/audit"><AuditStudio /></RouteGuard>}</Route>
       <Route path="/operations">{() => <RouteGuard path="/operations"><OperationsCenter /></RouteGuard>}</Route>
       <Route path="/map">{() => <RouteGuard path="/map"><SpatialMap /></RouteGuard>}</Route>
+      <Route path="/map/sensor/:id">{(params) => <RouteGuard path="/map"><SensorDetail /></RouteGuard>}</Route>
 
       {/* Compliance & secure */}
       <Route path="/records">{() => <RouteGuard path="/records"><RecordsManagement /></RouteGuard>}</Route>

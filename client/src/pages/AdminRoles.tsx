@@ -6,15 +6,16 @@
  *
  * Design: Civic Intelligence Light
  */
-import { useState } from "react";
+import { useState, useRef } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import {
   Shield, Users, Lock, Unlock, ChevronDown, ChevronUp,
   Plus, Pencil, Trash2, CheckCircle2, XCircle, Save, X,
-  Eye, EyeOff, AlertTriangle, UserCog, Key, Building2
+  Eye, EyeOff, AlertTriangle, UserCog, Key, Building2, QrCode, Loader2
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { trpc } from "@/lib/trpc";
 
 // ─── Role definitions ─────────────────────────────────────────────────────────
 export const ROLES = [
@@ -158,6 +159,65 @@ export default function AdminRoles() {
   const [showAddStaff, setShowAddStaff] = useState(false);
   const [newStaff, setNewStaff] = useState({ name: "", email: "", roleId: "public-works", department: "" });
   const [pendingChanges, setPendingChanges] = useState<Set<string>>(new Set());
+
+  // ── MFA Enrollment modal state ─────────────────────────────────────────────
+  const [mfaEnrollTarget, setMfaEnrollTarget] = useState<StaffAccount | null>(null);
+  const [mfaStep, setMfaStep] = useState<"loading" | "scan" | "verify" | "done">("loading");
+  const [mfaQrUrl, setMfaQrUrl] = useState("");
+  const [mfaSecret, setMfaSecret] = useState("");
+  const [mfaCode, setMfaCode] = useState("");
+  const [mfaError, setMfaError] = useState("");
+  const mfaCodeRef = useRef<HTMLInputElement>(null);
+
+  const generateSecretMutation = trpc.mfa.generateSecret.useMutation();
+  const verifyAndEnrollMutation = trpc.mfa.verifyAndEnroll.useMutation();
+
+  const openMfaEnroll = async (member: StaffAccount) => {
+    setMfaEnrollTarget(member);
+    setMfaStep("loading");
+    setMfaCode("");
+    setMfaError("");
+    try {
+      const result = await generateSecretMutation.mutateAsync({
+        openId: member.id,
+        accountName: member.email,
+      });
+      setMfaSecret(result.secret);
+      // Encode otpauth URI into a QR code via Google Charts API
+      setMfaQrUrl(`https://chart.googleapis.com/chart?chs=200x200&chld=M|0&cht=qr&chl=${encodeURIComponent(result.otpauthUrl)}`);
+      setMfaStep("scan");
+    } catch {
+      toast.error("Failed to generate TOTP secret. Try again.");
+      setMfaEnrollTarget(null);
+    }
+  };
+
+  const submitMfaEnroll = async () => {
+    if (mfaCode.length !== 6) { setMfaError("Enter a 6-digit code."); return; }
+    setMfaError("");
+    try {
+      const result = await verifyAndEnrollMutation.mutateAsync({
+        openId: mfaEnrollTarget!.id,
+        code: mfaCode,
+      });
+      if (!result.success) {
+        setMfaError(result.error ?? "Invalid code. Try again.");
+        return;
+      }
+      setMfaStep("done");
+      setStaff(prev => prev.map(s => s.id === mfaEnrollTarget!.id ? { ...s, mfaEnabled: true } : s));
+      appendAudit({
+        action: "MFA_ENROLLED",
+        target: `${mfaEnrollTarget!.name} (${mfaEnrollTarget!.id})`,
+        category: "rbac",
+        severity: "info",
+        detail: `MFA successfully enrolled for ${mfaEnrollTarget!.email} via TOTP.`,
+      });
+      toast.success(`MFA enrolled for ${mfaEnrollTarget!.name}`);
+    } catch {
+      setMfaError("Server error. Please try again.");
+    }
+  };
 
   const togglePermission = (roleId: string, moduleId: string) => {
     const wasGranted = permissions[roleId]?.has(moduleId);
@@ -610,18 +670,34 @@ export default function AdminRoles() {
                           <td className="px-4 py-3" style={{ color: "oklch(0.45 0.010 250)" }}>{member.department}</td>
                           <td className="px-4 py-3 font-mono" style={{ color: "oklch(0.52 0.010 250)" }}>{member.lastLogin}</td>
                           <td className="px-4 py-3">
-                            <button
-                              onClick={() => toggleMFA(member.id)}
-                              className="flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded transition-all"
-                              style={{
-                                background: member.mfaEnabled ? "oklch(0.42 0.18 145 / 12%)" : "oklch(0.55 0.22 25 / 12%)",
-                                color: member.mfaEnabled ? "oklch(0.38 0.18 145)" : "oklch(0.48 0.22 25)",
-                                border: `1px solid ${member.mfaEnabled ? "oklch(0.42 0.18 145 / 30%)" : "oklch(0.55 0.22 25 / 30%)"}`,
-                              }}
-                            >
-                              {member.mfaEnabled ? <Key className="w-2.5 h-2.5" /> : <AlertTriangle className="w-2.5 h-2.5" />}
-                              {member.mfaEnabled ? "ON" : "OFF"}
-                            </button>
+                            {member.mfaEnabled ? (
+                              <span
+                                className="flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded"
+                                style={{
+                                  background: "oklch(0.42 0.18 145 / 12%)",
+                                  color: "oklch(0.38 0.18 145)",
+                                  border: "1px solid oklch(0.42 0.18 145 / 30%)",
+                                }}
+                              >
+                                <Key className="w-2.5 h-2.5" /> ON
+                              </span>
+                            ) : (
+                              <button
+                                onClick={() => member.active && openMfaEnroll(member)}
+                                disabled={!member.active}
+                                className="flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded transition-all"
+                                style={{
+                                  background: "oklch(0.55 0.22 25 / 12%)",
+                                  color: "oklch(0.48 0.22 25)",
+                                  border: "1px solid oklch(0.55 0.22 25 / 30%)",
+                                  opacity: member.active ? 1 : 0.5,
+                                  cursor: member.active ? "pointer" : "not-allowed",
+                                }}
+                                title="Click to enroll in MFA"
+                              >
+                                <QrCode className="w-2.5 h-2.5" /> Enable
+                              </button>
+                            )}
                           </td>
                           <td className="px-4 py-3">
                             <span
@@ -718,6 +794,130 @@ export default function AdminRoles() {
           RBAC Admin Panel — City of West Liberty, IA · Changes are logged to the audit trail · Iowa Code Ch. 22 compliance
         </div>
       </div>
+
+      {/* ── MFA Enrollment Modal ── */}
+      {mfaEnrollTarget && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: "oklch(0 0 0 / 55%)" }}
+          onClick={e => { if (e.target === e.currentTarget) setMfaEnrollTarget(null); }}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl shadow-2xl p-6"
+            style={{ background: "oklch(1 0 0)", border: "1px solid oklch(0 0 0 / 10%)" }}
+          >
+            {/* Modal header */}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <QrCode className="w-4 h-4" style={{ color: "oklch(0.45 0.20 240)" }} />
+                <span className="text-sm font-bold" style={{ fontFamily: "'Syne', sans-serif", color: "oklch(0.18 0.018 250)" }}>Enable MFA</span>
+              </div>
+              <button onClick={() => setMfaEnrollTarget(null)} className="p-1 rounded" style={{ color: "oklch(0.52 0.010 250)" }}>
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <p className="text-[11px] mb-4" style={{ color: "oklch(0.45 0.010 250)" }}>
+              Enrolling <strong>{mfaEnrollTarget.name}</strong> ({mfaEnrollTarget.email})
+            </p>
+
+            {mfaStep === "loading" && (
+              <div className="flex flex-col items-center gap-3 py-8">
+                <Loader2 className="w-6 h-6 animate-spin" style={{ color: "oklch(0.45 0.20 240)" }} />
+                <span className="text-[11px]" style={{ color: "oklch(0.52 0.010 250)" }}>Generating TOTP secret…</span>
+              </div>
+            )}
+
+            {mfaStep === "scan" && (
+              <div className="space-y-4">
+                <div className="flex flex-col items-center gap-3">
+                  <div className="p-2 rounded-xl" style={{ background: "oklch(0.97 0.003 240)", border: "1px solid oklch(0 0 0 / 8%)" }}>
+                    <img src={mfaQrUrl} alt="TOTP QR Code" className="w-48 h-48" />
+                  </div>
+                  <p className="text-[10px] text-center" style={{ color: "oklch(0.52 0.010 250)" }}>
+                    Scan with Google Authenticator, Authy, or any TOTP app
+                  </p>
+                </div>
+                <div className="rounded-lg p-2" style={{ background: "oklch(0.97 0.003 240)", border: "1px solid oklch(0 0 0 / 6%)" }}>
+                  <div className="text-[9px] font-bold mb-1" style={{ color: "oklch(0.52 0.010 250)" }}>MANUAL ENTRY KEY</div>
+                  <div className="font-mono text-[10px] break-all" style={{ color: "oklch(0.18 0.018 250)" }}>{mfaSecret}</div>
+                </div>
+                <button
+                  onClick={() => { setMfaStep("verify"); setTimeout(() => mfaCodeRef.current?.focus(), 50); }}
+                  className="w-full py-2 rounded-lg text-sm font-semibold transition-all"
+                  style={{ background: "oklch(0.45 0.20 240)", color: "oklch(1 0 0)" }}
+                >
+                  I've scanned the code →
+                </button>
+              </div>
+            )}
+
+            {mfaStep === "verify" && (
+              <div className="space-y-4">
+                <p className="text-[11px]" style={{ color: "oklch(0.45 0.010 250)" }}>
+                  Enter the 6-digit code from your authenticator app to confirm enrollment.
+                </p>
+                <input
+                  ref={mfaCodeRef}
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                  value={mfaCode}
+                  onChange={e => { setMfaCode(e.target.value.replace(/\D/g, "")); setMfaError(""); }}
+                  onKeyDown={e => e.key === "Enter" && submitMfaEnroll()}
+                  placeholder="000000"
+                  className="w-full text-center text-2xl font-mono tracking-[0.4em] py-3 rounded-lg outline-none"
+                  style={{
+                    background: "oklch(0.97 0.003 240)",
+                    border: `1px solid ${mfaError ? "oklch(0.55 0.22 25)" : "oklch(0 0 0 / 12%)"}`,
+                    color: "oklch(0.18 0.018 250)",
+                  }}
+                />
+                {mfaError && <p className="text-[10px]" style={{ color: "oklch(0.55 0.22 25)" }}>{mfaError}</p>}
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setMfaStep("scan")}
+                    className="flex-1 py-2 rounded-lg text-sm font-semibold transition-all"
+                    style={{ background: "oklch(0.965 0.005 240)", border: "1px solid oklch(0 0 0 / 8%)", color: "oklch(0.45 0.010 250)" }}
+                  >
+                    ← Back
+                  </button>
+                  <button
+                    onClick={submitMfaEnroll}
+                    disabled={verifyAndEnrollMutation.isPending}
+                    className="flex-1 py-2 rounded-lg text-sm font-semibold transition-all flex items-center justify-center gap-1"
+                    style={{ background: "oklch(0.45 0.20 240)", color: "oklch(1 0 0)", opacity: verifyAndEnrollMutation.isPending ? 0.7 : 1 }}
+                  >
+                    {verifyAndEnrollMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                    Verify & Enroll
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {mfaStep === "done" && (
+              <div className="flex flex-col items-center gap-4 py-4">
+                <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: "oklch(0.42 0.18 145 / 15%)" }}>
+                  <CheckCircle2 className="w-6 h-6" style={{ color: "oklch(0.38 0.18 145)" }} />
+                </div>
+                <div className="text-center">
+                  <div className="font-bold text-sm mb-1" style={{ fontFamily: "'Syne', sans-serif", color: "oklch(0.18 0.018 250)" }}>MFA Enrolled</div>
+                  <p className="text-[11px]" style={{ color: "oklch(0.52 0.010 250)" }}>
+                    {mfaEnrollTarget.name} can now authenticate with their TOTP app.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setMfaEnrollTarget(null)}
+                  className="w-full py-2 rounded-lg text-sm font-semibold"
+                  style={{ background: "oklch(0.42 0.18 145)", color: "oklch(1 0 0)" }}
+                >
+                  Done
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 }

@@ -588,6 +588,14 @@ export default function SpatialMap() {
                       {selectedSensor.alert}
                     </div>
                   )}
+                  <button
+                    onClick={() => navigate(`/map/sensor/${selectedSensor.id}`)}
+                    className="w-full py-1.5 rounded text-xs font-semibold flex items-center justify-center gap-1.5"
+                    style={{ background: "oklch(0.45 0.20 240 / 10%)", color: "oklch(0.40 0.18 240)", border: "1px solid oklch(0.45 0.20 240 / 20%)" }}
+                  >
+                    View Details &amp; History
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
                   {selectedSensor.alert && (
                     <button
                       onClick={() => {

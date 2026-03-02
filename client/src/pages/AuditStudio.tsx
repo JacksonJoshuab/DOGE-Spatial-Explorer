@@ -8,6 +8,30 @@ import React, { useState, useMemo } from "react";
 import { toast } from "sonner";
 import { useAuth, AuditEntry } from "@/contexts/AuthContext";
 
+function exportFilteredLogCSV(entries: AuditEntry[], filterLabel: string) {
+  const header = ["ID", "Timestamp", "Actor", "Role", "Category", "Action", "Target", "Severity", "Detail"];
+  const rows = entries.map(e => [
+    e.id,
+    new Date(e.timestamp).toISOString(),
+    e.actor,
+    e.actorRole,
+    e.category,
+    e.action,
+    e.target,
+    e.severity,
+    (e.detail ?? "").replace(/"/g, '""'),
+  ].map(v => `"${v}"`).join(","));
+  const csv = [header.join(","), ...rows].join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  const ts = new Date().toISOString().slice(0, 10);
+  a.download = `westliberty-audit-log-${filterLabel}-${ts}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 function exportAuditPDF(findings: typeof FINDINGS) {
   const now = new Date();
   const dateStr = now.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
@@ -437,6 +461,19 @@ export default function AuditStudio() {
                   <X className="w-3 h-3" /> Clear Filters
                 </button>
               )}
+              <button
+                onClick={() => {
+                  const label = hasActiveFilters ? "filtered" : "full";
+                  exportFilteredLogCSV(filteredLog, label);
+                  toast.success(`Exported ${filteredLog.length} ${label} entries to CSV`);
+                }}
+                className="flex items-center gap-1 text-[10px] px-2 py-1 rounded font-medium transition-all"
+                style={{ background: "oklch(0.42 0.18 145 / 10%)", border: "1px solid oklch(0.42 0.18 145 / 25%)", color: "oklch(0.38 0.18 145)" }}
+                title={hasActiveFilters ? `Export ${filteredLog.length} filtered entries` : `Export all ${filteredLog.length} entries`}
+              >
+                <Download className="w-3 h-3" />
+                {hasActiveFilters ? `Export ${filteredLog.length} filtered` : "Export CSV"}
+              </button>
               <button
                 onClick={() => { clearAuditLog(); toast.success("Audit log cleared"); }}
                 className="text-[10px] px-2 py-1 rounded font-medium transition-all"

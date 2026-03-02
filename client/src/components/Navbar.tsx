@@ -24,6 +24,8 @@ const DROPDOWN_LINKS = [
   { href: "/map", label: "Spatial Map" },
   { href: "/le-hub", label: "LE Hub" },
   { href: "/utilities", label: "Utilities Hub" },
+  { href: "/parks", label: "Parks & Rec Hub" },
+  { href: "/community-dev", label: "Community Dev" },
   { href: "/records", label: "Records Management" },
   { href: "/secure", label: "Secure Modules" },
 ];
@@ -42,7 +44,8 @@ export default function Navbar() {
   const isDashboard = location.startsWith("/dashboard") || location.startsWith("/audit") ||
     location.startsWith("/operations") || location.startsWith("/map") ||
     location.startsWith("/records") || location.startsWith("/secure") ||
-    location.startsWith("/le-hub") || location.startsWith("/utilities");
+    location.startsWith("/le-hub") || location.startsWith("/utilities") ||
+    location.startsWith("/parks") || location.startsWith("/community-dev");
 
   return (
     <header

@@ -35,6 +35,8 @@ import ResidentPortal from "./pages/ResidentPortal";
 // Expanded department hubs
 import LEHub from "./pages/LEHub";
 import UtilitiesHub from "./pages/UtilitiesHub";
+import ParksHub from "./pages/ParksHub";
+import CommunityDevHub from "./pages/CommunityDevHub";
 
 function Router() {
   return (
@@ -69,6 +71,8 @@ function Router() {
       {/* Department hubs */}
       <Route path="/le-hub" component={LEHub} />
       <Route path="/utilities" component={UtilitiesHub} />
+      <Route path="/parks" component={ParksHub} />
+      <Route path="/community-dev" component={CommunityDevHub} />
 
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />

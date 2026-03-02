@@ -5,6 +5,7 @@ import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { CommandPalette, CommandPaletteProvider } from "./components/CommandPalette";
+import { NotificationProvider, NotificationPanel } from "./components/NotificationPanel";
 
 // Public pages
 import Home from "./pages/Home";
@@ -39,12 +40,14 @@ import UtilitiesHub from "./pages/UtilitiesHub";
 import ParksHub from "./pages/ParksHub";
 import CommunityDevHub from "./pages/CommunityDevHub";
 import CouncilReport from "./pages/CouncilReport";
+import StaffDirectory from "./pages/StaffDirectory";
 
 function AppShell() {
   return (
     <>
       <Router />
       <CommandPalette />
+      <NotificationPanel />
     </>
   );
 }
@@ -85,6 +88,7 @@ function Router() {
       <Route path="/parks" component={ParksHub} />
       <Route path="/community-dev" component={CommunityDevHub} />
       <Route path="/council-report" component={CouncilReport} />
+      <Route path="/staff" component={StaffDirectory} />
 
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
@@ -97,10 +101,12 @@ function App() {
     <ErrorBoundary>
       <ThemeProvider defaultTheme="light" switchable>
         <CommandPaletteProvider>
-          <TooltipProvider>
-            <Toaster />
-            <AppShell />
-          </TooltipProvider>
+          <NotificationProvider>
+            <TooltipProvider>
+              <Toaster />
+              <AppShell />
+            </TooltipProvider>
+          </NotificationProvider>
         </CommandPaletteProvider>
       </ThemeProvider>
     </ErrorBoundary>

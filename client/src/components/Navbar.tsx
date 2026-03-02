@@ -9,6 +9,7 @@ import { Building2, Menu, X, ChevronDown, LayoutDashboard, Sun, Moon, Search } f
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useCommandPalette } from "@/components/CommandPalette";
+import { NotificationBell } from "@/components/NotificationPanel";
 
 const NAV_LINKS = [
   { href: "/platform", label: "Platform" },
@@ -30,6 +31,8 @@ const DROPDOWN_LINKS = [
   { href: "/community-dev", label: "Community Dev" },
   { href: "/records", label: "Records Management" },
   { href: "/secure", label: "Secure Modules" },
+  { href: "/staff", label: "Staff Directory" },
+  { href: "/council-report", label: "Council Report" },
 ];
 
 const PUBLIC_PORTAL_LINKS = [
@@ -49,7 +52,8 @@ export default function Navbar() {
     location.startsWith("/operations") || location.startsWith("/map") ||
     location.startsWith("/records") || location.startsWith("/secure") ||
     location.startsWith("/le-hub") || location.startsWith("/utilities") ||
-    location.startsWith("/parks") || location.startsWith("/community-dev");
+    location.startsWith("/parks") || location.startsWith("/community-dev") ||
+    location.startsWith("/staff") || location.startsWith("/council-report");
 
   return (
     <header
@@ -188,6 +192,9 @@ export default function Navbar() {
           >
             Request Demo
           </Link>
+
+          {/* Notification bell */}
+          <NotificationBell />
 
           {/* Theme toggle */}
           {toggleTheme && (

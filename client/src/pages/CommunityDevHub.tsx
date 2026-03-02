@@ -12,8 +12,9 @@ import { Progress } from "@/components/ui/progress";
 import {
   TrendingUp, TrendingDown, AlertTriangle, Building2, FileText,
   DollarSign, MapPin, Clock, CheckCircle2, XCircle, Plus,
-  BarChart3, Users, Calendar, ExternalLink
+  BarChart3, Users, Calendar, ExternalLink, GitBranch
 } from "lucide-react";
+import BudgetAmendmentWorkflow from "@/components/BudgetAmendmentWorkflow";
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, ReferenceLine, LineChart, Line, Legend
@@ -241,7 +242,7 @@ export default function CommunityDevHub() {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-4 w-full max-w-xl">
+          <TabsList className="grid grid-cols-5 w-full max-w-2xl">
             <TabsTrigger value="budget">
               <BarChart3 className="w-3.5 h-3.5 mr-1.5" />Budget
             </TabsTrigger>
@@ -256,6 +257,11 @@ export default function CommunityDevHub() {
             </TabsTrigger>
             <TabsTrigger value="grants">
               <DollarSign className="w-3.5 h-3.5 mr-1.5" />Grants
+            </TabsTrigger>
+            <TabsTrigger value="amendment">
+              <GitBranch className="w-3.5 h-3.5 mr-1.5" />
+              <span>Amendment</span>
+              <span className="ml-1.5 w-4 h-4 rounded-full text-[9px] font-bold flex items-center justify-center" style={{ background: "oklch(0.55 0.22 25)", color: "white" }}>1</span>
             </TabsTrigger>
           </TabsList>
 
@@ -582,6 +588,11 @@ export default function CommunityDevHub() {
                 );
               })}
             </div>
+          </TabsContent>
+
+          {/* Budget Amendment Tab */}
+          <TabsContent value="amendment" className="mt-4">
+            <BudgetAmendmentWorkflow />
           </TabsContent>
         </Tabs>
 

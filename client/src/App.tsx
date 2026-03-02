@@ -41,6 +41,8 @@ import ParksHub from "./pages/ParksHub";
 import CommunityDevHub from "./pages/CommunityDevHub";
 import CouncilReport from "./pages/CouncilReport";
 import StaffDirectory from "./pages/StaffDirectory";
+import FinanceHub from "./pages/FinanceHub";
+import ResidentMobile from "./pages/ResidentMobile";
 
 function AppShell() {
   return (
@@ -89,6 +91,8 @@ function Router() {
       <Route path="/community-dev" component={CommunityDevHub} />
       <Route path="/council-report" component={CouncilReport} />
       <Route path="/staff" component={StaffDirectory} />
+      <Route path="/finance" component={FinanceHub} />
+      <Route path="/resident/m" component={ResidentMobile} />
 
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />

@@ -9,7 +9,7 @@ import Navbar from "@/components/Navbar";
 import {
   LayoutDashboard, Map, Shield, Wrench, FileText, Lock,
   Building2, Wifi, AlertTriangle, ChevronRight, ShieldCheck, Droplets,
-  Menu, X, Trees, HardHat
+  Menu, X, Trees, HardHat, DollarSign, Users, BookOpen
 } from "lucide-react";
 
 const SIDEBAR_SECTIONS = [
@@ -29,6 +29,14 @@ const SIDEBAR_SECTIONS = [
       { href: "/utilities", label: "Utilities Hub", icon: Droplets },
       { href: "/parks", label: "Parks & Rec Hub", icon: Trees },
       { href: "/community-dev", label: "Community Dev", icon: HardHat },
+    ],
+  },
+  {
+    label: "Finance & Reporting",
+    links: [
+      { href: "/finance", label: "Finance Hub", icon: DollarSign },
+      { href: "/council-report", label: "Council Report", icon: BookOpen },
+      { href: "/staff", label: "Staff Directory", icon: Users },
     ],
   },
   {

@@ -33,6 +33,7 @@ const DROPDOWN_LINKS = [
   { href: "/secure", label: "Secure Modules" },
   { href: "/staff", label: "Staff Directory" },
   { href: "/council-report", label: "Council Report" },
+  { href: "/finance", label: "Finance Hub" },
 ];
 
 const PUBLIC_PORTAL_LINKS = [
@@ -53,7 +54,8 @@ export default function Navbar() {
     location.startsWith("/records") || location.startsWith("/secure") ||
     location.startsWith("/le-hub") || location.startsWith("/utilities") ||
     location.startsWith("/parks") || location.startsWith("/community-dev") ||
-    location.startsWith("/staff") || location.startsWith("/council-report");
+    location.startsWith("/staff") || location.startsWith("/council-report") ||
+    location.startsWith("/finance");
 
   return (
     <header

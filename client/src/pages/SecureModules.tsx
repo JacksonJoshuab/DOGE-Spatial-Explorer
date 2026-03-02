@@ -4,6 +4,7 @@
  * Modular add-ins for law enforcement and secure facilities
  */
 import DashboardLayout from "@/components/DashboardLayout";
+import SecureAuthGate from "@/components/SecureAuthGate";
 import { useState } from "react";
 import { Shield, Lock, Eye, AlertTriangle, CheckCircle2, Clock, Radio, Thermometer, Camera, Users, Key, Activity } from "lucide-react";
 import { toast } from "sonner";
@@ -104,6 +105,11 @@ export default function SecureModules() {
   const [activeModule, setActiveModule] = useState("evidence");
 
   return (
+    <SecureAuthGate
+      moduleName="Secure Modules — Evidence, SCIF & Detention"
+      classificationLevel="SECRET"
+      requiredRole="Law Enforcement / City Administrator"
+    >
     <DashboardLayout title="Secure Modules">
       <div className="p-6 space-y-6">
         {/* Module selector */}
@@ -376,5 +382,6 @@ export default function SecureModules() {
         )}
       </div>
     </DashboardLayout>
+    </SecureAuthGate>
   );
 }

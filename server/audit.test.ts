@@ -67,7 +67,7 @@ describe("audit.append", () => {
     const caller = appRouter.createCaller(makeCtx());
     await caller.audit.append({ ...SAMPLE_ENTRY, severity: "critical" });
     expect(notifyOwner).toHaveBeenCalledWith(
-      expect.objectContaining({ title: expect.stringContaining("Critical Audit Event") })
+      expect.objectContaining({ title: expect.stringContaining("Critical IoT Alert") })
     );
   });
 

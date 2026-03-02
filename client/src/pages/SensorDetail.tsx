@@ -11,10 +11,11 @@ import DashboardLayout from "@/components/DashboardLayout";
 import {
   ArrowLeft, Activity, AlertTriangle, CheckCircle2, Clock, Wifi,
   WifiOff, MapPin, Cpu, Wrench, FileText, ChevronRight, RefreshCw,
-  Thermometer, Droplets, Gauge, Zap, Shield, Layers
+  Thermometer, Droplets, Gauge, Zap, Shield, Layers, Database
 } from "lucide-react";
 import { useIoTSensors, SensorReading } from "@/hooks/useIoTSensors";
 import { useAuth } from "@/contexts/AuthContext";
+import { trpc } from "@/lib/trpc";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { toast } from "sonner";
 
@@ -109,10 +110,29 @@ export default function SensorDetail() {
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const { sensors, wsStatus } = useIoTSensors();
-  const { auditLog } = useAuth();
+  const { auditLog, actorName } = useAuth();
 
   const sensor = useMemo(() => sensors.find(s => s.id === id), [sensors, id]);
-  const telemetry = useMemo(() => sensor ? generateTelemetryHistory(sensor) : [], [sensor?.id]);
+
+  // Fetch real 24h readings from Postgres; fall back to synthetic if empty
+  const { data: dbReadings, isLoading: readingsLoading } = trpc.sensorReadings.getLast24h.useQuery(
+    { sensorId: id ?? "" },
+    { enabled: !!id, refetchInterval: 30_000 }
+  );
+
+  const telemetry = useMemo(() => {
+    if (dbReadings && dbReadings.length >= 5) {
+      // DB readings are newest-first; reverse for chart (oldest → newest)
+      return [...dbReadings].reverse().map(r => ({
+        time: new Date(r.ts).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false }),
+        value: parseFloat(r.value) || 0,
+        status: r.status,
+      }));
+    }
+    return sensor ? generateTelemetryHistory(sensor) : [];
+  }, [dbReadings, sensor?.id]);
+
+  const telemetrySource = dbReadings && dbReadings.length >= 5 ? "live" : "simulated";
 
   // Filter audit log for this sensor
   const sensorAuditHistory = useMemo(() =>
@@ -133,6 +153,25 @@ export default function SensorDetail() {
     estimatedHours: "2",
   });
   const [workOrderSubmitted, setWorkOrderSubmitted] = useState(false);
+  const [submittedWoNumber, setSubmittedWoNumber] = useState<string | null>(null);
+
+  const createWorkOrderMutation = trpc.workOrders.create.useMutation({
+    onSuccess: (data) => {
+      setSubmittedWoNumber(data.woNumber);
+      setWorkOrderSubmitted(true);
+      setShowWorkOrder(false);
+      toast.success(`Work order ${data.woNumber} created and assigned to ${workOrder.assignee}`);
+    },
+    onError: (err) => {
+      toast.error(`Failed to create work order: ${err.message}`);
+    },
+  });
+
+  // Fetch existing work orders for this sensor
+  const { data: sensorWorkOrders } = trpc.workOrders.bySensor.useQuery(
+    { sensorId: id ?? "" },
+    { enabled: !!id }
+  );
 
   // Pre-fill work order when sensor loads
   useEffect(() => {
@@ -155,9 +194,16 @@ export default function SensorDetail() {
 
   const submitWorkOrder = () => {
     if (!workOrder.title.trim()) { toast.error("Work order title is required"); return; }
-    toast.success(`Work order #WO-${Date.now().toString().slice(-5)} created and assigned to ${workOrder.assignee}`);
-    setWorkOrderSubmitted(true);
-    setShowWorkOrder(false);
+    createWorkOrderMutation.mutate({
+      title: workOrder.title,
+      priority: workOrder.priority,
+      sensorId: sensor?.id,
+      sensorName: sensor?.name,
+      assignee: workOrder.assignee,
+      description: workOrder.description,
+      estimatedHours: workOrder.estimatedHours,
+      createdBy: actorName ?? "System",
+    });
   };
 
   if (!sensor) {
@@ -285,7 +331,11 @@ export default function SensorDetail() {
               </h2>
             </div>
             <span className="text-[10px] font-mono px-2 py-0.5 rounded" style={{ background: "oklch(0.965 0.005 240)", color: "oklch(0.52 0.010 250)" }}>
-              {meta.unit} · Simulated history
+              {meta.unit} · {telemetrySource === "live" ? (
+                <span className="inline-flex items-center gap-1">
+                  <Database className="w-2.5 h-2.5" /> Live DB
+                </span>
+              ) : "Simulated history"}
             </span>
           </div>
           <ResponsiveContainer width="100%" height={160}>
@@ -408,7 +458,7 @@ export default function SensorDetail() {
               <div className="flex flex-col items-center justify-center h-40 gap-3">
                 <CheckCircle2 className="w-8 h-8" style={{ color: "oklch(0.42 0.18 145)" }} />
                 <p className="text-[11px] text-center" style={{ color: "oklch(0.52 0.010 250)" }}>
-                  Work order submitted and assigned to {workOrder.assignee}.
+                  Work order {submittedWoNumber} created and assigned to {workOrder.assignee}.
                 </p>
                 <button
                   onClick={() => { setWorkOrderSubmitted(false); setShowWorkOrder(false); }}

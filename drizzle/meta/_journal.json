@@ -22,6 +22,13 @@
       "when": 1772441999183,
       "tag": "0002_bouncy_stepford_cuckoos",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1772443928567,
+      "tag": "0003_soft_devos",
+      "breakpoints": true
     }
   ]
 }

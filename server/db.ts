@@ -179,3 +179,62 @@ export async function isMfaEnabled(openId: string): Promise<boolean> {
     .limit(1);
   return (rows[0]?.mfaEnabled ?? 0) === 1;
 }
+
+// ─── Work Order helpers ───────────────────────────────────────────────────────
+import { InsertWorkOrder, InsertSensorReading, workOrders, sensorReadings } from "../drizzle/schema";
+
+export async function createWorkOrder(wo: InsertWorkOrder): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.insert(workOrders).values(wo);
+}
+
+export async function listWorkOrders(limit = 100) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(workOrders).orderBy(desc(workOrders.createdAt)).limit(limit);
+}
+
+export async function updateWorkOrderStatus(
+  woNumber: string,
+  status: "open" | "in_progress" | "resolved" | "cancelled",
+): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const resolvedAt = status === "resolved" ? new Date() : null;
+  await db.update(workOrders)
+    .set({ status, ...(resolvedAt ? { resolvedAt } : {}) })
+    .where(eq(workOrders.woNumber, woNumber));
+}
+
+export async function getWorkOrdersBySensor(sensorId: string, limit = 50) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(workOrders)
+    .where(eq(workOrders.sensorId, sensorId))
+    .orderBy(desc(workOrders.createdAt))
+    .limit(limit);
+}
+
+// ─── Sensor Reading helpers ───────────────────────────────────────────────────
+
+export async function recordSensorReading(reading: InsertSensorReading): Promise<void> {
+  const db = await getDb();
+  if (!db) return; // silent fail — telemetry is best-effort
+  await db.insert(sensorReadings).values(reading);
+}
+
+export async function getSensorReadings(sensorId: string, sinceTs: number, limit = 300) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(sensorReadings)
+    .where(and(eq(sensorReadings.sensorId, sensorId), gte(sensorReadings.ts, sinceTs)))
+    .orderBy(desc(sensorReadings.ts))
+    .limit(limit);
+}
+
+export async function pruneOldSensorReadings(olderThanTs: number): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db.delete(sensorReadings).where(lte(sensorReadings.ts, olderThanTs));
+}

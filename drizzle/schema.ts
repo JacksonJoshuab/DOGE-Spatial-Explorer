@@ -61,3 +61,53 @@ export const auditLog = mysqlTable("audit_log", {
 
 export type AuditLogRow = typeof auditLog.$inferSelect;
 export type InsertAuditLogRow = typeof auditLog.$inferInsert;
+
+/**
+ * Work orders created from IoT sensor alerts or manual dispatch.
+ * Appears in the Operations Center queue with status lifecycle.
+ */
+export const workOrders = mysqlTable("work_orders", {
+  id: int("id").autoincrement().primaryKey(),
+  /** WO-XXXXX display number */
+  woNumber: varchar("woNumber", { length: 16 }).notNull().unique(),
+  title: varchar("title", { length: 256 }).notNull(),
+  priority: mysqlEnum("priority", ["low", "normal", "high", "critical"]).notNull().default("normal"),
+  status: mysqlEnum("status", ["open", "in_progress", "resolved", "cancelled"]).notNull().default("open"),
+  /** Sensor ID that triggered this work order, if any */
+  sensorId: varchar("sensorId", { length: 32 }),
+  sensorName: varchar("sensorName", { length: 128 }),
+  assignee: varchar("assignee", { length: 128 }).notNull(),
+  description: text("description"),
+  estimatedHours: varchar("estimatedHours", { length: 8 }),
+  /** Actor who created the work order */
+  createdBy: varchar("createdBy", { length: 128 }).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  resolvedAt: timestamp("resolvedAt"),
+});
+
+export type WorkOrder = typeof workOrders.$inferSelect;
+export type InsertWorkOrder = typeof workOrders.$inferInsert;
+
+/**
+ * Sensor telemetry readings — one row per tick per sensor.
+ * Enables real historical sparklines on the SensorDetail drill-down page.
+ * Rows older than 48h should be pruned by a scheduled job.
+ */
+export const sensorReadings = mysqlTable("sensor_readings", {
+  id: int("id").autoincrement().primaryKey(),
+  sensorId: varchar("sensorId", { length: 32 }).notNull(),
+  sensorName: varchar("sensorName", { length: 128 }).notNull(),
+  sensorType: varchar("sensorType", { length: 32 }).notNull(),
+  /** Primary numeric reading value (pressure, level, temp, etc.) */
+  value: varchar("value", { length: 32 }).notNull(),
+  /** Raw reading string from the sensor */
+  reading: text("reading").notNull(),
+  status: mysqlEnum("status", ["online", "warning", "alert", "offline"]).notNull().default("online"),
+  /** UTC epoch ms */
+  ts: bigint("ts", { mode: "number" }).notNull(),
+  recordedAt: timestamp("recordedAt").defaultNow().notNull(),
+});
+
+export type SensorReading = typeof sensorReadings.$inferSelect;
+export type InsertSensorReading = typeof sensorReadings.$inferInsert;

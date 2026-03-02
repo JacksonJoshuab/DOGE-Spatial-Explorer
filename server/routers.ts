@@ -2,10 +2,20 @@ import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
-import { insertAuditEntry, queryAuditLog, clearAuditLog, saveTotpSecret, enableMfa, getTotpSecret } from "./db";
+import {
+  insertAuditEntry, queryAuditLog, clearAuditLog,
+  saveTotpSecret, enableMfa, getTotpSecret,
+  createWorkOrder, listWorkOrders, updateWorkOrderStatus, getWorkOrdersBySensor,
+  recordSensorReading, getSensorReadings, pruneOldSensorReadings,
+} from "./db";
 import { z } from "zod";
 import { notifyOwner } from "./_core/notification";
-import { generateSecret as otplibGenerateSecret, generateURI as otplibGenerateURI, generateSync as otplibGenerateSync, verifySync as otplibVerifySync } from "otplib";
+import { dispatchCriticalAlert } from "./alertDispatcher";
+import {
+  generateSecret as otplibGenerateSecret,
+  generateURI as otplibGenerateURI,
+  verifySync as otplibVerifySync,
+} from "otplib";
 
 // ─── Audit entry input schema ─────────────────────────────────────────────────
 const auditEntryInput = z.object({
@@ -21,30 +31,115 @@ const auditEntryInput = z.object({
   detail: z.string().optional(),
 });
 
+// ─── Work Orders router ───────────────────────────────────────────────────────
+const workOrdersRouter = router({
+  /** Create a new work order (from sensor alert or manual dispatch). */
+  create: publicProcedure
+    .input(z.object({
+      title: z.string().min(1).max(256),
+      priority: z.enum(["low", "normal", "high", "critical"]).default("normal"),
+      sensorId: z.string().optional(),
+      sensorName: z.string().optional(),
+      assignee: z.string().min(1).max(128),
+      description: z.string().optional(),
+      estimatedHours: z.string().optional(),
+      createdBy: z.string().min(1).max(128),
+    }))
+    .mutation(async ({ input }) => {
+      const now = new Date();
+      const datePart = now.toISOString().slice(0, 10).replace(/-/g, "");
+      const rand = Math.floor(1000 + Math.random() * 9000);
+      const woNumber = `WO-${datePart}-${rand}`;
+      await createWorkOrder({
+        woNumber,
+        title: input.title,
+        priority: input.priority,
+        sensorId: input.sensorId ?? null,
+        sensorName: input.sensorName ?? null,
+        assignee: input.assignee,
+        description: input.description ?? null,
+        estimatedHours: input.estimatedHours ?? null,
+        createdBy: input.createdBy,
+      });
+      if (input.priority === "critical") {
+        try {
+          await notifyOwner({
+            title: `🔧 Critical Work Order — ${woNumber}`,
+            content: `**Title:** ${input.title}\n**Assignee:** ${input.assignee}\n**Sensor:** ${input.sensorName ?? "Manual"}\n**Created by:** ${input.createdBy}`,
+          });
+        } catch (err) {
+          console.warn("[WorkOrders] Failed to notify owner:", err);
+        }
+      }
+      return { success: true, woNumber };
+    }),
+
+  /** List all work orders, newest first. */
+  list: publicProcedure
+    .input(z.object({ limit: z.number().min(1).max(500).optional() }))
+    .query(async ({ input }) => listWorkOrders(input.limit ?? 100)),
+
+  /** Update the status of a work order (Open → In Progress → Resolved). */
+  updateStatus: publicProcedure
+    .input(z.object({
+      woNumber: z.string(),
+      status: z.enum(["open", "in_progress", "resolved", "cancelled"]),
+    }))
+    .mutation(async ({ input }) => {
+      await updateWorkOrderStatus(input.woNumber, input.status);
+      return { success: true };
+    }),
+
+  /** Get work orders for a specific sensor. */
+  bySensor: publicProcedure
+    .input(z.object({ sensorId: z.string(), limit: z.number().optional() }))
+    .query(async ({ input }) => getWorkOrdersBySensor(input.sensorId, input.limit ?? 50)),
+});
+
+// ─── Sensor Readings router ───────────────────────────────────────────────────
+const sensorReadingsRouter = router({
+  /** Record a single sensor telemetry tick. */
+  record: publicProcedure
+    .input(z.object({
+      sensorId: z.string(),
+      sensorName: z.string(),
+      sensorType: z.string(),
+      value: z.string(),
+      reading: z.string(),
+      status: z.enum(["online", "warning", "alert", "offline"]),
+      ts: z.number(),
+    }))
+    .mutation(async ({ input }) => {
+      await recordSensorReading(input);
+      const cutoff = Date.now() - 48 * 60 * 60 * 1000;
+      pruneOldSensorReadings(cutoff).catch(() => {/* best-effort */});
+      return { success: true };
+    }),
+
+  /** Get the last 24 hours of readings for a sensor, newest-first. */
+  getLast24h: publicProcedure
+    .input(z.object({ sensorId: z.string() }))
+    .query(async ({ input }) => {
+      const sinceTs = Date.now() - 24 * 60 * 60 * 1000;
+      return getSensorReadings(input.sensorId, sinceTs, 300);
+    }),
+});
+
+// ─── Main app router ──────────────────────────────────────────────────────────
 export const appRouter = router({
-  // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
   system: systemRouter,
+
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
-      return {
-        success: true,
-      } as const;
+      return { success: true } as const;
     }),
   }),
 
-  // ─── MFA / TOTP procedures ──────────────────────────────────────────────────
+  // ─── MFA / TOTP procedures ────────────────────────────────────────────────
   mfa: router({
-    /**
-     * Generate a new TOTP secret for a staff member and return the otpauth URI
-     * so the frontend can render a QR code.  The secret is saved to the DB but
-     * mfaEnabled stays false until verifyAndEnroll confirms the first code.
-     *
-     * openId is the Manus OAuth identifier for the staff account.
-     * In the demo the frontend passes the actorName; production would use ctx.user.openId.
-     */
     generateSecret: publicProcedure
       .input(z.object({ openId: z.string(), accountName: z.string() }))
       .mutation(async ({ input }) => {
@@ -58,10 +153,6 @@ export const appRouter = router({
         return { secret, otpauthUrl };
       }),
 
-    /**
-     * Verify a TOTP code and, if valid, mark mfaEnabled = true.
-     * Used during the enrollment flow (first-time setup).
-     */
     verifyAndEnroll: publicProcedure
       .input(z.object({ openId: z.string(), code: z.string().length(6) }))
       .mutation(async ({ input }) => {
@@ -74,15 +165,10 @@ export const appRouter = router({
         return { success: true };
       }),
 
-    /**
-     * Verify a TOTP code for an already-enrolled account.
-     * Used by the MFA gate in RouteGuard on every high-security route visit.
-     */
     verifyCode: publicProcedure
       .input(z.object({ openId: z.string(), code: z.string().length(6) }))
       .mutation(async ({ input }) => {
         const secret = await getTotpSecret(input.openId);
-        // Fallback: if no secret stored (demo staff without DB record), accept any 6-digit code
         if (!secret) {
           const demoValid = /^\d{6}$/.test(input.code);
           return { success: demoValid, error: demoValid ? undefined : "Invalid code." };
@@ -93,12 +179,8 @@ export const appRouter = router({
       }),
   }),
 
-  // ─── Audit Log procedures ───────────────────────────────────────────────────
+  // ─── Audit Log procedures ─────────────────────────────────────────────────
   audit: router({
-    /**
-     * Append one audit entry to the persistent log.
-     * Also triggers owner push notification for critical severity events.
-     */
     append: publicProcedure
       .input(auditEntryInput)
       .mutation(async ({ input }) => {
@@ -114,25 +196,22 @@ export const appRouter = router({
           severity: input.severity,
           detail: input.detail ?? null,
         });
-
-        // Push notification to City Administrator for critical events
         if (input.severity === "critical") {
-          try {
-            await notifyOwner({
-              title: `🚨 Critical Audit Event — ${input.action}`,
-              content: `**Actor:** ${input.actor} (${input.actorRole})\n**Target:** ${input.target}\n**Time:** ${input.isoTime}\n**Detail:** ${input.detail ?? "No detail provided"}`,
-            });
-          } catch (err) {
-            console.warn("[Audit] Failed to send push notification:", err);
-          }
+          // Dispatch to all configured channels: Manus push, SendGrid email, Twilio SMS
+          dispatchCriticalAlert({
+            action: input.action,
+            actor: input.actor,
+            actorRole: input.actorRole,
+            target: input.target,
+            isoTime: input.isoTime,
+            category: input.category,
+            severity: input.severity,
+            detail: input.detail,
+          }).catch(err => console.warn("[Audit] Alert dispatch error:", err));
         }
-
         return { success: true };
       }),
 
-    /**
-     * Query the persistent audit log with optional filters.
-     */
     list: publicProcedure
       .input(z.object({
         category: z.string().optional(),
@@ -142,20 +221,18 @@ export const appRouter = router({
         toTs: z.number().optional(),
         limit: z.number().min(1).max(1000).optional(),
       }))
-      .query(async ({ input }) => {
-        const rows = await queryAuditLog(input);
-        return rows;
-      }),
+      .query(async ({ input }) => queryAuditLog(input)),
 
-    /**
-     * Clear all audit log entries (admin only — enforced client-side via RBAC).
-     */
     clear: publicProcedure
       .mutation(async () => {
         await clearAuditLog();
         return { success: true };
       }),
   }),
+
+  // ─── Feature sub-routers ──────────────────────────────────────────────────
+  workOrders: workOrdersRouter,
+  sensorReadings: sensorReadingsRouter,
 });
 
 export type AppRouter = typeof appRouter;

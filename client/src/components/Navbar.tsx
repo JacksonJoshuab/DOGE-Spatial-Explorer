@@ -5,8 +5,10 @@
  */
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { Building2, Menu, X, ChevronDown, LayoutDashboard } from "lucide-react";
+import { Building2, Menu, X, ChevronDown, LayoutDashboard, Sun, Moon, Search } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTheme } from "@/contexts/ThemeContext";
+import { useCommandPalette } from "@/components/CommandPalette";
 
 const NAV_LINKS = [
   { href: "/platform", label: "Platform" },
@@ -40,6 +42,8 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [dashOpen, setDashOpen] = useState(false);
   const [location] = useLocation();
+  const { theme, toggleTheme } = useTheme();
+  const { open: _paletteOpen, setOpen: setPaletteOpen } = useCommandPalette();
 
   const isDashboard = location.startsWith("/dashboard") || location.startsWith("/audit") ||
     location.startsWith("/operations") || location.startsWith("/map") ||
@@ -98,6 +102,20 @@ export default function Navbar() {
 
         {/* Right side */}
         <div className="flex items-center gap-2">
+          {/* Cmd+K search trigger */}
+          <button
+            onClick={() => setPaletteOpen(true)}
+            className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded text-[12px] transition-all"
+            style={{
+              background: "oklch(0 0 0 / 4%)",
+              border: "1px solid oklch(0 0 0 / 10%)",
+              color: "oklch(0.55 0.010 250)",
+            }}
+          >
+            <Search className="w-3.5 h-3.5" />
+            <span>Search</span>
+            <kbd className="ml-1 px-1 py-0.5 rounded text-[10px] font-mono" style={{ background: "oklch(0.93 0.004 250)", border: "1px solid oklch(0 0 0 / 12%)" }}>⌘K</kbd>
+          </button>
           {/* Dashboard dropdown */}
           <div className="relative hidden md:block">
             <button
@@ -170,6 +188,25 @@ export default function Navbar() {
           >
             Request Demo
           </Link>
+
+          {/* Theme toggle */}
+          {toggleTheme && (
+            <button
+              onClick={toggleTheme}
+              className="p-1.5 rounded transition-all"
+              title={theme === "light" ? "Switch to dark mode" : "Switch to light mode"}
+              style={{
+                color: "oklch(0.45 0.014 250)",
+                background: "oklch(0 0 0 / 5%)",
+                border: "1px solid oklch(0 0 0 / 8%)",
+              }}
+            >
+              {theme === "light"
+                ? <Moon className="w-4 h-4" />
+                : <Sun className="w-4 h-4" style={{ color: "oklch(0.72 0.20 85)" }} />
+              }
+            </button>
+          )}
 
           {/* Mobile toggle */}
           <button

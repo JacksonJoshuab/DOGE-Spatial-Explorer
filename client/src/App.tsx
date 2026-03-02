@@ -45,6 +45,7 @@ import FinanceHub from "./pages/FinanceHub";
 import ResidentMobile from "./pages/ResidentMobile";
 import UtilityBillQR from "./pages/UtilityBillQR";
 import Transparency from "./pages/Transparency";
+import AdminRoles from "./pages/AdminRoles";
 
 function AppShell() {
   return (
@@ -97,6 +98,9 @@ function Router() {
       <Route path="/resident/m" component={ResidentMobile} />
       <Route path="/utility-bill-qr" component={UtilityBillQR} />
       <Route path="/transparency" component={Transparency} />
+
+      {/* Admin */}
+      <Route path="/admin/roles" component={AdminRoles} />
 
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />

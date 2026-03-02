@@ -10,8 +10,47 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import {
   TrendingUp, TrendingDown, DollarSign, AlertTriangle,
-  BookOpen, Clock, BarChart3, CreditCard, CheckCircle2, FileText
+  BookOpen, Clock, BarChart3, CreditCard, CheckCircle2, FileText,
+  Download, Table2
 } from "lucide-react";
+
+// ─── CSV / Excel export utilities ────────────────────────────────────────────
+function escapeCSV(v: string | number): string {
+  const s = String(v);
+  if (s.includes(",") || s.includes('"') || s.includes("\n")) return `"${s.replace(/"/g, '""')}"`;
+  return s;
+}
+
+function downloadCSV(filename: string, headers: string[], rows: (string | number)[][]) {
+  const csv = [
+    headers.map(escapeCSV).join(","),
+    ...rows.map(r => r.map(escapeCSV).join(",")),
+  ].join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function ExportButton({ onClick, label = "Export CSV" }: { onClick: () => void; label?: string }) {
+  return (
+    <button
+      onClick={onClick}
+      className="flex items-center gap-1.5 px-3 py-1.5 rounded text-[11px] font-semibold transition-all"
+      style={{
+        background: "oklch(0.45 0.20 240 / 10%)",
+        border: "1px solid oklch(0.45 0.20 240 / 30%)",
+        color: "oklch(0.35 0.20 240)",
+      }}
+    >
+      <Download className="w-3 h-3" />
+      {label}
+    </button>
+  );
+}
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, LineChart, Line, Legend, PieChart, Pie, Cell
@@ -129,6 +168,36 @@ const ageBadgeStyle = (status: string) => {
 export default function FinanceHub() {
   const [activeTab, setActiveTab] = useState("gl");
 
+  const exportGL = () => downloadCSV(
+    "west-liberty-general-ledger-fy2024.csv",
+    ["Account Code", "Account Name", "Total Debits", "Total Credits", "Net Balance", "Type"],
+    GL_ACCOUNTS.map(a => [a.code, a.name, a.debit, a.credit, a.balance, a.type])
+  );
+
+  const exportMonthlyRevenue = () => downloadCSV(
+    "west-liberty-monthly-revenue-fy2024.csv",
+    ["Month", "Revenue", "Expenditure", "Net"],
+    MONTHLY_REVENUE.map(m => [m.month, m.revenue, m.expenditure, m.revenue - m.expenditure])
+  );
+
+  const exportAP = () => downloadCSV(
+    "west-liberty-ap-aging-fy2024.csv",
+    ["Invoice #", "Vendor", "Department", "Amount", "Age (Days)", "Status"],
+    AP_INVOICES.map(i => [i.id, i.vendor, i.dept, i.amount, i.age, i.status])
+  );
+
+  const exportFunds = () => downloadCSV(
+    "west-liberty-fund-balances-fy2024.csv",
+    ["Fund", "Beginning Balance", "Revenues", "Expenditures", "Ending Balance", "Target", "% of Target"],
+    FUND_BALANCES.map(f => [f.fund, f.beginning, f.revenues, f.expenditures, f.ending, f.target, f.pct])
+  );
+
+  const exportDebt = () => downloadCSV(
+    "west-liberty-debt-service-fy2024.csv",
+    ["Bond ID", "Description", "Issue Date", "Maturity", "Original Principal", "Outstanding Balance", "Rate (%)", "Annual Principal", "Annual Interest", "Next Payment", "Fund"],
+    DEBT_SCHEDULE.map(d => [d.id, d.description, d.issueDate, d.maturity, d.originalPrincipal, d.outstandingBalance, d.interestRate, d.annualPrincipal, d.annualInterest, d.nextPayment, d.fund])
+  );
+
   const totalRevenue  = MONTHLY_REVENUE.reduce((s, m) => s + m.revenue, 0);
   const totalExpend   = MONTHLY_REVENUE.reduce((s, m) => s + m.expenditure, 0);
   const netPosition   = totalRevenue - totalExpend;
@@ -187,8 +256,11 @@ export default function FinanceHub() {
           <TabsContent value="gl" className="mt-4 space-y-4">
             {/* Revenue vs Expenditure chart */}
             <div className="rounded-xl border p-5" style={{ background: "oklch(1 0 0)", borderColor: "oklch(0 0 0 / 8%)" }}>
-              <div className="text-sm font-semibold mb-4" style={{ fontFamily: "'Syne', sans-serif", color: "oklch(0.18 0.018 250)" }}>
-                Monthly Revenue vs. Expenditure — FY2024
+              <div className="flex items-center justify-between mb-4">
+                <div className="text-sm font-semibold" style={{ fontFamily: "'Syne', sans-serif", color: "oklch(0.18 0.018 250)" }}>
+                  Monthly Revenue vs. Expenditure — FY2024
+                </div>
+                <ExportButton onClick={exportMonthlyRevenue} label="Export Monthly CSV" />
               </div>
               <ResponsiveContainer width="100%" height={220}>
                 <BarChart data={MONTHLY_REVENUE} barGap={2}>
@@ -205,8 +277,9 @@ export default function FinanceHub() {
 
             {/* GL Account table */}
             <div className="rounded-xl border overflow-hidden" style={{ background: "oklch(1 0 0)", borderColor: "oklch(0 0 0 / 8%)" }}>
-              <div className="p-4 border-b" style={{ borderColor: "oklch(0 0 0 / 8%)" }}>
+              <div className="p-4 border-b flex items-center justify-between" style={{ borderColor: "oklch(0 0 0 / 8%)" }}>
                 <div className="text-sm font-semibold" style={{ fontFamily: "'Syne', sans-serif", color: "oklch(0.18 0.018 250)" }}>Account Balances — FY2024 Year-End</div>
+                <ExportButton onClick={exportGL} label="Export GL CSV" />
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-[12px]">
@@ -296,9 +369,12 @@ export default function FinanceHub() {
 
             {/* Invoice table */}
             <div className="rounded-xl border overflow-hidden" style={{ background: "oklch(1 0 0)", borderColor: "oklch(0 0 0 / 8%)" }}>
-              <div className="p-4 border-b flex items-center justify-between" style={{ borderColor: "oklch(0 0 0 / 8%)" }}>
+              <div className="p-4 border-b flex items-center justify-between gap-3" style={{ borderColor: "oklch(0 0 0 / 8%)" }}>
                 <div className="text-sm font-semibold" style={{ fontFamily: "'Syne', sans-serif", color: "oklch(0.18 0.018 250)" }}>Open Invoices</div>
-                <div className="text-[12px]" style={{ color: "oklch(0.55 0.010 250)" }}>Total: <strong style={{ color: "oklch(0.25 0.014 250)" }}>{fmt(totalAP)}</strong></div>
+                <div className="flex items-center gap-3">
+                  <div className="text-[12px]" style={{ color: "oklch(0.55 0.010 250)" }}>Total: <strong style={{ color: "oklch(0.25 0.014 250)" }}>{fmt(totalAP)}</strong></div>
+                  <ExportButton onClick={exportAP} label="Export AP CSV" />
+                </div>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-[12px]">
@@ -336,8 +412,11 @@ export default function FinanceHub() {
           {/* Fund Balances Tab */}
           <TabsContent value="funds" className="mt-4 space-y-4">
             <div className="rounded-xl border p-5" style={{ background: "oklch(1 0 0)", borderColor: "oklch(0 0 0 / 8%)" }}>
-              <div className="text-sm font-semibold mb-4" style={{ fontFamily: "'Syne', sans-serif", color: "oklch(0.18 0.018 250)" }}>
-                Fund Balance vs. Target — FY2024 Year-End
+              <div className="flex items-center justify-between mb-4">
+                <div className="text-sm font-semibold" style={{ fontFamily: "'Syne', sans-serif", color: "oklch(0.18 0.018 250)" }}>
+                  Fund Balance vs. Target — FY2024 Year-End
+                </div>
+                <ExportButton onClick={exportFunds} label="Export Funds CSV" />
               </div>
               <div className="space-y-4">
                 {FUND_BALANCES.map(f => {
@@ -394,6 +473,9 @@ export default function FinanceHub() {
 
           {/* Debt Service Tab */}
           <TabsContent value="debt" className="mt-4 space-y-4">
+            <div className="flex justify-end">
+              <ExportButton onClick={exportDebt} label="Export Debt Schedule CSV" />
+            </div>
             {/* Debt KPIs */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="rounded-xl border p-4" style={{ background: "oklch(1 0 0)", borderColor: "oklch(0 0 0 / 8%)" }}>

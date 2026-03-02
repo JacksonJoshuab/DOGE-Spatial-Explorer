@@ -9,7 +9,7 @@ import Navbar from "@/components/Navbar";
 import {
   LayoutDashboard, Map, Shield, Wrench, FileText, Lock,
   Building2, Wifi, AlertTriangle, ChevronRight, ShieldCheck, Droplets,
-  Menu, X, Trees, HardHat, DollarSign, Users, BookOpen
+  Menu, X, Trees, HardHat, DollarSign, Users, BookOpen, UserCog
 } from "lucide-react";
 
 const SIDEBAR_SECTIONS = [
@@ -44,6 +44,12 @@ const SIDEBAR_SECTIONS = [
     links: [
       { href: "/records", label: "Records Management", icon: FileText },
       { href: "/secure", label: "Secure Modules", icon: Lock },
+    ],
+  },
+  {
+    label: "Administration",
+    links: [
+      { href: "/admin/roles", label: "RBAC — Roles", icon: UserCog },
     ],
   },
 ];

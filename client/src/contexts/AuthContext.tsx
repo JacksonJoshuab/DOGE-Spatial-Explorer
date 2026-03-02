@@ -17,13 +17,13 @@ import { trpc } from "@/lib/trpc";
 // ─── Module permission map (mirrors DEFAULT_PERMISSIONS in AdminRoles.tsx) ────
 const ROLE_MODULES: Record<string, string[]> = {
   "city-admin": ["*"], // wildcard — all modules
-  "mayor":          ["dashboard","spatial-map","transparency","council-report","audit-studio","finance-hub","capital-hub"],
-  "finance-director": ["dashboard","finance-hub","capital-hub","hardware-mkt","audit-studio","council-report","transparency","community-dev"],
-  "police-chief":   ["dashboard","le-hub","evidence-room","scif","detention","records","spatial-map","operations"],
-  "public-works":   ["dashboard","utilities","spatial-map","operations","hardware-mkt","records"],
+  "mayor":          ["dashboard","spatial-map","transparency","council-report","audit-studio","finance-hub","capital-hub","ems"],
+  "finance-director": ["dashboard","finance-hub","capital-hub","hardware-mkt","audit-studio","council-report","transparency","community-dev","ems"],
+  "police-chief":   ["dashboard","le-hub","evidence-room","scif","detention","records","spatial-map","operations","ems"],
+  "public-works":   ["dashboard","utilities","spatial-map","operations","hardware-mkt","records","ems"],
   "community-dev":  ["dashboard","community-dev","transparency","finance-hub","records","spatial-map"],
   "parks-director": ["dashboard","parks","spatial-map","operations","records"],
-  "it-admin":       ["dashboard","spatial-map","hardware-mkt","resident-portal","ip-pipeline","scif","records","operations"],
+  "it-admin":       ["dashboard","spatial-map","hardware-mkt","resident-portal","ip-pipeline","scif","records","operations","ems"],
 };
 
 // Route → module-id mapping for guard checks
@@ -46,6 +46,12 @@ export const ROUTE_MODULE_MAP: Record<string, string> = {
   "/transparency":   "transparency",
   "/staff":          "dashboard",
   "/dashboard":      "dashboard",
+  "/ems/dispatch":    "ems",
+  "/ems/fleet":       "ems",
+  "/ems/billing":     "ems",
+  "/ems/compliance":  "ems",
+  "/feeds":           "dashboard",
+  "/ms-graph":        "dashboard",
 };
 
 // ─── Audit log entry (client-side shape) ──────────────────────────────────────

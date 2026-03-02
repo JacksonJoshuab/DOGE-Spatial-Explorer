@@ -9,7 +9,8 @@ import Navbar from "@/components/Navbar";
 import {
   LayoutDashboard, Map, Shield, Wrench, FileText, Lock,
   Building2, Wifi, AlertTriangle, ChevronRight, ShieldCheck, Droplets,
-  Menu, X, Trees, HardHat, DollarSign, Users, BookOpen, UserCog, Network, Rss
+  Menu, X, Trees, HardHat, DollarSign, Users, BookOpen, UserCog, Network, Rss,
+  Ambulance, Flame, ClipboardList
 } from "lucide-react";
 import RoleSwitcher from "@/components/RoleSwitcher";
 
@@ -45,6 +46,15 @@ const SIDEBAR_SECTIONS = [
     links: [
       { href: "/records", label: "Records Management", icon: FileText },
       { href: "/secure", label: "Secure Modules", icon: Lock },
+    ],
+  },
+  {
+    label: "EMS / Fire",
+    links: [
+      { href: "/ems/dispatch", label: "Dispatch Board", icon: Ambulance },
+      { href: "/ems/fleet", label: "Fleet Map", icon: Map },
+      { href: "/ems/billing", label: "EMS Billing", icon: DollarSign },
+      { href: "/ems/compliance", label: "Compliance", icon: ClipboardList },
     ],
   },
   {

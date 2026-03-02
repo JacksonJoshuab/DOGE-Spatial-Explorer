@@ -13,12 +13,14 @@ import {
   fetchFederalRegister,
   fetchCensusData,
   fetchBlsData,
+  fetchBlsTrend,
   fetchIowaGovFeeds,
   fetchLocalNewsFeeds,
   fetchSocialFeeds,
   fetchGrantsGov,
 } from "./feeds";
 import { notifyOwner } from "./_core/notification";
+import { emsRouter } from "./ems";
 import { dispatchCriticalAlert } from "./alertDispatcher";
 import {
   generateSecret as otplibGenerateSecret,
@@ -289,6 +291,10 @@ export const appRouter = router({
     bls: publicProcedure
       .query(async () => fetchBlsData()),
 
+    /** BLS Quarterly Trend — 8-quarter history for unemployment rate and labor force */
+    blsTrend: publicProcedure
+      .query(async () => fetchBlsTrend()),
+
     /** Iowa state government news & policy RSS */
     iowaGov: publicProcedure
       .query(async () => fetchIowaGovFeeds()),
@@ -306,6 +312,7 @@ export const appRouter = router({
       .input(z.object({ keyword: z.string().optional() }))
       .query(async ({ input }) => fetchGrantsGov(input.keyword ?? "Iowa municipal infrastructure")),
   }),
+  ems: emsRouter,
 });
 
 export type AppRouter = typeof appRouter;

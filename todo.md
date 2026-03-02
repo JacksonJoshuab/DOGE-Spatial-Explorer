@@ -37,5 +37,14 @@
 
 ## In Progress
 - [ ] Intelligence Feed Hub at /feeds — social media, news RSS, Federal Register, Census ACS, BLS economic data
+- [ ] BLS quarterly trend chart (8-quarter AreaChart) in IntelFeedHub
 - [ ] Sensor telemetry retention cron — prune sensor_readings older than 30 days
 - [ ] Work order email notifications via dispatchCriticalAlert on create/reassign
+
+## EMS & Fire Service Suite
+- [x] EMS/Fire Postgres schema (ems_incidents, ems_units, ems_billing, ems_compliance)
+- [x] tRPC EMS router (incident CRUD, unit status, billing workflow, compliance)
+- [x] EMS Dispatch Board (/ems/dispatch) — live incident queue, unit assignment, status workflow
+- [x] EMS Billing Dashboard (/ems/billing) — insurance claims, Medicare/Medicaid, revenue analytics
+- [x] EMS Compliance Tracker (/ems/compliance) — HIPAA, NEMSIS, NFIRS, certifications, CMS audits
+- [x] EMS Fleet Map (/ems/fleet) — live GPS positions of all units on Google Maps

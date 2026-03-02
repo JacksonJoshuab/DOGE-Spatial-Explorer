@@ -53,6 +53,10 @@ import SensorDetail from "./pages/SensorDetail";
 import MsGraphExplorer from "./pages/MsGraphExplorer";
 import MsGraphCallback from "./pages/MsGraphCallback";
 import IntelFeedHub from "./pages/IntelFeedHub";
+import EmsDispatch from "./pages/EmsDispatch";
+import EmsFleet from "./pages/EmsFleet";
+import EmsBilling from "./pages/EmsBilling";
+import EmsCompliance from "./pages/EmsCompliance";
 
 function AppShell() {
   return (
@@ -112,6 +116,12 @@ function Router() {
 
       {/* Intelligence Feed Hub */}
       <Route path="/feeds">{() => <RouteGuard path="/feeds"><IntelFeedHub /></RouteGuard>}</Route>
+
+      {/* EMS / Fire Service Suite */}
+      <Route path="/ems/dispatch">{() => <RouteGuard path="/ems/dispatch"><EmsDispatch /></RouteGuard>}</Route>
+      <Route path="/ems/fleet">{() => <RouteGuard path="/ems/fleet"><EmsFleet /></RouteGuard>}</Route>
+      <Route path="/ems/billing">{() => <RouteGuard path="/ems/billing"><EmsBilling /></RouteGuard>}</Route>
+      <Route path="/ems/compliance">{() => <RouteGuard path="/ems/compliance"><EmsCompliance /></RouteGuard>}</Route>
 
       {/* Microsoft Graph integration */}
       <Route path="/ms-graph">{() => <RouteGuard path="/ms-graph"><MsGraphExplorer /></RouteGuard>}</Route>

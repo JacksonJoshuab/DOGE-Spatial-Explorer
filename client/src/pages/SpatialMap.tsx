@@ -11,7 +11,7 @@ import { useLocation } from "wouter";
 import {
   Droplets, Zap, Shield, Wrench, TreePine, AlertTriangle,
   CheckCircle2, Clock, ChevronRight, Radio, X,
-  Layers, Activity, Send, Eye, EyeOff, Wifi, GitBranch
+  Layers, Activity, Send, Eye, EyeOff, Wifi, GitBranch, Mountain
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -255,6 +255,7 @@ export default function SpatialMap() {
   const [alerts, setAlerts] = useState<AlertItem[]>(INITIAL_ALERTS);
   const [activeLayers, setActiveLayers] = useState<Set<string>>(new Set(["water", "sewer", "roads", "parks", "le"]));
   const [activeGisLayers, setActiveGisLayers] = useState<Set<GisLayerKey>>(new Set());
+  const [is3D, setIs3D] = useState(false);
   const mapRef = useRef<google.maps.Map | null>(null);
   const markersRef = useRef<Map<string, google.maps.Marker>>(new Map());
   const polylinesRef = useRef<Map<string, google.maps.Polyline[]>>(new Map());
@@ -408,6 +409,24 @@ export default function SpatialMap() {
     setTimeout(() => navigate("/operations"), 1200);
   };
 
+  const toggle3D = () => {
+    const map = mapRef.current;
+    if (!map) return;
+    if (!is3D) {
+      map.setMapTypeId(google.maps.MapTypeId.SATELLITE);
+      map.setTilt(45);
+      map.setZoom(16);
+      setIs3D(true);
+      toast.success("3D Satellite / Terrain view enabled — tilt: 45°");
+    } else {
+      map.setMapTypeId(google.maps.MapTypeId.ROADMAP);
+      map.setTilt(0);
+      map.setZoom(15);
+      setIs3D(false);
+      toast.success("Returned to 2D roadmap view");
+    }
+  };
+
   const alertCount = alerts.filter(a => a.type === "alert" && !a.dispatched).length;
   const warningCount = alerts.filter(a => a.type === "warning" && !a.dispatched).length;
   const onlineCount = IOT_SENSORS.filter(s => s.status === "online").length;
@@ -552,6 +571,22 @@ export default function SpatialMap() {
           {/* Map */}
           <div className="flex-1 relative overflow-hidden">
             <MapView onMapReady={handleMapReady} className="w-full h-full" />
+
+            {/* 3D Terrain Toggle */}
+            <button
+              onClick={toggle3D}
+              className="absolute top-3 left-3 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+              style={{
+                background: is3D ? "oklch(0.40 0.18 240)" : "oklch(1 0 0 / 92%)",
+                border: `1px solid ${is3D ? "oklch(0.40 0.18 240)" : "oklch(0 0 0 / 10%)"}`,
+                color: is3D ? "#fff" : "oklch(0.22 0.018 250)",
+                backdropFilter: "blur(8px)",
+                boxShadow: "0 2px 8px oklch(0 0 0 / 12%)",
+              }}
+            >
+              <Mountain className="w-3.5 h-3.5" />
+              {is3D ? "3D ON" : "3D / Satellite"}
+            </button>
 
             {/* Map legend */}
             <div

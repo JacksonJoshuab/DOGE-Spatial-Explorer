@@ -13,7 +13,7 @@ import {
 import {
   Eye, CheckCircle2, AlertTriangle, Clock, TrendingUp, TrendingDown,
   Building2, Droplets, Shield, Wrench, Trees, FileText, DollarSign,
-  Users, ExternalLink, Info, ChevronDown, ChevronUp
+  Users, ExternalLink, Info, ChevronDown, ChevronUp, Code2, Copy, Check
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -134,6 +134,39 @@ const WO_STATUS_LABEL: Record<string, string> = {
 export default function Transparency() {
   const [expandedFinding, setExpandedFinding] = useState<string | null>(null);
   const [deptFilter, setDeptFilter] = useState<"all" | "over" | "under">("all");
+  const [showEmbed, setShowEmbed] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const EMBED_VARIANTS = [
+    {
+      id: "full",
+      label: "Full Dashboard",
+      desc: "Complete transparency portal with all charts and tables",
+      code: `<iframe\n  src="https://dogemuni-zykc8hns.manus.space/transparency"\n  width="100%"\n  height="900"\n  frameborder="0"\n  title="City of West Liberty — Open Government Transparency Portal"\n  loading="lazy"\n  allowfullscreen\n></iframe>`,
+    },
+    {
+      id: "compact",
+      label: "Compact Widget",
+      desc: "Budget summary card for sidebar or footer placement",
+      code: `<iframe\n  src="https://dogemuni-zykc8hns.manus.space/transparency#summary"\n  width="400"\n  height="300"\n  frameborder="0"\n  title="West Liberty Budget Summary"\n  loading="lazy"\n></iframe>`,
+    },
+    {
+      id: "audit",
+      label: "Audit Findings Only",
+      desc: "Standalone audit findings accordion for compliance pages",
+      code: `<iframe\n  src="https://dogemuni-zykc8hns.manus.space/transparency#audit"\n  width="100%"\n  height="600"\n  frameborder="0"\n  title="West Liberty Audit Findings"\n  loading="lazy"\n></iframe>`,
+    },
+  ];
+  const [selectedEmbed, setSelectedEmbed] = useState("full");
+
+  const copyEmbed = () => {
+    const variant = EMBED_VARIANTS.find(v => v.id === selectedEmbed);
+    if (!variant) return;
+    navigator.clipboard.writeText(variant.code).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
 
   const totalBudget = DEPARTMENTS.reduce((s, d) => s + d.budget, 0);
   const totalActual = DEPARTMENTS.reduce((s, d) => s + d.actual, 0);
@@ -192,8 +225,81 @@ export default function Transparency() {
                 >
                   <ExternalLink className="w-3 h-3" /> Official City Website
                 </a>
+                <button
+                  onClick={() => setShowEmbed(v => !v)}
+                  className="flex items-center gap-1.5 text-[10px] font-semibold px-2.5 py-1.5 rounded mt-2 transition-all"
+                  style={{
+                    background: showEmbed ? "oklch(0.45 0.20 240)" : "oklch(0.45 0.20 240 / 20%)",
+                    border: "1px solid oklch(0.45 0.20 240 / 40%)",
+                    color: showEmbed ? "#fff" : "oklch(0.65 0.18 240)",
+                  }}
+                >
+                  <Code2 className="w-3 h-3" />
+                  {showEmbed ? "Hide Embed Code" : "Get Embed Code"}
+                </button>
               </div>
             </div>
+
+            {/* Embed Code Generator Panel */}
+            {showEmbed && (
+              <div
+                className="mt-6 rounded-xl overflow-hidden"
+                style={{ background: "oklch(0.12 0.015 250)", border: "1px solid oklch(0.45 0.20 240 / 30%)" }}
+              >
+                <div className="px-5 py-3 border-b flex items-center justify-between" style={{ borderColor: "oklch(0.45 0.20 240 / 20%)" }}>
+                  <div className="flex items-center gap-2">
+                    <Code2 className="w-4 h-4" style={{ color: "oklch(0.65 0.18 240)" }} />
+                    <span className="text-sm font-bold" style={{ color: "oklch(0.92 0.005 250)", fontFamily: "'Syne', sans-serif" }}>Embed Code Generator</span>
+                  </div>
+                  <span className="text-[10px] font-mono" style={{ color: "oklch(0.55 0.010 250)" }}>Copy &amp; paste into your CMS or HTML</span>
+                </div>
+                <div className="p-5">
+                  {/* Variant selector */}
+                  <div className="flex gap-2 mb-4 flex-wrap">
+                    {EMBED_VARIANTS.map(v => (
+                      <button
+                        key={v.id}
+                        onClick={() => setSelectedEmbed(v.id)}
+                        className="px-3 py-1.5 rounded text-xs font-semibold transition-all"
+                        style={{
+                          background: selectedEmbed === v.id ? "oklch(0.45 0.20 240)" : "oklch(0.22 0.015 250)",
+                          color: selectedEmbed === v.id ? "#fff" : "oklch(0.65 0.010 250)",
+                          border: `1px solid ${selectedEmbed === v.id ? "oklch(0.45 0.20 240)" : "oklch(0.35 0.010 250 / 40%)"}`,
+                        }}
+                      >
+                        {v.label}
+                      </button>
+                    ))}
+                  </div>
+                  {EMBED_VARIANTS.filter(v => v.id === selectedEmbed).map(v => (
+                    <div key={v.id}>
+                      <p className="text-xs mb-3" style={{ color: "oklch(0.62 0.010 250)" }}>{v.desc}</p>
+                      <div className="relative">
+                        <pre
+                          className="p-4 rounded-lg text-[11px] font-mono overflow-x-auto"
+                          style={{ background: "oklch(0.08 0.010 250)", color: "oklch(0.78 0.12 240)", border: "1px solid oklch(0.35 0.010 250 / 30%)" }}
+                        >{v.code}</pre>
+                        <button
+                          onClick={copyEmbed}
+                          className="absolute top-2 right-2 flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[10px] font-semibold transition-all"
+                          style={{
+                            background: copied ? "oklch(0.32 0.18 145)" : "oklch(0.35 0.010 250 / 60%)",
+                            color: copied ? "#fff" : "oklch(0.78 0.010 250)",
+                            border: "1px solid oklch(0.45 0.010 250 / 40%)",
+                          }}
+                        >
+                          {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                          {copied ? "Copied!" : "Copy"}
+                        </button>
+                      </div>
+                      <p className="text-[10px] mt-2" style={{ color: "oklch(0.45 0.010 250)" }}>
+                        Paste this snippet into any HTML page or CMS block on cityofwestlibertyia.org. The iframe is responsive and updates automatically as data changes.
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

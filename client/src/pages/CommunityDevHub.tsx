@@ -12,7 +12,8 @@ import { Progress } from "@/components/ui/progress";
 import {
   TrendingUp, TrendingDown, AlertTriangle, Building2, FileText,
   DollarSign, MapPin, Clock, CheckCircle2, XCircle, Plus,
-  BarChart3, Users, Calendar, ExternalLink, GitBranch, Sparkles
+  BarChart3, Users, Calendar, ExternalLink, GitBranch, Sparkles,
+  ChevronLeft, ChevronRight, Link2
 } from "lucide-react";
 import BudgetAmendmentWorkflow from "@/components/BudgetAmendmentWorkflow";
 import GrantAutoFill from "@/components/GrantAutoFill";
@@ -186,6 +187,382 @@ function StatusBadge({ status }: { status: string }) {
 
 const fmt = (n: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
 
+// ── Grant Deadline Calendar ───────────────────────────────────────────────────
+const GRANT_DEADLINES = [
+  {
+    id: "GD-001",
+    program: "Iowa CDBG",
+    fullName: "Community Development Block Grant",
+    agency: "Iowa Economic Development Authority",
+    month: 2, // March (0-indexed)
+    day: 15,
+    year: 2026,
+    amount: "$500K–$1M",
+    urgency: "high",
+    color: "oklch(0.55 0.22 25)",
+    url: "https://www.iowaeda.com/community/cdbg/",
+    description: "Annual competitive cycle for housing, public facilities, and economic development.",
+    eligibility: "Cities under 50,000 population",
+    matchRequired: "No match required",
+  },
+  {
+    id: "GD-002",
+    program: "USDA Rural Dev",
+    fullName: "USDA Rural Development Business Grant",
+    agency: "USDA Rural Development Iowa",
+    month: 3, // April
+    day: 15,
+    year: 2026,
+    amount: "$50K–$500K",
+    urgency: "medium",
+    color: "oklch(0.65 0.20 55)",
+    url: "https://www.rd.usda.gov/programs-services/business-programs",
+    description: "Business and industry loan guarantees plus community facility grants.",
+    eligibility: "Rural communities under 50,000",
+    matchRequired: "25% local match",
+  },
+  {
+    id: "GD-003",
+    program: "FEMA BRIC",
+    fullName: "Building Resilient Infrastructure & Communities",
+    agency: "FEMA Hazard Mitigation",
+    month: 5, // June
+    day: 30,
+    year: 2026,
+    amount: "$1M–$50M",
+    urgency: "low",
+    color: "oklch(0.45 0.18 145)",
+    url: "https://www.fema.gov/grants/mitigation/building-resilient-infrastructure-communities",
+    description: "Pre-disaster mitigation for infrastructure hardening and community resilience.",
+    eligibility: "State/local governments",
+    matchRequired: "25% non-federal match",
+  },
+  {
+    id: "GD-004",
+    program: "EPA Water",
+    fullName: "EPA Clean Water State Revolving Fund",
+    agency: "Iowa DNR / EPA Region 7",
+    month: 6, // July
+    day: 1,
+    year: 2026,
+    amount: "$100K–$5M",
+    urgency: "medium",
+    color: "oklch(0.45 0.20 240)",
+    url: "https://www.epa.gov/cwsrf",
+    description: "Low-interest loans for wastewater treatment, stormwater management, and water quality.",
+    eligibility: "Municipalities with water/sewer infrastructure",
+    matchRequired: "20% match recommended",
+  },
+  {
+    id: "GD-005",
+    program: "HUD HOME",
+    fullName: "HOME Investment Partnerships Program",
+    agency: "HUD / Iowa Finance Authority",
+    month: 7, // August
+    day: 31,
+    year: 2026,
+    amount: "$200K–$2M",
+    urgency: "low",
+    color: "oklch(0.55 0.18 290)",
+    url: "https://www.hud.gov/program_offices/comm_planning/home",
+    description: "Affordable housing construction, rehabilitation, and homebuyer assistance.",
+    eligibility: "Participating jurisdictions",
+    matchRequired: "25% match required",
+  },
+  {
+    id: "GD-006",
+    program: "Iowa DOT STBG",
+    fullName: "Surface Transportation Block Grant",
+    agency: "Iowa Department of Transportation",
+    month: 8, // September
+    day: 15,
+    year: 2026,
+    amount: "$500K–$5M",
+    urgency: "low",
+    color: "oklch(0.50 0.18 200)",
+    url: "https://iowadot.gov/local_systems/local-systems-funding",
+    description: "Transportation infrastructure improvements including roads, bridges, and trails.",
+    eligibility: "Local governments",
+    matchRequired: "20% local match",
+  },
+];
+
+const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const MONTH_ABBR  = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+function GrantDeadlineCalendar() {
+  const today = new Date();
+  const [viewYear, setViewYear] = useState(today.getFullYear());
+  const [viewMonth, setViewMonth] = useState(today.getMonth());
+  const [selected, setSelected] = useState<string | null>(null);
+
+  const prevMonth = () => {
+    if (viewMonth === 0) { setViewMonth(11); setViewYear(y => y - 1); }
+    else setViewMonth(m => m - 1);
+  };
+  const nextMonth = () => {
+    if (viewMonth === 11) { setViewMonth(0); setViewYear(y => y + 1); }
+    else setViewMonth(m => m + 1);
+  };
+
+  // Days in current view month
+  const firstDay = new Date(viewYear, viewMonth, 1).getDay();
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+
+  // Deadlines in this month
+  const monthDeadlines = GRANT_DEADLINES.filter(g => g.month === viewMonth && g.year === viewYear);
+
+  // Upcoming deadlines (next 90 days)
+  const upcoming = GRANT_DEADLINES
+    .map(g => ({ ...g, date: new Date(g.year, g.month, g.day) }))
+    .filter(g => g.date >= today)
+    .sort((a, b) => a.date.getTime() - b.date.getTime())
+    .slice(0, 6);
+
+  const selectedGrant = GRANT_DEADLINES.find(g => g.id === selected);
+
+  const urgencyLabel: Record<string, string> = { high: "Due Soon", medium: "Upcoming", low: "Future" };
+
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-sm font-semibold" style={{ fontFamily: "'Syne', sans-serif", color: "oklch(0.18 0.018 250)" }}>Grant Deadline Calendar</h3>
+          <p className="text-[11px] mt-0.5" style={{ color: "oklch(0.55 0.010 250)" }}>{GRANT_DEADLINES.length} programs tracked · Click a deadline to view details and start application</p>
+        </div>
+        <div className="flex items-center gap-1">
+          <button onClick={prevMonth} className="p-1.5 rounded hover:bg-gray-100 transition-colors">
+            <ChevronLeft className="w-4 h-4" style={{ color: "oklch(0.45 0.010 250)" }} />
+          </button>
+          <span className="text-sm font-semibold px-2" style={{ color: "oklch(0.18 0.018 250)", fontFamily: "'Syne', sans-serif", minWidth: 140, textAlign: "center" }}>
+            {MONTH_NAMES[viewMonth]} {viewYear}
+          </span>
+          <button onClick={nextMonth} className="p-1.5 rounded hover:bg-gray-100 transition-colors">
+            <ChevronRight className="w-4 h-4" style={{ color: "oklch(0.45 0.010 250)" }} />
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        {/* Calendar grid */}
+        <div className="lg:col-span-2 rounded-xl border overflow-hidden" style={{ background: "oklch(1 0 0)", borderColor: "oklch(0 0 0 / 8%)" }}>
+          {/* Day headers */}
+          <div className="grid grid-cols-7 border-b" style={{ borderColor: "oklch(0 0 0 / 8%)" }}>
+            {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map(d => (
+              <div key={d} className="py-2 text-center text-[10px] font-bold tracking-wider" style={{ color: "oklch(0.55 0.010 250)", fontFamily: "'JetBrains Mono', monospace" }}>{d}</div>
+            ))}
+          </div>
+          {/* Day cells */}
+          <div className="grid grid-cols-7">
+            {Array.from({ length: firstDay }).map((_, i) => (
+              <div key={`empty-${i}`} className="h-14 border-b border-r" style={{ borderColor: "oklch(0 0 0 / 5%)", background: "oklch(0.975 0.003 240)" }} />
+            ))}
+            {Array.from({ length: daysInMonth }).map((_, i) => {
+              const dayNum = i + 1;
+              const isToday = today.getFullYear() === viewYear && today.getMonth() === viewMonth && today.getDate() === dayNum;
+              const dayGrants = monthDeadlines.filter(g => g.day === dayNum);
+              return (
+                <div
+                  key={dayNum}
+                  className="h-14 border-b border-r p-1 relative"
+                  style={{ borderColor: "oklch(0 0 0 / 5%)", background: isToday ? "oklch(0.94 0.015 240)" : "oklch(1 0 0)" }}
+                >
+                  <span
+                    className="text-[11px] font-mono"
+                    style={{
+                      color: isToday ? "oklch(0.35 0.20 240)" : "oklch(0.45 0.010 250)",
+                      fontWeight: isToday ? 700 : 400,
+                    }}
+                  >{dayNum}</span>
+                  <div className="absolute bottom-1 left-1 right-1 flex flex-col gap-0.5">
+                    {dayGrants.map(g => (
+                      <button
+                        key={g.id}
+                        onClick={() => setSelected(selected === g.id ? null : g.id)}
+                        className="w-full text-[8px] font-bold px-1 py-0.5 rounded truncate text-left transition-all"
+                        style={{
+                          background: `${g.color}22`,
+                          color: g.color,
+                          border: `1px solid ${g.color}44`,
+                          outline: selected === g.id ? `2px solid ${g.color}` : "none",
+                        }}
+                        title={g.program}
+                      >
+                        {g.program}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Right panel: selected grant detail OR upcoming list */}
+        <div className="space-y-3">
+          {selectedGrant ? (
+            <div className="rounded-xl border p-4" style={{ background: "oklch(1 0 0)", borderColor: `${selectedGrant.color}44`, borderWidth: 2 }}>
+              <div className="flex items-start justify-between mb-2">
+                <div>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded" style={{ background: `${selectedGrant.color}18`, color: selectedGrant.color }}>
+                    {urgencyLabel[selectedGrant.urgency]}
+                  </span>
+                  <div className="text-sm font-bold mt-1.5" style={{ fontFamily: "'Syne', sans-serif", color: "oklch(0.18 0.018 250)" }}>{selectedGrant.program}</div>
+                  <div className="text-[11px] mt-0.5" style={{ color: "oklch(0.50 0.010 250)" }}>{selectedGrant.fullName}</div>
+                </div>
+                <button onClick={() => setSelected(null)} className="text-[10px] px-1.5 py-0.5 rounded" style={{ background: "oklch(0.965 0.005 240)", color: "oklch(0.55 0.010 250)" }}>✕</button>
+              </div>
+              <div className="space-y-2 text-[11px]" style={{ color: "oklch(0.40 0.010 250)" }}>
+                <p>{selectedGrant.description}</p>
+                <div className="grid grid-cols-2 gap-2 mt-2">
+                  {[
+                    { label: "Agency", value: selectedGrant.agency },
+                    { label: "Award Range", value: selectedGrant.amount },
+                    { label: "Deadline", value: `${MONTH_ABBR[selectedGrant.month]} ${selectedGrant.day}, ${selectedGrant.year}` },
+                    { label: "Match", value: selectedGrant.matchRequired },
+                  ].map(item => (
+                    <div key={item.label} className="p-2 rounded" style={{ background: "oklch(0.965 0.005 240)" }}>
+                      <div className="text-[9px] font-bold uppercase tracking-wider mb-0.5" style={{ color: "oklch(0.55 0.010 250)" }}>{item.label}</div>
+                      <div className="font-semibold" style={{ color: "oklch(0.25 0.018 250)" }}>{item.value}</div>
+                    </div>
+                  ))}
+                </div>
+                <div className="p-2 rounded" style={{ background: "oklch(0.965 0.005 240)" }}>
+                  <div className="text-[9px] font-bold uppercase tracking-wider mb-0.5" style={{ color: "oklch(0.55 0.010 250)" }}>Eligibility</div>
+                  <div style={{ color: "oklch(0.25 0.018 250)" }}>{selectedGrant.eligibility}</div>
+                </div>
+              </div>
+              <div className="flex gap-2 mt-3">
+                <a
+                  href={selectedGrant.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded text-[11px] font-semibold transition-all"
+                  style={{ background: selectedGrant.color, color: "#fff" }}
+                >
+                  <Link2 className="w-3 h-3" />Start Application
+                </a>
+                <button
+                  className="px-3 py-2 rounded text-[11px] font-semibold"
+                  style={{ background: "oklch(0.965 0.005 240)", color: "oklch(0.45 0.010 250)", border: "1px solid oklch(0 0 0 / 8%)" }}
+                  onClick={() => setSelected(null)}
+                >
+                  Auto-Fill
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="rounded-xl border p-4" style={{ background: "oklch(1 0 0)", borderColor: "oklch(0 0 0 / 8%)" }}>
+              <div className="text-[11px] font-bold mb-3" style={{ color: "oklch(0.18 0.018 250)", fontFamily: "'Syne', sans-serif" }}>Upcoming Deadlines</div>
+              <div className="space-y-2">
+                {upcoming.map(g => {
+                  const daysUntil = Math.ceil((g.date.getTime() - today.getTime()) / 86400000);
+                  return (
+                    <button
+                      key={g.id}
+                      onClick={() => { setViewMonth(g.month); setViewYear(g.year); setSelected(g.id); }}
+                      className="w-full flex items-center gap-3 p-2.5 rounded-lg text-left transition-all hover:bg-gray-50"
+                      style={{ border: "1px solid oklch(0 0 0 / 6%)" }}
+                    >
+                      <div className="w-8 h-8 rounded-lg flex-shrink-0 flex flex-col items-center justify-center" style={{ background: `${g.color}18` }}>
+                        <div className="text-[8px] font-bold" style={{ color: g.color }}>{MONTH_ABBR[g.month]}</div>
+                        <div className="text-[13px] font-black font-mono" style={{ color: g.color }}>{g.day}</div>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-[11px] font-semibold truncate" style={{ color: "oklch(0.18 0.018 250)" }}>{g.program}</div>
+                        <div className="text-[10px]" style={{ color: "oklch(0.55 0.010 250)" }}>{g.amount}</div>
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        <div className="text-[10px] font-bold" style={{ color: daysUntil <= 30 ? "oklch(0.55 0.22 25)" : daysUntil <= 90 ? "oklch(0.65 0.20 55)" : "oklch(0.45 0.18 145)" }}>
+                          {daysUntil}d
+                        </div>
+                        <div className="text-[9px]" style={{ color: "oklch(0.60 0.010 250)" }}>away</div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Legend */}
+          <div className="rounded-xl border p-3" style={{ background: "oklch(1 0 0)", borderColor: "oklch(0 0 0 / 8%)" }}>
+            <div className="text-[10px] font-bold mb-2" style={{ color: "oklch(0.45 0.010 250)", fontFamily: "'JetBrains Mono', monospace" }}>URGENCY LEGEND</div>
+            <div className="space-y-1.5">
+              {[
+                { label: "Due Soon (≤30 days)", color: "oklch(0.55 0.22 25)" },
+                { label: "Upcoming (31–90 days)", color: "oklch(0.65 0.20 55)" },
+                { label: "Future (>90 days)", color: "oklch(0.45 0.18 145)" },
+              ].map(item => (
+                <div key={item.label} className="flex items-center gap-2">
+                  <div className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ background: item.color }} />
+                  <span className="text-[10px]" style={{ color: "oklch(0.45 0.010 250)" }}>{item.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* All programs list */}
+      <div className="rounded-xl border overflow-hidden" style={{ background: "oklch(1 0 0)", borderColor: "oklch(0 0 0 / 8%)" }}>
+        <div className="px-5 py-3 border-b flex items-center justify-between" style={{ borderColor: "oklch(0 0 0 / 8%)" }}>
+          <span className="text-sm font-semibold" style={{ fontFamily: "'Syne', sans-serif", color: "oklch(0.18 0.018 250)" }}>All Grant Programs</span>
+          <span className="text-[10px] font-mono" style={{ color: "oklch(0.55 0.010 250)" }}>{GRANT_DEADLINES.length} tracked programs</span>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-[11px]">
+            <thead>
+              <tr style={{ background: "oklch(0.975 0.003 240)", borderBottom: "1px solid oklch(0 0 0 / 8%)" }}>
+                {["Program","Agency","Award Range","Deadline","Match","Action"].map(h => (
+                  <th key={h} className="px-4 py-2.5 text-left font-bold" style={{ color: "oklch(0.45 0.010 250)", fontFamily: "'JetBrains Mono', monospace" }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {GRANT_DEADLINES.map((g, idx) => {
+                const deadlineDate = new Date(g.year, g.month, g.day);
+                const daysUntil = Math.ceil((deadlineDate.getTime() - today.getTime()) / 86400000);
+                return (
+                  <tr key={g.id} style={{ borderBottom: "1px solid oklch(0 0 0 / 5%)", background: idx % 2 === 0 ? "oklch(1 0 0)" : "oklch(0.990 0.002 240)" }}>
+                    <td className="px-4 py-3">
+                      <div className="font-semibold" style={{ color: "oklch(0.18 0.018 250)" }}>{g.program}</div>
+                      <div style={{ color: "oklch(0.55 0.010 250)" }}>{g.fullName}</div>
+                    </td>
+                    <td className="px-4 py-3" style={{ color: "oklch(0.40 0.010 250)" }}>{g.agency}</td>
+                    <td className="px-4 py-3 font-mono font-semibold" style={{ color: "oklch(0.45 0.18 145)" }}>{g.amount}</td>
+                    <td className="px-4 py-3">
+                      <div className="font-mono" style={{ color: "oklch(0.25 0.018 250)" }}>{MONTH_ABBR[g.month]} {g.day}, {g.year}</div>
+                      <div
+                        className="text-[9px] font-bold mt-0.5"
+                        style={{ color: daysUntil <= 30 ? "oklch(0.55 0.22 25)" : daysUntil <= 90 ? "oklch(0.65 0.20 55)" : "oklch(0.45 0.18 145)" }}
+                      >
+                        {daysUntil > 0 ? `${daysUntil} days away` : "Past deadline"}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3" style={{ color: "oklch(0.40 0.010 250)" }}>{g.matchRequired}</td>
+                    <td className="px-4 py-3">
+                      <a
+                        href={g.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 px-2.5 py-1 rounded text-[10px] font-semibold transition-all"
+                        style={{ background: `${g.color}18`, color: g.color, border: `1px solid ${g.color}30` }}
+                      >
+                        <ExternalLink className="w-2.5 h-2.5" />Apply
+                      </a>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function CommunityDevHub() {
   const [activeTab, setActiveTab] = useState("budget");
 
@@ -243,7 +620,7 @@ export default function CommunityDevHub() {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-5 w-full max-w-2xl">
+          <TabsList className="grid grid-cols-6 w-full max-w-3xl">
             <TabsTrigger value="budget">
               <BarChart3 className="w-3.5 h-3.5 mr-1.5" />Budget
             </TabsTrigger>
@@ -261,6 +638,9 @@ export default function CommunityDevHub() {
             </TabsTrigger>
             <TabsTrigger value="autofill">
               <Sparkles className="w-3 h-3 mr-1" />Auto-Fill
+            </TabsTrigger>
+            <TabsTrigger value="deadlines">
+              <Calendar className="w-3.5 h-3.5 mr-1.5" />Deadlines
             </TabsTrigger>
             <TabsTrigger value="amendment">
               <GitBranch className="w-3.5 h-3.5 mr-1.5" />
@@ -597,6 +977,11 @@ export default function CommunityDevHub() {
           {/* Grant Auto-Fill Tab */}
           <TabsContent value="autofill" className="mt-4">
             <GrantAutoFill />
+          </TabsContent>
+
+          {/* Grant Deadline Calendar Tab */}
+          <TabsContent value="deadlines" className="mt-4">
+            <GrantDeadlineCalendar />
           </TabsContent>
 
           {/* Budget Amendment Tab */}

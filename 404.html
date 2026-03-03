@@ -1,22 +1,29 @@
 <!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>DOGE Spatial Studio</title>
-  <script type="text/javascript">
-    // GitHub Pages SPA redirect
-    // Stores the path in sessionStorage and redirects to the root
-    var pathSegmentsToKeep = 1; // 1 = keep /DOGE-Spatial-Explorer/
-    var l = window.location;
-    l.replace(
-      l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
-      l.pathname.split('/').slice(0, 1 + pathSegmentsToKeep).join('/') + '/?/' +
-      l.pathname.slice(1).split('/').slice(pathSegmentsToKeep).join('/').replace(/&/g, '~and~') +
-      (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
-      l.hash
-    );
-  </script>
-</head>
-<body>
-</body>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DOGE Spatial Studio — Cross-Platform Spatial Editing</title>
+    <meta name="description" content="A FaceTime live spatial editing studio for Apple Vision Pro, Meta Quest, iPadOS, and Blender. Privacy-first, AI-powered, cross-platform 3D collaboration." />
+    <meta name="theme-color" content="#08080F" />
+    <link rel="icon" type="image/svg+xml" href="/DOGE-Spatial-Explorer/favicon.svg" />
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body, #root { height: 100%; background: #08080F; }
+      body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif; }
+      ::-webkit-scrollbar { width: 6px; height: 6px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
+      ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+    </style>
+    <script type="module" crossorigin src="/DOGE-Spatial-Explorer/assets/index-C_SSeNat.js"></script>
+    <link rel="modulepreload" crossorigin href="/DOGE-Spatial-Explorer/assets/react-0fpV1AoQ.js">
+    <link rel="modulepreload" crossorigin href="/DOGE-Spatial-Explorer/assets/framer-CouwQwo6.js">
+    <link rel="modulepreload" crossorigin href="/DOGE-Spatial-Explorer/assets/three-CLEub1Hg.js">
+    <link rel="modulepreload" crossorigin href="/DOGE-Spatial-Explorer/assets/react-three-CUfZk4We.js">
+    <link rel="stylesheet" crossorigin href="/DOGE-Spatial-Explorer/assets/index-BsAKVDdp.css">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
 </html>

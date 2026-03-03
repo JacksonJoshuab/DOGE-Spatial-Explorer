@@ -60,6 +60,9 @@ import EmsCompliance from "./pages/EmsCompliance";
 import SpatialStudio from "./pages/SpatialStudio";
 import SpatialCollaboration from "./pages/SpatialCollaboration";
 import DeviceManager from "./pages/DeviceManager";
+import AIGenerationStudio from "./pages/AIGenerationStudio";
+import PrivacyDashboard from "./pages/PrivacyDashboard";
+import AssetLibrary from "./pages/AssetLibrary";
 
 function AppShell() {
   return (
@@ -130,6 +133,9 @@ function Router() {
       <Route path="/spatial-studio">{() => <RouteGuard path="/spatial-studio"><SpatialStudio /></RouteGuard>}</Route>
       <Route path="/spatial-collab">{() => <RouteGuard path="/spatial-collab"><SpatialCollaboration /></RouteGuard>}</Route>
       <Route path="/devices">{() => <RouteGuard path="/devices"><DeviceManager /></RouteGuard>}</Route>
+      <Route path="/ai-studio">{() => <RouteGuard path="/ai-studio"><AIGenerationStudio /></RouteGuard>}</Route>
+      <Route path="/privacy">{() => <RouteGuard path="/privacy"><PrivacyDashboard /></RouteGuard>}</Route>
+      <Route path="/assets">{() => <RouteGuard path="/assets"><AssetLibrary /></RouteGuard>}</Route>
 
       {/* Microsoft Graph integration */}
       <Route path="/ms-graph">{() => <RouteGuard path="/ms-graph"><MsGraphExplorer /></RouteGuard>}</Route>

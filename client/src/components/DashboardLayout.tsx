@@ -10,7 +10,8 @@ import {
   LayoutDashboard, Map, Shield, Wrench, FileText, Lock,
   Building2, Wifi, AlertTriangle, ChevronRight, ShieldCheck, Droplets,
   Menu, X, Trees, HardHat, DollarSign, Users, BookOpen, UserCog, Network, Rss,
-  Ambulance, Flame, ClipboardList, Layers, Video, Monitor as MonitorIcon
+  Ambulance, Flame, ClipboardList, Layers, Video, Monitor as MonitorIcon,
+  Brain, Package, ShieldAlert
 } from "lucide-react";
 import RoleSwitcher from "@/components/RoleSwitcher";
 
@@ -25,6 +26,9 @@ const SIDEBAR_SECTIONS = [
       { href: "/spatial-studio", label: "Spatial Studio", icon: Layers },
       { href: "/spatial-collab", label: "Live Collaboration", icon: Video },
       { href: "/devices", label: "Device Manager", icon: MonitorIcon },
+      { href: "/ai-studio", label: "AI Generation", icon: Brain },
+      { href: "/assets", label: "Asset Library", icon: Package },
+      { href: "/privacy", label: "Privacy & Security", icon: ShieldAlert },
     ],
   },
   {

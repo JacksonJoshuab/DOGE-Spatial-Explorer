@@ -3,27 +3,27 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>DOGE Spatial Studio — Cross-Platform Spatial Editing</title>
-    <meta name="description" content="A FaceTime live spatial editing studio for Apple Vision Pro, Meta Quest, iPadOS, and Blender. Privacy-first, AI-powered, cross-platform 3D collaboration." />
+    <title>DOGE Spatial Studio</title>
     <meta name="theme-color" content="#08080F" />
-    <link rel="icon" type="image/svg+xml" href="/DOGE-Spatial-Explorer/favicon.svg" />
+    <script>
+      // SPA redirect for GitHub Pages — encode path as query param
+      var pathSegmentsToKeep = 1;
+      var l = window.location;
+      l.replace(
+        l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+        l.pathname.split('/').slice(0, 1 + pathSegmentsToKeep).join('/') + '/?/' +
+        l.pathname.slice(1).split('/').slice(pathSegmentsToKeep).join('/').replace(/&/g, '~and~') +
+        (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
+        l.hash
+      );
+    </script>
     <style>
-      * { box-sizing: border-box; margin: 0; padding: 0; }
-      html, body, #root { height: 100%; background: #08080F; }
-      body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif; }
-      ::-webkit-scrollbar { width: 6px; height: 6px; }
-      ::-webkit-scrollbar-track { background: transparent; }
-      ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
-      ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+      body { background: #08080F; color: #fff; font-family: -apple-system, sans-serif;
+             display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+      .spinner { width: 32px; height: 32px; border: 2px solid rgba(153,102,255,0.3);
+                 border-top-color: #9966ff; border-radius: 50%; animation: spin 0.8s linear infinite; }
+      @keyframes spin { to { transform: rotate(360deg); } }
     </style>
-    <script type="module" crossorigin src="/DOGE-Spatial-Explorer/assets/index-C_SSeNat.js"></script>
-    <link rel="modulepreload" crossorigin href="/DOGE-Spatial-Explorer/assets/react-0fpV1AoQ.js">
-    <link rel="modulepreload" crossorigin href="/DOGE-Spatial-Explorer/assets/framer-CouwQwo6.js">
-    <link rel="modulepreload" crossorigin href="/DOGE-Spatial-Explorer/assets/three-CLEub1Hg.js">
-    <link rel="modulepreload" crossorigin href="/DOGE-Spatial-Explorer/assets/react-three-CUfZk4We.js">
-    <link rel="stylesheet" crossorigin href="/DOGE-Spatial-Explorer/assets/index-BsAKVDdp.css">
   </head>
-  <body>
-    <div id="root"></div>
-  </body>
+  <body><div class="spinner"></div></body>
 </html>

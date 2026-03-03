@@ -6,24 +6,14 @@
     <title>DOGE Spatial Studio</title>
     <meta name="theme-color" content="#08080F" />
     <script>
-      // SPA redirect for GitHub Pages — encode path as query param
       var pathSegmentsToKeep = 1;
       var l = window.location;
-      l.replace(
-        l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+      l.replace(l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
         l.pathname.split('/').slice(0, 1 + pathSegmentsToKeep).join('/') + '/?/' +
         l.pathname.slice(1).split('/').slice(pathSegmentsToKeep).join('/').replace(/&/g, '~and~') +
-        (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
-        l.hash
-      );
+        (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') + l.hash);
     </script>
-    <style>
-      body { background: #08080F; color: #fff; font-family: -apple-system, sans-serif;
-             display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-      .spinner { width: 32px; height: 32px; border: 2px solid rgba(153,102,255,0.3);
-                 border-top-color: #9966ff; border-radius: 50%; animation: spin 0.8s linear infinite; }
-      @keyframes spin { to { transform: rotate(360deg); } }
-    </style>
+    <style>body{background:#08080F;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}.s{width:32px;height:32px;border:2px solid rgba(153,102,255,.3);border-top-color:#9966ff;border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}</style>
   </head>
-  <body><div class="spinner"></div></body>
+  <body><div class="s"></div></body>
 </html>

@@ -7,6 +7,19 @@
     <meta name="description" content="A FaceTime live spatial editing studio for Apple Vision Pro, Meta Quest, iPadOS, and Blender. Privacy-first, AI-powered, cross-platform 3D collaboration." />
     <meta name="theme-color" content="#08080F" />
     <link rel="icon" type="image/svg+xml" href="/DOGE-Spatial-Explorer/favicon.svg" />
+    <script type="text/javascript">
+      // GitHub Pages SPA redirect handler
+      (function(l) {
+        if (l.search[1] === '/' ) {
+          var decoded = l.search.slice(1).split('&').map(function(s) {
+            return s.replace(/~and~/g, '&')
+          }).join('?');
+          window.history.replaceState(null, null,
+            l.pathname.slice(0, -1) + decoded + l.hash
+          );
+        }
+      }(window.location))
+    </script>
     <style>
       * { box-sizing: border-box; margin: 0; padding: 0; }
       html, body, #root { height: 100%; background: #08080F; }

@@ -57,6 +57,9 @@ import EmsDispatch from "./pages/EmsDispatch";
 import EmsFleet from "./pages/EmsFleet";
 import EmsBilling from "./pages/EmsBilling";
 import EmsCompliance from "./pages/EmsCompliance";
+import SpatialStudio from "./pages/SpatialStudio";
+import SpatialCollaboration from "./pages/SpatialCollaboration";
+import DeviceManager from "./pages/DeviceManager";
 
 function AppShell() {
   return (
@@ -122,6 +125,11 @@ function Router() {
       <Route path="/ems/fleet">{() => <RouteGuard path="/ems/fleet"><EmsFleet /></RouteGuard>}</Route>
       <Route path="/ems/billing">{() => <RouteGuard path="/ems/billing"><EmsBilling /></RouteGuard>}</Route>
       <Route path="/ems/compliance">{() => <RouteGuard path="/ems/compliance"><EmsCompliance /></RouteGuard>}</Route>
+
+      {/* Spatial Studio */}
+      <Route path="/spatial-studio">{() => <RouteGuard path="/spatial-studio"><SpatialStudio /></RouteGuard>}</Route>
+      <Route path="/spatial-collab">{() => <RouteGuard path="/spatial-collab"><SpatialCollaboration /></RouteGuard>}</Route>
+      <Route path="/devices">{() => <RouteGuard path="/devices"><DeviceManager /></RouteGuard>}</Route>
 
       {/* Microsoft Graph integration */}
       <Route path="/ms-graph">{() => <RouteGuard path="/ms-graph"><MsGraphExplorer /></RouteGuard>}</Route>

@@ -1,19 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>DOGE Spatial Studio</title>
-    <meta name="theme-color" content="#08080F" />
-    <script>
-      var pathSegmentsToKeep = 1;
-      var l = window.location;
-      l.replace(l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
-        l.pathname.split('/').slice(0, 1 + pathSegmentsToKeep).join('/') + '/?/' +
-        l.pathname.slice(1).split('/').slice(pathSegmentsToKeep).join('/').replace(/&/g, '~and~') +
-        (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') + l.hash);
-    </script>
-    <style>body{background:#08080F;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}.s{width:32px;height:32px;border:2px solid rgba(153,102,255,.3);border-top-color:#9966ff;border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}</style>
-  </head>
-  <body><div class="s"></div></body>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>DOGE Spatial Studio</title>
+  <script>
+    var l = window.location;
+    l.replace(l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+      l.pathname.split('/').slice(0, 2).join('/') +
+      '/?/' + l.pathname.slice(1).split('/').slice(1).join('/').replace(/&/g, '~and~') +
+      (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
+      l.hash
+    );
+  </script>
+</head>
 </html>

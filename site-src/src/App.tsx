@@ -9,6 +9,12 @@ const DeviceManager = lazy(() => import("./pages/DeviceManager"));
 const AIStudio = lazy(() => import("./pages/AIStudio"));
 const AssetLibrary = lazy(() => import("./pages/AssetLibrary"));
 const PrivacyDashboard = lazy(() => import("./pages/PrivacyDashboard"));
+// Blender integration features
+const BlenderBridge = lazy(() => import("./pages/BlenderBridge"));
+const NodeGraph = lazy(() => import("./pages/NodeGraph"));
+const RenderFarm = lazy(() => import("./pages/RenderFarm"));
+const MaterialSync = lazy(() => import("./pages/MaterialSync"));
+const SceneVersionControl = lazy(() => import("./pages/SceneVersionControl"));
 
 function LoadingSpinner() {
   return (
@@ -33,6 +39,12 @@ export default function App() {
           <Route path="/ai" element={<AIStudio />} />
           <Route path="/assets" element={<AssetLibrary />} />
           <Route path="/privacy" element={<PrivacyDashboard />} />
+          {/* Blender integration */}
+          <Route path="/blender-bridge" element={<BlenderBridge />} />
+          <Route path="/node-graph" element={<NodeGraph />} />
+          <Route path="/render-farm" element={<RenderFarm />} />
+          <Route path="/materials" element={<MaterialSync />} />
+          <Route path="/version-control" element={<SceneVersionControl />} />
           <Route path="*" element={<Home />} />
         </Routes>
       </Suspense>

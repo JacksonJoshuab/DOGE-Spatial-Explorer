@@ -3,7 +3,8 @@ import { NavLink, useLocation } from "react-router-dom";
 import {
   Layers, Video, Monitor, Brain, Package, ShieldCheck,
   Menu, X, Wifi, Lock, Activity, ChevronRight, Home,
-  Cpu, Globe, Headphones, Zap
+  Cpu, Globe, Headphones, Zap, ArrowLeftRight, GitBranch,
+  Server, Palette, GitCommit
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -17,16 +18,106 @@ const NAV_ITEMS = [
   { href: "/privacy", label: "Privacy & Security", icon: ShieldCheck },
 ];
 
+const BLENDER_NAV_ITEMS = [
+  { href: "/blender-bridge", label: "Blender Bridge", icon: ArrowLeftRight },
+  { href: "/node-graph", label: "Node Graph", icon: GitBranch },
+  { href: "/render-farm", label: "Render Farm", icon: Server },
+  { href: "/materials", label: "Material Sync", icon: Palette },
+  { href: "/version-control", label: "Version Control", icon: GitCommit },
+];
+
 const PLATFORM_STATUS = [
   { label: "visionOS", color: "bg-blue-400", active: true },
   { label: "Meta Quest", color: "bg-purple-400", active: true },
   { label: "iPadOS", color: "bg-green-400", active: true },
-  { label: "Blender", color: "bg-amber-400", active: false },
+  { label: "Blender", color: "bg-amber-400", active: true },
 ];
+
+const ALL_NAV = [...NAV_ITEMS, ...BLENDER_NAV_ITEMS];
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [blenderExpanded, setBlenderExpanded] = useState(true);
   const location = useLocation();
+
+  const currentLabel =
+    ALL_NAV.find(n => n.href === location.pathname)?.label ?? "DOGE Spatial Studio";
+
+  const NavSection = ({ items, onClose }: { items: typeof NAV_ITEMS; onClose?: () => void }) => (
+    <>
+      {items.map(({ href, label, icon: Icon }) => (
+        <NavLink
+          key={href}
+          to={href}
+          end={href === "/"}
+          onClick={onClose}
+          className={({ isActive }) =>
+            `flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+              isActive
+                ? "bg-blue-500/15 text-blue-300 border border-blue-500/20"
+                : "text-gray-400 hover:text-gray-200 hover:bg-white/5"
+            }`
+          }
+        >
+          {({ isActive }) => (
+            <>
+              <Icon className={`w-3.5 h-3.5 flex-shrink-0 ${isActive ? "text-blue-400" : ""}`} />
+              {label}
+              {isActive && <ChevronRight className="w-3 h-3 ml-auto text-blue-400/50" />}
+            </>
+          )}
+        </NavLink>
+      ))}
+    </>
+  );
+
+  const BlenderSection = ({ onClose }: { onClose?: () => void }) => (
+    <div>
+      <button
+        onClick={() => setBlenderExpanded(p => !p)}
+        className="flex items-center gap-2 w-full px-3 py-1.5 text-[9px] text-gray-600 uppercase tracking-wider hover:text-gray-400 transition-colors"
+      >
+        <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+        Blender Integration
+        <ChevronRight className={`w-3 h-3 ml-auto transition-transform ${blenderExpanded ? "rotate-90" : ""}`} />
+      </button>
+      <AnimatePresence>
+        {blenderExpanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden"
+          >
+            <div className="space-y-0.5 pl-1">
+              {BLENDER_NAV_ITEMS.map(({ href, label, icon: Icon }) => (
+                <NavLink
+                  key={href}
+                  to={href}
+                  onClick={onClose}
+                  className={({ isActive }) =>
+                    `flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                      isActive
+                        ? "bg-amber-500/15 text-amber-300 border border-amber-500/20"
+                        : "text-gray-400 hover:text-gray-200 hover:bg-white/5"
+                    }`
+                  }
+                >
+                  {({ isActive }) => (
+                    <>
+                      <Icon className={`w-3.5 h-3.5 flex-shrink-0 ${isActive ? "text-amber-400" : ""}`} />
+                      {label}
+                      {isActive && <ChevronRight className="w-3 h-3 ml-auto text-amber-400/50" />}
+                    </>
+                  )}
+                </NavLink>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
 
   return (
     <div className="flex h-screen bg-[#08080F] overflow-hidden">
@@ -45,28 +136,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
         {/* Nav */}
         <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto">
-          {NAV_ITEMS.map(({ href, label, icon: Icon }) => (
-            <NavLink
-              key={href}
-              to={href}
-              end={href === "/"}
-              className={({ isActive }) =>
-                `flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
-                  isActive
-                    ? "bg-blue-500/15 text-blue-300 border border-blue-500/20"
-                    : "text-gray-400 hover:text-gray-200 hover:bg-white/5"
-                }`
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  <Icon className={`w-3.5 h-3.5 flex-shrink-0 ${isActive ? "text-blue-400" : ""}`} />
-                  {label}
-                  {isActive && <ChevronRight className="w-3 h-3 ml-auto text-blue-400/50" />}
-                </>
-              )}
-            </NavLink>
-          ))}
+          <NavSection items={NAV_ITEMS} />
+          <div className="pt-2">
+            <BlenderSection />
+          </div>
         </nav>
 
         {/* Platform status */}
@@ -107,7 +180,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <motion.aside
               initial={{ x: -240 }} animate={{ x: 0 }} exit={{ x: -240 }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="fixed left-0 top-0 bottom-0 w-56 z-50 lg:hidden flex flex-col bg-[#0A0A16] border-r border-white/8"
+              className="fixed left-0 top-0 bottom-0 w-56 z-50 lg:hidden flex flex-col bg-[#0A0A16] border-r border-white/8 overflow-y-auto"
             >
               <div className="flex items-center justify-between px-4 py-4 border-b border-white/8">
                 <div className="flex items-center gap-2.5">
@@ -121,26 +194,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 </button>
               </div>
               <nav className="flex-1 px-2 py-3 space-y-0.5">
-                {NAV_ITEMS.map(({ href, label, icon: Icon }) => (
-                  <NavLink
-                    key={href}
-                    to={href}
-                    end={href === "/"}
-                    onClick={() => setSidebarOpen(false)}
-                    className={({ isActive }) =>
-                      `flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
-                        isActive ? "bg-blue-500/15 text-blue-300 border border-blue-500/20" : "text-gray-400 hover:text-gray-200 hover:bg-white/5"
-                      }`
-                    }
-                  >
-                    {({ isActive }) => (
-                      <>
-                        <Icon className={`w-3.5 h-3.5 flex-shrink-0 ${isActive ? "text-blue-400" : ""}`} />
-                        {label}
-                      </>
-                    )}
-                  </NavLink>
-                ))}
+                <NavSection items={NAV_ITEMS} onClose={() => setSidebarOpen(false)} />
+                <div className="pt-2">
+                  <BlenderSection onClose={() => setSidebarOpen(false)} />
+                </div>
               </nav>
             </motion.aside>
           </>
@@ -158,9 +215,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <Menu className="w-4 h-4" />
           </button>
           <div className="flex items-center gap-1.5 text-xs text-gray-500">
-            <span className="text-gray-300 font-medium">
-              {NAV_ITEMS.find(n => n.href === location.pathname)?.label ?? "DOGE Spatial Studio"}
-            </span>
+            <span className="text-gray-300 font-medium">{currentLabel}</span>
           </div>
           <div className="ml-auto flex items-center gap-3">
             {/* Live metrics */}

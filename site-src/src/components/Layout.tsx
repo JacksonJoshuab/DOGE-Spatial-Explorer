@@ -4,40 +4,50 @@ import {
   Layers, Video, Monitor, Brain, Package, ShieldCheck,
   Menu, X, Wifi, Lock, Activity, ChevronRight, Home,
   Cpu, Globe, Headphones, Zap, ArrowLeftRight, GitBranch,
-  Server, Palette, GitCommit
+  Server, Palette, GitCommit, BarChart3, Store, Film,
+  Settings as SettingsIcon
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const NAV_ITEMS = [
-  { href: "/", label: "Home", icon: Home },
-  { href: "/studio", label: "Spatial Studio", icon: Layers },
-  { href: "/collaboration", label: "Live Collaboration", icon: Video },
-  { href: "/devices", label: "Device Manager", icon: Monitor },
-  { href: "/ai", label: "AI Generation", icon: Brain },
-  { href: "/assets", label: "Asset Library", icon: Package },
-  { href: "/privacy", label: "Privacy & Security", icon: ShieldCheck },
+  { href: "/",             label: "Home",              icon: Home },
+  { href: "/studio",       label: "Spatial Studio",    icon: Layers },
+  { href: "/collaboration",label: "Live Collaboration", icon: Video },
+  { href: "/devices",      label: "Device Manager",    icon: Monitor },
+  { href: "/ai",           label: "AI Generation",     icon: Brain },
+  { href: "/assets",       label: "Asset Library",     icon: Package },
+  { href: "/privacy",      label: "Privacy & Security",icon: ShieldCheck },
 ];
 
 const BLENDER_NAV_ITEMS = [
-  { href: "/blender-bridge", label: "Blender Bridge", icon: ArrowLeftRight },
-  { href: "/node-graph", label: "Node Graph", icon: GitBranch },
-  { href: "/render-farm", label: "Render Farm", icon: Server },
-  { href: "/materials", label: "Material Sync", icon: Palette },
-  { href: "/version-control", label: "Version Control", icon: GitCommit },
+  { href: "/blender-bridge",  label: "Blender Bridge",   icon: ArrowLeftRight },
+  { href: "/node-graph",      label: "Node Graph",       icon: GitBranch },
+  { href: "/render-farm",     label: "Render Farm",      icon: Server },
+  { href: "/materials",       label: "Material Sync",    icon: Palette },
+  { href: "/version-control", label: "Version Control",  icon: GitCommit },
+];
+
+const ADVANCED_NAV_ITEMS = [
+  { href: "/analytics",   label: "Analytics",        icon: BarChart3 },
+  { href: "/marketplace", label: "Marketplace",      icon: Store },
+  { href: "/audio",       label: "Audio Studio",     icon: Headphones },
+  { href: "/timeline",    label: "Timeline",         icon: Film },
+  { href: "/settings",    label: "Settings",         icon: SettingsIcon },
 ];
 
 const PLATFORM_STATUS = [
-  { label: "visionOS", color: "bg-blue-400", active: true },
-  { label: "Meta Quest", color: "bg-purple-400", active: true },
-  { label: "iPadOS", color: "bg-green-400", active: true },
-  { label: "Blender", color: "bg-amber-400", active: true },
+  { label: "visionOS",  color: "bg-blue-400",   active: true },
+  { label: "Meta Quest",color: "bg-purple-400", active: true },
+  { label: "iPadOS",    color: "bg-green-400",  active: true },
+  { label: "Blender",   color: "bg-amber-400",  active: true },
 ];
 
-const ALL_NAV = [...NAV_ITEMS, ...BLENDER_NAV_ITEMS];
+const ALL_NAV = [...NAV_ITEMS, ...BLENDER_NAV_ITEMS, ...ADVANCED_NAV_ITEMS];
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [blenderExpanded, setBlenderExpanded] = useState(true);
+  const [advancedExpanded, setAdvancedExpanded] = useState(true);
   const location = useLocation();
 
   const currentLabel =
@@ -71,18 +81,23 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     </>
   );
 
-  const BlenderSection = ({ onClose }: { onClose?: () => void }) => (
+  const CollapsibleSection = ({
+    title, items, dotColor, activeColor, expanded, onToggle, onClose
+  }: {
+    title: string; items: typeof NAV_ITEMS; dotColor: string; activeColor: string;
+    expanded: boolean; onToggle: () => void; onClose?: () => void;
+  }) => (
     <div>
       <button
-        onClick={() => setBlenderExpanded(p => !p)}
+        onClick={onToggle}
         className="flex items-center gap-2 w-full px-3 py-1.5 text-[9px] text-gray-600 uppercase tracking-wider hover:text-gray-400 transition-colors"
       >
-        <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-        Blender Integration
-        <ChevronRight className={`w-3 h-3 ml-auto transition-transform ${blenderExpanded ? "rotate-90" : ""}`} />
+        <div className={`w-1.5 h-1.5 rounded-full ${dotColor} animate-pulse`} />
+        {title}
+        <ChevronRight className={`w-3 h-3 ml-auto transition-transform ${expanded ? "rotate-90" : ""}`} />
       </button>
       <AnimatePresence>
-        {blenderExpanded && (
+        {expanded && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
@@ -90,7 +105,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             className="overflow-hidden"
           >
             <div className="space-y-0.5 pl-1">
-              {BLENDER_NAV_ITEMS.map(({ href, label, icon: Icon }) => (
+              {items.map(({ href, label, icon: Icon }) => (
                 <NavLink
                   key={href}
                   to={href}
@@ -98,16 +113,16 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   className={({ isActive }) =>
                     `flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
                       isActive
-                        ? "bg-amber-500/15 text-amber-300 border border-amber-500/20"
+                        ? `${activeColor} border`
                         : "text-gray-400 hover:text-gray-200 hover:bg-white/5"
                     }`
                   }
                 >
                   {({ isActive }) => (
                     <>
-                      <Icon className={`w-3.5 h-3.5 flex-shrink-0 ${isActive ? "text-amber-400" : ""}`} />
+                      <Icon className={`w-3.5 h-3.5 flex-shrink-0`} />
                       {label}
-                      {isActive && <ChevronRight className="w-3 h-3 ml-auto text-amber-400/50" />}
+                      {isActive && <ChevronRight className="w-3 h-3 ml-auto opacity-50" />}
                     </>
                   )}
                 </NavLink>
@@ -119,9 +134,37 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     </div>
   );
 
+  const SidebarContent = ({ onClose }: { onClose?: () => void }) => (
+    <>
+      <NavSection items={NAV_ITEMS} onClose={onClose} />
+      <div className="pt-2">
+        <CollapsibleSection
+          title="Blender Integration"
+          items={BLENDER_NAV_ITEMS}
+          dotColor="bg-amber-400"
+          activeColor="bg-amber-500/15 text-amber-300 border-amber-500/20"
+          expanded={blenderExpanded}
+          onToggle={() => setBlenderExpanded(p => !p)}
+          onClose={onClose}
+        />
+      </div>
+      <div className="pt-2">
+        <CollapsibleSection
+          title="Advanced Tools"
+          items={ADVANCED_NAV_ITEMS}
+          dotColor="bg-green-400"
+          activeColor="bg-green-500/15 text-green-300 border-green-500/20"
+          expanded={advancedExpanded}
+          onToggle={() => setAdvancedExpanded(p => !p)}
+          onClose={onClose}
+        />
+      </div>
+    </>
+  );
+
   return (
     <div className="flex h-screen bg-[#08080F] overflow-hidden">
-      {/* Sidebar */}
+      {/* Desktop Sidebar */}
       <aside className="hidden lg:flex flex-col w-56 flex-shrink-0 border-r border-white/8 bg-[#0A0A16]">
         {/* Logo */}
         <div className="flex items-center gap-2.5 px-4 py-4 border-b border-white/8">
@@ -136,10 +179,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
         {/* Nav */}
         <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto">
-          <NavSection items={NAV_ITEMS} />
-          <div className="pt-2">
-            <BlenderSection />
-          </div>
+          <SidebarContent />
         </nav>
 
         {/* Platform status */}
@@ -194,10 +234,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 </button>
               </div>
               <nav className="flex-1 px-2 py-3 space-y-0.5">
-                <NavSection items={NAV_ITEMS} onClose={() => setSidebarOpen(false)} />
-                <div className="pt-2">
-                  <BlenderSection onClose={() => setSidebarOpen(false)} />
-                </div>
+                <SidebarContent onClose={() => setSidebarOpen(false)} />
               </nav>
             </motion.aside>
           </>

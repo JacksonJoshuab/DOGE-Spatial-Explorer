@@ -15,6 +15,12 @@ const NodeGraph = lazy(() => import("./pages/NodeGraph"));
 const RenderFarm = lazy(() => import("./pages/RenderFarm"));
 const MaterialSync = lazy(() => import("./pages/MaterialSync"));
 const SceneVersionControl = lazy(() => import("./pages/SceneVersionControl"));
+// Advanced features
+const Analytics = lazy(() => import("./pages/Analytics"));
+const Marketplace = lazy(() => import("./pages/Marketplace"));
+const AudioStudio = lazy(() => import("./pages/AudioStudio"));
+const Timeline = lazy(() => import("./pages/Timeline"));
+const Settings = lazy(() => import("./pages/Settings"));
 
 function LoadingSpinner() {
   return (
@@ -45,6 +51,12 @@ export default function App() {
           <Route path="/render-farm" element={<RenderFarm />} />
           <Route path="/materials" element={<MaterialSync />} />
           <Route path="/version-control" element={<SceneVersionControl />} />
+          {/* Advanced features */}
+          <Route path="/analytics" element={<Analytics />} />
+          <Route path="/marketplace" element={<Marketplace />} />
+          <Route path="/audio" element={<AudioStudio />} />
+          <Route path="/timeline" element={<Timeline />} />
+          <Route path="/settings" element={<Settings />} />
           <Route path="*" element={<Home />} />
         </Routes>
       </Suspense>

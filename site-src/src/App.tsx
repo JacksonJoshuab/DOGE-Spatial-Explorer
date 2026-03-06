@@ -21,6 +21,17 @@ const Marketplace = lazy(() => import("./pages/Marketplace"));
 const AudioStudio = lazy(() => import("./pages/AudioStudio"));
 const Timeline = lazy(() => import("./pages/Timeline"));
 const Settings = lazy(() => import("./pages/Settings"));
+// New 10 features
+const SpatialRecorder = lazy(() => import("./pages/SpatialRecorder"));
+const PhysicsSimulator = lazy(() => import("./pages/PhysicsSimulator"));
+const ShaderLab = lazy(() => import("./pages/ShaderLab"));
+const PersonaStudio = lazy(() => import("./pages/PersonaStudio"));
+const SpatialScripting = lazy(() => import("./pages/SpatialScripting"));
+const LightStudio = lazy(() => import("./pages/LightStudio"));
+const XRPreview = lazy(() => import("./pages/XRPreview"));
+const CloudStorage = lazy(() => import("./pages/CloudStorage"));
+const SpatialChat = lazy(() => import("./pages/SpatialChat"));
+const ProjectManager = lazy(() => import("./pages/ProjectManager"));
 
 function LoadingSpinner() {
   return (
@@ -57,6 +68,17 @@ export default function App() {
           <Route path="/audio" element={<AudioStudio />} />
           <Route path="/timeline" element={<Timeline />} />
           <Route path="/settings" element={<Settings />} />
+          {/* New 10 features */}
+          <Route path="/recorder" element={<SpatialRecorder />} />
+          <Route path="/physics" element={<PhysicsSimulator />} />
+          <Route path="/shader-lab" element={<ShaderLab />} />
+          <Route path="/persona" element={<PersonaStudio />} />
+          <Route path="/scripting" element={<SpatialScripting />} />
+          <Route path="/lights" element={<LightStudio />} />
+          <Route path="/xr-preview" element={<XRPreview />} />
+          <Route path="/cloud" element={<CloudStorage />} />
+          <Route path="/chat" element={<SpatialChat />} />
+          <Route path="/projects" element={<ProjectManager />} />
           <Route path="*" element={<Home />} />
         </Routes>
       </Suspense>

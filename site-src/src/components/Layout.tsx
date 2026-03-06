@@ -5,7 +5,9 @@ import {
   Menu, X, Wifi, Lock, Activity, ChevronRight, Home,
   Cpu, Globe, Headphones, Zap, ArrowLeftRight, GitBranch,
   Server, Palette, GitCommit, BarChart3, Store, Film,
-  Settings as SettingsIcon
+  Settings as SettingsIcon, Circle, Sun, Eye, Cloud,
+  MessageSquare, FolderOpen, FlaskConical, User, Terminal,
+  Disc, Atom
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -35,6 +37,19 @@ const ADVANCED_NAV_ITEMS = [
   { href: "/settings",    label: "Settings",         icon: SettingsIcon },
 ];
 
+const STUDIO_TOOLS_NAV_ITEMS = [
+  { href: "/recorder",    label: "Spatial Recorder",  icon: Disc },
+  { href: "/physics",     label: "Physics Simulator", icon: Atom },
+  { href: "/shader-lab",  label: "Shader Lab",        icon: FlaskConical },
+  { href: "/persona",     label: "Persona Studio",    icon: User },
+  { href: "/scripting",   label: "Scripting",         icon: Terminal },
+  { href: "/lights",      label: "Light Studio",      icon: Sun },
+  { href: "/xr-preview",  label: "XR Preview",        icon: Eye },
+  { href: "/cloud",       label: "Cloud Storage",     icon: Cloud },
+  { href: "/chat",        label: "Spatial Chat",      icon: MessageSquare },
+  { href: "/projects",    label: "Projects",          icon: FolderOpen },
+];
+
 const PLATFORM_STATUS = [
   { label: "visionOS",  color: "bg-blue-400",   active: true },
   { label: "Meta Quest",color: "bg-purple-400", active: true },
@@ -42,12 +57,13 @@ const PLATFORM_STATUS = [
   { label: "Blender",   color: "bg-amber-400",  active: true },
 ];
 
-const ALL_NAV = [...NAV_ITEMS, ...BLENDER_NAV_ITEMS, ...ADVANCED_NAV_ITEMS];
+const ALL_NAV = [...NAV_ITEMS, ...BLENDER_NAV_ITEMS, ...ADVANCED_NAV_ITEMS, ...STUDIO_TOOLS_NAV_ITEMS];
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [blenderExpanded, setBlenderExpanded] = useState(true);
   const [advancedExpanded, setAdvancedExpanded] = useState(true);
+  const [studioExpanded, setStudioExpanded] = useState(true);
   const location = useLocation();
 
   const currentLabel =
@@ -145,6 +161,17 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           activeColor="bg-amber-500/15 text-amber-300 border-amber-500/20"
           expanded={blenderExpanded}
           onToggle={() => setBlenderExpanded(p => !p)}
+          onClose={onClose}
+        />
+      </div>
+      <div className="pt-2">
+        <CollapsibleSection
+          title="Studio Tools"
+          items={STUDIO_TOOLS_NAV_ITEMS}
+          dotColor="bg-violet-400"
+          activeColor="bg-violet-500/15 text-violet-300 border-violet-500/20"
+          expanded={studioExpanded}
+          onToggle={() => setStudioExpanded(p => !p)}
           onClose={onClose}
         />
       </div>

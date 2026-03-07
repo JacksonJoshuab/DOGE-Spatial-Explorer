@@ -21,6 +21,7 @@ import {
 } from "./feeds";
 import { notifyOwner } from "./_core/notification";
 import { emsRouter } from "./ems";
+import { agentsRouter } from "./agents";
 import { dispatchCriticalAlert } from "./alertDispatcher";
 import {
   generateSecret as otplibGenerateSecret,
@@ -313,6 +314,8 @@ export const appRouter = router({
       .query(async ({ input }) => fetchGrantsGov(input.keyword ?? "Iowa municipal infrastructure")),
   }),
   ems: emsRouter,
+  // ─── AI Agent procedures ──────────────────────────────────────────────────
+  agents: agentsRouter,
 });
 
 export type AppRouter = typeof appRouter;

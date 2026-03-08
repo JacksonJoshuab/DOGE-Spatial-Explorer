@@ -63,6 +63,8 @@ import DeviceManager from "./pages/DeviceManager";
 import AIGenerationStudio from "./pages/AIGenerationStudio";
 import PrivacyDashboard from "./pages/PrivacyDashboard";
 import AssetLibrary from "./pages/AssetLibrary";
+import DailyBrief from "./pages/DailyBrief";
+import FleetEquipment from "./pages/FleetEquipment";
 
 function AppShell() {
   return (
@@ -93,6 +95,8 @@ function Router() {
 
       {/* Operational dashboard */}
       <Route path="/dashboard">{() => <RouteGuard path="/dashboard"><Dashboard /></RouteGuard>}</Route>
+      <Route path="/daily-brief">{() => <RouteGuard path="/daily-brief"><DailyBrief /></RouteGuard>}</Route>
+      <Route path="/fleet">{() => <RouteGuard path="/fleet"><FleetEquipment /></RouteGuard>}</Route>
       <Route path="/audit">{() => <RouteGuard path="/audit"><AuditStudio /></RouteGuard>}</Route>
       <Route path="/operations">{() => <RouteGuard path="/operations"><OperationsCenter /></RouteGuard>}</Route>
       <Route path="/map">{() => <RouteGuard path="/map"><SpatialMap /></RouteGuard>}</Route>

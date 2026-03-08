@@ -11,7 +11,7 @@ import {
   Building2, Wifi, AlertTriangle, ChevronRight, ShieldCheck, Droplets,
   Menu, X, Trees, HardHat, DollarSign, Users, BookOpen, UserCog, Network, Rss,
   Ambulance, Flame, ClipboardList, Layers, Video, Monitor as MonitorIcon,
-  Brain, Package, ShieldAlert
+  Brain, Package, ShieldAlert, Zap, Truck
 } from "lucide-react";
 import RoleSwitcher from "@/components/RoleSwitcher";
 
@@ -20,6 +20,8 @@ const SIDEBAR_SECTIONS = [
     label: "Operations",
     links: [
       { href: "/dashboard", label: "Executive Dashboard", icon: LayoutDashboard },
+      { href: "/daily-brief", label: "Daily Brief", icon: Zap },
+      { href: "/fleet", label: "Fleet & Equipment", icon: Truck },
       { href: "/audit", label: "Audit Studio", icon: Shield },
       { href: "/operations", label: "Operations Center", icon: Wrench },
       { href: "/map", label: "Spatial Map", icon: Map },
@@ -75,9 +77,9 @@ const SIDEBAR_SECTIONS = [
 ];
 
 const ALERTS = [
-  { text: "Community Dev 115% over budget", severity: "red" },
-  { text: "TIF variance $47K", severity: "amber" },
-  { text: "IoT Node #12 offline", severity: "amber" },
+  { text: "Batch Plant Moisture Sensor #3 — manual override active", severity: "red" },
+  { text: "MT-007 low fuel (68%) — refuel at 09:30 AM", severity: "amber" },
+  { text: "Low stock: Air Entraining Agent, Fly Ash, Rebar", severity: "amber" },
 ];
 
 interface Props {
@@ -174,12 +176,12 @@ function SidebarContent({ onLinkClick }: { onLinkClick?: () => void }) {
 
       {/* FY2024 mini stats */}
       <div className="p-3 border-t" style={{ borderColor: "oklch(1 0 0 / 8%)" }}>
-        <div className="section-label mb-2" style={{ color: "oklch(0.45 0.010 250)" }}>FY2024 Budget</div>
+        <div className="section-label mb-2" style={{ color: "oklch(0.45 0.010 250)" }}>Today's Operations</div>
         <div className="space-y-1">
           {[
-            { label: "Revenue", value: "$17.5M", color: "oklch(0.65 0.18 145)" },
-            { label: "Expenses", value: "$17.3M", color: "oklch(0.65 0.18 240)" },
-            { label: "Surplus", value: "+$172K", color: "oklch(0.65 0.18 145)" },
+            { label: "Active Pours", value: "2 sites", color: "oklch(0.65 0.18 145)" },
+            { label: "Fleet On-Road", value: "5 mixers", color: "oklch(0.65 0.18 240)" },
+            { label: "Crew On-Site", value: "12 staff", color: "oklch(0.65 0.18 145)" },
           ].map((stat) => (
             <div key={stat.label} className="flex justify-between items-center">
               <span className="text-[10px]" style={{ color: "oklch(0.52 0.010 250)" }}>{stat.label}</span>

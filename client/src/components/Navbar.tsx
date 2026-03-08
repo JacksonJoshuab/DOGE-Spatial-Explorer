@@ -22,6 +22,8 @@ const NAV_LINKS = [
 
 const DROPDOWN_LINKS = [
   { href: "/dashboard", label: "Executive Dashboard" },
+  { href: "/daily-brief", label: "Daily Brief" },
+  { href: "/fleet", label: "Fleet & Equipment" },
   { href: "/audit", label: "Audit Studio" },
   { href: "/operations", label: "Operations Center" },
   { href: "/map", label: "Spatial Map" },
@@ -83,10 +85,10 @@ export default function Navbar() {
               className="text-sm font-bold leading-none tracking-tight"
               style={{ fontFamily: "'Syne', sans-serif", color: "oklch(0.18 0.018 250)" }}
             >
-              DOGE & Associates
+              All American Concrete
             </div>
             <div className="text-[9px] uppercase tracking-[0.18em] mt-0.5" style={{ color: "oklch(0.50 0.012 250)" }}>
-              Municipal Platform
+              Operations Platform
             </div>
           </div>
         </Link>

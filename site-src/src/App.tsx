@@ -32,6 +32,14 @@ const XRPreview = lazy(() => import("./pages/XRPreview"));
 const CloudStorage = lazy(() => import("./pages/CloudStorage"));
 const SpatialChat = lazy(() => import("./pages/SpatialChat"));
 const ProjectManager = lazy(() => import("./pages/ProjectManager"));
+// DOGE-GRIP ORIN™ Business Intelligence
+const GripDashboard = lazy(() => import("./pages/GripDashboard"));
+const GripFinancial = lazy(() => import("./pages/GripFinancial"));
+const GripOEM = lazy(() => import("./pages/GripOEM"));
+const GripRobots = lazy(() => import("./pages/GripRobots"));
+const GripAgents = lazy(() => import("./pages/GripAgents"));
+const GripRoadmap = lazy(() => import("./pages/GripRoadmap"));
+const GripRisk = lazy(() => import("./pages/GripRisk"));
 
 function LoadingSpinner() {
   return (
@@ -79,6 +87,14 @@ export default function App() {
           <Route path="/cloud" element={<CloudStorage />} />
           <Route path="/chat" element={<SpatialChat />} />
           <Route path="/projects" element={<ProjectManager />} />
+          {/* DOGE-GRIP ORIN™ Business Intelligence */}
+          <Route path="/grip" element={<GripDashboard />} />
+          <Route path="/grip-financial" element={<GripFinancial />} />
+          <Route path="/grip-oem" element={<GripOEM />} />
+          <Route path="/grip-robots" element={<GripRobots />} />
+          <Route path="/grip-agents" element={<GripAgents />} />
+          <Route path="/grip-roadmap" element={<GripRoadmap />} />
+          <Route path="/grip-risk" element={<GripRisk />} />
           <Route path="*" element={<Home />} />
         </Routes>
       </Suspense>

@@ -7,7 +7,7 @@ import {
   Server, Palette, GitCommit, BarChart3, Store, Film,
   Settings as SettingsIcon, Circle, Sun, Eye, Cloud,
   MessageSquare, FolderOpen, FlaskConical, User, Terminal,
-  Disc, Atom
+  Disc, Atom, DollarSign, Wrench, Bot, Shield, Map
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -19,6 +19,16 @@ const NAV_ITEMS = [
   { href: "/ai",           label: "AI Generation",     icon: Brain },
   { href: "/assets",       label: "Asset Library",     icon: Package },
   { href: "/privacy",      label: "Privacy & Security",icon: ShieldCheck },
+];
+
+const GRIP_NAV_ITEMS = [
+  { href: "/grip",          label: "GRIP Dashboard",   icon: Cpu },
+  { href: "/grip-financial",label: "Financial Model",  icon: DollarSign },
+  { href: "/grip-oem",      label: "OEM Ecosystem",    icon: Globe },
+  { href: "/grip-robots",   label: "Robot Compat.",    icon: Wrench },
+  { href: "/grip-agents",   label: "AI Agents",        icon: Bot },
+  { href: "/grip-roadmap",  label: "Roadmap",          icon: Map },
+  { href: "/grip-risk",     label: "Risk & Ops",       icon: Shield },
 ];
 
 const BLENDER_NAV_ITEMS = [
@@ -57,13 +67,14 @@ const PLATFORM_STATUS = [
   { label: "Blender",   color: "bg-amber-400",  active: true },
 ];
 
-const ALL_NAV = [...NAV_ITEMS, ...BLENDER_NAV_ITEMS, ...ADVANCED_NAV_ITEMS, ...STUDIO_TOOLS_NAV_ITEMS];
+const ALL_NAV = [...NAV_ITEMS, ...GRIP_NAV_ITEMS, ...BLENDER_NAV_ITEMS, ...ADVANCED_NAV_ITEMS, ...STUDIO_TOOLS_NAV_ITEMS];
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [blenderExpanded, setBlenderExpanded] = useState(true);
-  const [advancedExpanded, setAdvancedExpanded] = useState(true);
-  const [studioExpanded, setStudioExpanded] = useState(true);
+  const [gripExpanded, setGripExpanded] = useState(true);
+  const [blenderExpanded, setBlenderExpanded] = useState(false);
+  const [advancedExpanded, setAdvancedExpanded] = useState(false);
+  const [studioExpanded, setStudioExpanded] = useState(false);
   const location = useLocation();
 
   const currentLabel =
@@ -98,10 +109,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   );
 
   const CollapsibleSection = ({
-    title, items, dotColor, activeColor, expanded, onToggle, onClose
+    title, items, dotColor, activeColor, expanded, onToggle, onClose, badge
   }: {
     title: string; items: typeof NAV_ITEMS; dotColor: string; activeColor: string;
-    expanded: boolean; onToggle: () => void; onClose?: () => void;
+    expanded: boolean; onToggle: () => void; onClose?: () => void; badge?: string;
   }) => (
     <div>
       <button
@@ -110,6 +121,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       >
         <div className={`w-1.5 h-1.5 rounded-full ${dotColor} animate-pulse`} />
         {title}
+        {badge && (
+          <span className="ml-1 px-1.5 py-0.5 rounded-full bg-blue-500/20 text-blue-400 text-[8px] font-bold">{badge}</span>
+        )}
         <ChevronRight className={`w-3 h-3 ml-auto transition-transform ${expanded ? "rotate-90" : ""}`} />
       </button>
       <AnimatePresence>
@@ -153,6 +167,18 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const SidebarContent = ({ onClose }: { onClose?: () => void }) => (
     <>
       <NavSection items={NAV_ITEMS} onClose={onClose} />
+      <div className="pt-2">
+        <CollapsibleSection
+          title="DOGE-GRIP ORIN™"
+          items={GRIP_NAV_ITEMS}
+          dotColor="bg-blue-400"
+          activeColor="bg-blue-500/15 text-blue-300 border-blue-500/20"
+          expanded={gripExpanded}
+          onToggle={() => setGripExpanded(p => !p)}
+          onClose={onClose}
+          badge="v63"
+        />
+      </div>
       <div className="pt-2">
         <CollapsibleSection
           title="Blender Integration"

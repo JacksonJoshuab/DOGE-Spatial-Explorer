@@ -1,0 +1,317 @@
+/* 
+ * DOGE-LANDSCAPER — Spatial Glass Command Deck Design System
+ * Design Movement: Apple Liquid Glass × NASA Mission Control × visionOS Spatial Computing
+ * Color Philosophy: Deep navy base, Iowa Corn Gold accent, Prairie Green secondary
+ * Typography: system-ui (SF Pro on Apple), monospace for telemetry
+ * Animations: Framer Motion spring physics, 300-500ms transitions
+ */
+
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  /* Custom DOGE tokens */
+  --color-iowa-gold: var(--iowa-gold);
+  --color-prairie-green: var(--prairie-green);
+  --color-lidar-cyan: var(--lidar-cyan);
+  --color-glass-bg: var(--glass-bg);
+  --color-glass-border: var(--glass-border);
+}
+
+:root {
+  /* Iowa Corn Gold — oklch(0.82 0.18 85) */
+  --iowa-gold: oklch(0.82 0.18 85);
+  /* Prairie Green — oklch(0.55 0.15 145) */
+  --prairie-green: oklch(0.55 0.15 145);
+  /* LiDAR Cyan */
+  --lidar-cyan: oklch(0.85 0.18 195);
+  /* Glass */
+  --glass-bg: oklch(1 0 0 / 0.08);
+  --glass-border: oklch(1 0 0 / 0.18);
+
+  --radius: 0.75rem;
+  --primary: oklch(0.82 0.18 85);
+  --primary-foreground: oklch(0.1 0.02 85);
+  --background: oklch(0.09 0.015 260);
+  --foreground: oklch(0.96 0.005 260);
+  --card: oklch(0.12 0.015 260);
+  --card-foreground: oklch(0.96 0.005 260);
+  --popover: oklch(0.12 0.015 260);
+  --popover-foreground: oklch(0.96 0.005 260);
+  --secondary: oklch(0.55 0.15 145);
+  --secondary-foreground: oklch(0.96 0.005 145);
+  --muted: oklch(0.18 0.01 260);
+  --muted-foreground: oklch(0.65 0.01 260);
+  --accent: oklch(0.85 0.18 195);
+  --accent-foreground: oklch(0.1 0.02 195);
+  --destructive: oklch(0.65 0.22 25);
+  --destructive-foreground: oklch(0.98 0 0);
+  --border: oklch(1 0 0 / 0.12);
+  --input: oklch(1 0 0 / 0.1);
+  --ring: oklch(0.82 0.18 85);
+  --chart-1: oklch(0.82 0.18 85);
+  --chart-2: oklch(0.55 0.15 145);
+  --chart-3: oklch(0.85 0.18 195);
+  --chart-4: oklch(0.65 0.22 25);
+  --chart-5: oklch(0.75 0.15 300);
+  --sidebar: oklch(0.1 0.015 260);
+  --sidebar-foreground: oklch(0.96 0.005 260);
+  --sidebar-primary: oklch(0.82 0.18 85);
+  --sidebar-primary-foreground: oklch(0.1 0.02 85);
+  --sidebar-accent: oklch(0.18 0.01 260);
+  --sidebar-accent-foreground: oklch(0.96 0.005 260);
+  --sidebar-border: oklch(1 0 0 / 0.1);
+  --sidebar-ring: oklch(0.82 0.18 85);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  [type="button"]:not(:disabled),
+  [type="submit"]:not(:disabled),
+  [type="reset"]:not(:disabled),
+  a[href],
+  select:not(:disabled),
+  input[type="checkbox"]:not(:disabled),
+  input[type="radio"]:not(:disabled) {
+    @apply cursor-pointer;
+  }
+}
+
+/* ===== LIQUID GLASS SYSTEM ===== */
+.glass {
+  background: oklch(1 0 0 / 0.07);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid oklch(1 0 0 / 0.15);
+  box-shadow: 
+    0 0 0 0.5px oklch(1 0 0 / 0.08) inset,
+    0 8px 32px oklch(0 0 0 / 0.4),
+    0 1px 0 oklch(1 0 0 / 0.2) inset;
+}
+
+.glass-gold {
+  background: oklch(0.82 0.18 85 / 0.12);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid oklch(0.82 0.18 85 / 0.3);
+  box-shadow: 
+    0 0 0 0.5px oklch(0.82 0.18 85 / 0.1) inset,
+    0 8px 32px oklch(0 0 0 / 0.4),
+    0 1px 0 oklch(0.82 0.18 85 / 0.25) inset;
+}
+
+.glass-green {
+  background: oklch(0.55 0.15 145 / 0.12);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid oklch(0.55 0.15 145 / 0.3);
+  box-shadow: 
+    0 0 0 0.5px oklch(0.55 0.15 145 / 0.1) inset,
+    0 8px 32px oklch(0 0 0 / 0.4),
+    0 1px 0 oklch(0.55 0.15 145 / 0.25) inset;
+}
+
+.glass-red {
+  background: oklch(0.65 0.22 25 / 0.12);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid oklch(0.65 0.22 25 / 0.3);
+  box-shadow: 
+    0 0 0 0.5px oklch(0.65 0.22 25 / 0.1) inset,
+    0 8px 32px oklch(0 0 0 / 0.4),
+    0 1px 0 oklch(0.65 0.22 25 / 0.25) inset;
+}
+
+.glass:hover {
+  background: oklch(1 0 0 / 0.1);
+  border-color: oklch(1 0 0 / 0.22);
+  box-shadow: 
+    0 0 0 0.5px oklch(1 0 0 / 0.12) inset,
+    0 12px 40px oklch(0 0 0 / 0.5),
+    0 1px 0 oklch(1 0 0 / 0.28) inset;
+  transition: all 0.3s ease;
+}
+
+/* Specular highlight on glass — rainbow shimmer */
+.glass-specular::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    135deg,
+    oklch(1 0 0 / 0.12) 0%,
+    oklch(0.82 0.18 85 / 0.06) 25%,
+    transparent 50%,
+    oklch(0.85 0.18 195 / 0.06) 75%,
+    oklch(1 0 0 / 0.08) 100%
+  );
+  pointer-events: none;
+}
+
+/* ===== TELEMETRY MONOSPACE ===== */
+.telemetry {
+  font-family: "SF Mono", "Fira Code", "Cascadia Code", ui-monospace, monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  color: oklch(0.85 0.18 195);
+}
+
+.telemetry-gold {
+  font-family: "SF Mono", "Fira Code", "Cascadia Code", ui-monospace, monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  color: oklch(0.82 0.18 85);
+}
+
+/* ===== LIDAR SCAN ANIMATION ===== */
+@keyframes lidar-scan {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes lidar-pulse {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.05); }
+}
+
+@keyframes status-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+@keyframes scan-line {
+  0% { transform: translateY(-100%); opacity: 0; }
+  10% { opacity: 0.6; }
+  90% { opacity: 0.6; }
+  100% { transform: translateY(100vh); opacity: 0; }
+}
+
+@keyframes float-up {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+  100% { transform: translateY(0px); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes hud-flicker {
+  0%, 98%, 100% { opacity: 1; }
+  99% { opacity: 0.7; }
+}
+
+.animate-lidar-scan { animation: lidar-scan 4s linear infinite; }
+.animate-lidar-pulse { animation: lidar-pulse 2s ease-in-out infinite; }
+.animate-status-pulse { animation: status-pulse 1.5s ease-in-out infinite; }
+.animate-float { animation: float-up 3s ease-in-out infinite; }
+.animate-hud-flicker { animation: hud-flicker 8s ease-in-out infinite; }
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: oklch(1 0 0 / 0.2); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: oklch(1 0 0 / 0.35); }
+
+/* ===== CONTAINER ===== */
+@layer components {
+  .container {
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  .flex {
+    min-height: 0;
+    min-width: 0;
+  }
+  @media (min-width: 640px) {
+    .container { padding-left: 1.5rem; padding-right: 1.5rem; }
+  }
+  @media (min-width: 1024px) {
+    .container { padding-left: 2rem; padding-right: 2rem; max-width: 1440px; }
+  }
+}
+
+/* ===== HUD OVERLAY ELEMENTS ===== */
+.hud-corner {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-color: oklch(0.82 0.18 85 / 0.7);
+  border-style: solid;
+}
+.hud-corner-tl { top: 8px; left: 8px; border-width: 2px 0 0 2px; }
+.hud-corner-tr { top: 8px; right: 8px; border-width: 2px 2px 0 0; }
+.hud-corner-bl { bottom: 8px; left: 8px; border-width: 0 0 2px 2px; }
+.hud-corner-br { bottom: 8px; right: 8px; border-width: 0 2px 2px 0; }
+
+/* ===== IOWA GOLD GLOW ===== */
+.glow-gold {
+  box-shadow: 0 0 20px oklch(0.82 0.18 85 / 0.4), 0 0 40px oklch(0.82 0.18 85 / 0.2);
+}
+.glow-green {
+  box-shadow: 0 0 20px oklch(0.55 0.15 145 / 0.4), 0 0 40px oklch(0.55 0.15 145 / 0.2);
+}
+.glow-cyan {
+  box-shadow: 0 0 20px oklch(0.85 0.18 195 / 0.4), 0 0 40px oklch(0.85 0.18 195 / 0.2);
+}
+
+/* ===== TOAST OVERRIDES ===== */
+[data-sonner-toaster] [data-sonner-toast] {
+  background: oklch(0.12 0.015 260 / 0.9) !important;
+  backdrop-filter: blur(24px) !important;
+  border: 1px solid oklch(1 0 0 / 0.15) !important;
+  color: oklch(0.96 0.005 260) !important;
+}

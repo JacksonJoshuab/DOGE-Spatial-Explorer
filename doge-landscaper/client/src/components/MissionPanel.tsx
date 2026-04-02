@@ -39,9 +39,9 @@ const STATUS_CONFIG = {
 
 // Zone coverage map: which task IDs have spray zones and their path segment range
 const ZONE_SPRAY_TASKS: Record<string, { label: string; start: number; end: number }> = {
-  "weed-feed-apply": { label: "Zone A+B", start: 0.0, end: 0.5 },
-  "mow-main":        { label: "Zone C",   start: 0.5, end: 0.75 },
-  "edge-beds":       { label: "Zone D",   start: 0.75, end: 1.0 },
+  "weed-feed-apply": { label: "Zone A+B", start: 0.0,  end: 0.45 },
+  "mow-main":        { label: "Zone A",   start: 0.45, end: 0.80 },
+  "edge-beds":       { label: "Zone D",   start: 0.80, end: 1.0  },
 };
 
 export default function MissionPanel({ tasks, persona, onTaskComplete, robotProgress = 0 }: MissionPanelProps) {
@@ -129,7 +129,19 @@ export default function MissionPanel({ tasks, persona, onTaskComplete, robotProg
                   <p className="text-xs font-medium text-white truncate">{task.name}</p>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[9px] text-white/40">{task.duration}</span>
+                  {status === "in-progress" && ZONE_SPRAY_TASKS[task.id] ? (() => {
+                    const zone = ZONE_SPRAY_TASKS[task.id];
+                    const localPct = Math.max(0, Math.min(1, (robotProgress - zone.start) / (zone.end - zone.start)));
+                    const totalMins = parseInt(task.duration) || 25;
+                    const remainMins = Math.round(totalMins * (1 - localPct));
+                    return (
+                      <span className="text-[9px] font-mono text-yellow-400 animate-pulse">
+                        ~{remainMins}m left
+                      </span>
+                    );
+                  })() : (
+                    <span className="text-[9px] text-white/40">{task.duration}</span>
+                  )}
                   {isExpanded ? <ChevronDown size={12} className="text-white/40" /> : <ChevronRight size={12} className="text-white/40" />}
                 </div>
               </div>

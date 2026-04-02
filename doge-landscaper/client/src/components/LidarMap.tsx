@@ -88,9 +88,9 @@ export default function LidarMap() {
       {mapMode === "lidar" ? (
         <div className="relative rounded-xl overflow-hidden" style={{ height: 220 }}>
           <img 
-            src="https://d2xsxph8kpxj0f.cloudfront.net/116029439/cao3qXUUr9zrMdetSxxjdj/doge-lidar-bg-b2tydw2JzcSuQ5GHx2sLVA.webp"
-            alt="LiDAR Map"
-            className="w-full h-full object-cover opacity-80"
+            src="https://d2xsxph8kpxj0f.cloudfront.net/116029439/cao3qXUUr9zrMdetSxxjdj/lidar_topdown_7a0d6a4b.png"
+            alt="LiDAR Map — 905 Backyard, Wilton IA · 10/8/2025"
+            className="w-full h-full object-cover opacity-95"
           />
           
           <svg className="absolute inset-0 w-full h-full" viewBox="0 0 260 200" preserveAspectRatio="xMidYMid slice">
@@ -137,7 +137,7 @@ export default function LidarMap() {
             <div className="hud-corner hud-corner-br" />
           </div>
           <div className="absolute bottom-2 right-2 glass rounded px-1.5 py-0.5">
-            <span className="text-[9px] telemetry">Scale: 1px = 0.5m</span>
+            <span className="text-[9px] telemetry">21.7m × 43.9m · SCAN 10/8/2025</span>
           </div>
         </div>
       ) : (
@@ -178,15 +178,15 @@ export default function LidarMap() {
         <div className="grid grid-cols-3 gap-3 text-center">
           <div>
             <p className="text-[10px] text-white/40">Total Area</p>
-            <p className="text-sm font-bold text-white">8,400 ft²</p>
+            <p className="text-sm font-bold text-white">9,515 ft²</p>
           </div>
           <div>
             <p className="text-[10px] text-white/40">Scan Points</p>
-            <p className="text-sm font-bold text-cyan-400">124,832</p>
+            <p className="text-sm font-bold text-cyan-400">404,354</p>
           </div>
           <div>
             <p className="text-[10px] text-white/40">Coverage</p>
-            <p className="text-sm font-bold text-green-400">74.8%</p>
+            <p className="text-sm font-bold text-green-400">91.2%</p>
           </div>
         </div>
       </div>

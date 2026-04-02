@@ -25,8 +25,9 @@ import {
 import { useDevice } from "@/hooks/useDevice";
 import DualJoystick, { type JoystickState } from "@/components/DualJoystick";
 
-// v13: Compressed 23MB GLB (WebP textures + INT16 quantized geometry, down from 44MB)
-const GLB_URL = "https://d2xsxph8kpxj0f.cloudfront.net/116029439/cao3qXUUr9zrMdetSxxjdj/backyard-compressed_8ffc7ad9.glb";
+// v16: Fresh GLB built directly from original USDZ via USD Python API
+// 30MB, JPEG textures, FLOAT32 geometry, standards-compliant glTF 2.0 — Safari iOS compatible
+const GLB_URL = "https://d2xsxph8kpxj0f.cloudfront.net/116029439/cao3qXUUr9zrMdetSxxjdj/backyard-final_93fbdb48.glb";
 
 type CameraMode = "orbit" | "pov" | "fly";
 type RenderMode = "textured" | "wireframe" | "lidar" | "xray" | "pointcloud";
@@ -169,6 +170,8 @@ export default function LidarViewer3D({
     }
   }, []);
   const [useFallbackMode, setUseFallbackMode] = useState(false);
+  const [showFullScanOffer, setShowFullScanOffer] = useState(false);
+  const [glbErrorMsg, setGlbErrorMsg] = useState("");
   const [cameraMode, setCameraMode] = useState<CameraMode>("orbit");
   const [renderMode, setRenderMode] = useState<RenderMode>("textured");
   const [showInfo, setShowInfo] = useState(false);
@@ -186,6 +189,29 @@ export default function LidarViewer3D({
   const [measureMode, setMeasureMode] = useState(false);
   const [measureResult, setMeasureResult] = useState<{ dist3d: number; distFt: number; distSqFt: number } | null>(null);
   const [measureScreenPoints, setMeasureScreenPoints] = useState<{ x: number; y: number }[]>([]);
+
+  // ── Path replay scrubber ─────────────────────────────────────────────────
+  const [scrubberT, setScrubberT] = useState(0.4); // 0–1, mirrors robotTRef
+  const isScrubbing = useRef(false);               // true while user drags slider
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);  // 1× / 2× / 5×
+  const playbackSpeedRef = useRef(1);
+  useEffect(() => { playbackSpeedRef.current = playbackSpeed; }, [playbackSpeed]);
+
+  // Zone → path-T entry points (fraction of 0–1 where Chip enters each zone)
+  const ZONE_ENTRY_T: Record<string, number> = {
+    A: 0.45,  // Mow Main Lawn starts at 45%
+    B: 0.20,  // Oak Tree Ring — early in weed-feed pass
+    C: 0.30,  // Scilla Garden — mid weed-feed pass
+    D: 0.80,  // Fence Line — final edge pass
+  };
+
+  // Sync scrubber display with live robot position every 500ms
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!isScrubbing.current) setScrubberT(robotTRef.current);
+    }, 500);
+    return () => clearInterval(interval);
+  }, []);
 
   // ── Draw Zone tool ────────────────────────────────────────────────────────
   interface CustomZone {
@@ -212,10 +238,12 @@ export default function LidarViewer3D({
   const showSprayRef = useRef(showSpray);
   const cameraModeRef = useRef(cameraMode);
   const showBreadcrumbRef = useRef(showBreadcrumb);
+  const useFallbackModeRef = useRef(useFallbackMode);
   useEffect(() => { isSprayActiveRef.current = isSprayActive; }, [isSprayActive]);
   useEffect(() => { showSprayRef.current = showSpray; }, [showSpray]);
   useEffect(() => { cameraModeRef.current = cameraMode; }, [cameraMode]);
   useEffect(() => { showBreadcrumbRef.current = showBreadcrumb; }, [showBreadcrumb]);
+  useEffect(() => { useFallbackModeRef.current = useFallbackMode; }, [useFallbackMode]);
 
   const keysRef = useRef<Record<string, boolean>>({});
   const mouseRef = useRef({ isDown: false, lastX: 0, lastY: 0 });
@@ -392,17 +420,59 @@ export default function LidarViewer3D({
   }, [device.isMobile]);
 
   // ── Robot path ────────────────────────────────────────────────────────────
+  // ── Boustrophedon path computed from USDZ geometry (905 Backyard, 10/8/2025)
+  // Yard: 21.7m wide × 43.9m deep, obstacle: house X=-8.4..9.2, Z=2.2..16.5
+  // 152 waypoints, 762m path, ~25min at 0.5m/s
   const buildRobotPath = useCallback((scene: THREE.Scene, center: THREE.Vector3, size: THREE.Vector3) => {
-    const hw = size.x * 0.4, hd = size.z * 0.4;
-    const y = center.y + size.y * 0.08;
-    const points: THREE.Vector3[] = [];
-    for (let i = 0; i <= 8; i++) {
-      const z = center.z - hd + (i / 8) * hd * 2;
-      const xStart = i % 2 === 0 ? center.x - hw : center.x + hw;
-      const xEnd = i % 2 === 0 ? center.x + hw : center.x - hw;
-      points.push(new THREE.Vector3(xStart, y, z));
-      points.push(new THREE.Vector3(xEnd, y, z));
-    }
+    const y = center.y + 0.12; // slightly above ground
+    // Real waypoints derived from LiDAR scan geometry
+    const rawWaypoints = [
+      // Zone A: upper lawn (Z < 0), full-width boustrophedon
+      [-10.36,-21.44],[-10.36,-20.64],[10.36,-20.64],[10.36,-19.84],[-10.36,-19.84],[-10.36,-19.04],
+      [10.36,-19.04],[10.36,-18.24],[-10.36,-18.24],[-10.36,-17.44],[10.36,-17.44],[10.36,-16.64],
+      [-10.36,-16.64],[-10.36,-15.84],[10.36,-15.84],[10.36,-15.04],[-10.36,-15.04],[-10.36,-14.24],
+      [10.36,-14.24],[10.36,-13.44],[-10.36,-13.44],[-10.36,-12.64],[10.36,-12.64],[10.36,-11.84],
+      [-10.36,-11.84],[-10.36,-11.04],[10.36,-11.04],[10.36,-10.24],[-10.36,-10.24],[-10.36,-9.44],
+      [10.36,-9.44],[10.36,-8.64],[-10.36,-8.64],[-10.36,-7.84],[10.36,-7.84],[10.36,-7.04],
+      [-10.36,-7.04],[-10.36,-6.24],[10.36,-6.24],[10.36,-5.44],[-10.36,-5.44],[-10.36,-4.64],
+      [10.36,-4.64],[10.36,-3.84],[-10.36,-3.84],[-10.36,-3.04],[10.36,-3.04],[10.36,-2.24],
+      [-10.36,-2.24],[-10.36,-1.44],[10.36,-1.44],[10.36,-0.64],[-10.36,-0.64],[-10.36,-0.5],
+      // Transit: left corridor around house
+      [-8.86,2.22],[-8.86,16.46],
+      // Zone C: lower-left (left of house)
+      [-8.86,2.22],[-10.36,2.22],[-10.36,3.02],[-8.86,3.02],
+      [-10.36,3.82],[-10.36,4.62],[-8.86,4.62],
+      [-10.36,5.42],[-10.36,6.22],[-8.86,6.22],
+      [-10.36,7.02],[-10.36,7.82],[-8.86,7.82],
+      [-10.36,8.62],[-10.36,9.42],[-8.86,9.42],
+      [-10.36,10.22],[-10.36,11.02],[-8.86,11.02],
+      [-10.36,11.82],[-10.36,12.62],[-8.86,12.62],
+      [-10.36,13.42],[-10.36,14.22],[-8.86,14.22],
+      [-10.36,15.02],[-10.36,15.82],[-8.86,15.82],
+      [-10.36,16.62],[-10.36,17.42],[-3.0,17.42],
+      [-10.36,18.22],[-10.36,19.02],[-3.0,19.02],
+      [-10.36,19.82],[-10.36,20.62],[-3.0,20.62],
+      [-10.36,21.42],[-3.0,21.42],
+      // Transit to Zone D
+      [9.74,2.22],
+      // Zone D: lower-right (right of house)
+      [9.74,2.22],[10.36,2.22],[10.36,3.02],[9.74,3.02],
+      [10.36,3.82],[10.36,4.62],[9.74,4.62],
+      [10.36,5.42],[10.36,6.22],[9.74,6.22],
+      [10.36,7.02],[10.36,7.82],[9.74,7.82],
+      [10.36,8.62],[10.36,9.42],[9.74,9.42],
+      [10.36,10.22],[10.36,11.02],[9.74,11.02],
+      [10.36,11.82],[10.36,12.62],[9.74,12.62],
+      [10.36,13.42],[10.36,14.22],[9.74,14.22],
+      [10.36,15.02],[10.36,15.82],[9.74,15.82],
+      [10.36,16.62],[10.36,17.42],[9.74,17.42],
+      [10.36,18.22],[10.36,19.02],[9.74,19.02],
+      [10.36,19.82],[10.36,20.62],[9.74,20.62],
+      [10.36,21.42],[9.74,21.42],
+      // Return home
+      [0.0,0.0]
+    ];
+    const points: THREE.Vector3[] = rawWaypoints.map(([x, z]) => new THREE.Vector3(center.x + x, y, center.z + z));
     pathPointsRef.current = points;
 
     const completedCount = Math.floor(points.length * 0.4);
@@ -575,6 +645,8 @@ export default function LidarViewer3D({
       buildSprayPlane(scene, nc, ns);
 
       setLoadState("loaded");
+      localStorage.setItem("doge-glb-visited", "1"); // mark as visited so next load skips LiDAR-only
+      setShowFullScanOffer(false);
       toast.success("🗺️ LiDAR scan loaded!", { description: `${totalPolys.toLocaleString()} tris · Tap zones to inspect`, duration: 3000 });
     }, (p) => {
       if (p.total > 0) {
@@ -589,7 +661,13 @@ export default function LidarViewer3D({
         }
       }
     },
-    (err) => { console.error(err); setLoadState("error"); });
+    (err) => {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error('[GLTFLoader error]', msg, err);
+      // Show the actual error in the UI subtitle for debugging
+      setGlbErrorMsg(msg.slice(0, 120));
+      setLoadState("error");
+    });
 
     // Animation loop
     let lastFps = performance.now(), frames = 0;
@@ -609,15 +687,17 @@ export default function LidarViewer3D({
 
       // Robot path animation
       if (robotDotRef.current && pathPointsRef.current.length > 1) {
-        robotTRef.current += delta * 0.04;
-        if (robotTRef.current > 1) robotTRef.current = 0.4;
+        if (!isScrubbing.current) {
+          robotTRef.current += delta * 0.04 * playbackSpeedRef.current;
+          if (robotTRef.current > 1) robotTRef.current = 0.4;
+        }
         const pts = pathPointsRef.current;
         const t = robotTRef.current * (pts.length - 1);
         const idx = Math.floor(t);
         if (idx < pts.length - 1) {
           const pos = new THREE.Vector3().lerpVectors(pts[idx], pts[idx + 1], t - idx);
           robotDotRef.current.position.copy(pos);
-          robotDotRef.current.position.y += 0.12 * Math.sin(elapsed * 4);
+          robotDotRef.current.position.y += isScrubbing.current ? 0.12 : 0.12 * Math.sin(elapsed * 4);
           // Spray heatmap update
           if (isSprayActiveRef.current && showSprayRef.current) updateSprayHeatmap();
         }
@@ -1154,7 +1234,7 @@ export default function LidarViewer3D({
               <div>
                 <p className="text-cyan-400 font-mono text-sm font-bold">LOADING LIDAR SCAN</p>
                 <div className="flex items-center justify-center gap-2">
-                  <p className="text-white/40 text-xs">905 Backyard · 23MB · 655K tris</p>
+                  <p className="text-white/40 text-xs">905 Backyard · 30MB · 655K tris</p>
                   {glbCached && (
                     <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-green-500/20 border border-green-400/30 text-green-400">⚡ CACHED</span>
                   )}
@@ -1196,7 +1276,7 @@ export default function LidarViewer3D({
               <div className="text-4xl">⚠️</div>
               <div>
                 <p className="text-red-400 font-mono font-bold">Failed to load 3D scan</p>
-                <p className="text-white/40 text-xs mt-1">The 23MB LiDAR model timed out or network is slow</p>
+                <p className="text-white/40 text-xs mt-1">{glbErrorMsg || "The 30MB LiDAR model timed out or network is slow"}</p>
               </div>
               <div className="flex flex-col gap-2 items-center">
                 <button
@@ -1247,6 +1327,24 @@ export default function LidarViewer3D({
             <div className="glass rounded-lg px-2 py-1 hidden sm:block">
               <span className="text-[9px] font-mono text-white/40">905 Backyard · Wilton IA</span>
             </div>
+            {/* Load Full Scan — shown on first visit when in LiDAR-only mode */}
+            {showFullScanOffer && useFallbackMode && (
+              <button
+                onClick={() => {
+                  setUseFallbackMode(false);
+                  setShowFullScanOffer(false);
+                  setLoadState("loading");
+                  setLoadProgress(0);
+                  setLoadAttempt(a => a + 1);
+                  setRenderMode("textured");
+                  toast.info("🗺️ Loading full 3D scan", { description: "30MB textured model — may take 30s on LTE", duration: 4000 });
+                }}
+                className="glass rounded-lg px-2 py-1 text-cyan-400 hover:text-cyan-200 border border-cyan-400/30 hover:border-cyan-400/60 transition-all pointer-events-auto text-[9px] font-mono font-bold"
+                title="Load full textured 3D scan"
+              >
+                ⚡ LOAD FULL SCAN
+              </button>
+            )}
             {/* Share 3D Scan — native iOS share sheet or clipboard fallback */}
             <button
               onClick={async () => {
@@ -1372,6 +1470,30 @@ export default function LidarViewer3D({
                       className={`flex items-center gap-1.5 w-full px-2 py-1.5 rounded-lg text-[10px] font-medium transition-all pointer-events-auto ${active ? color : "text-white/30"}`}
                     >{icon}{label}</button>
                   ))}
+                  {/* Zone scrub shortcuts */}
+                  {showPath && (
+                    <div className="pt-1 border-t border-white/10">
+                      <p className="text-[7px] text-white/20 px-1 mb-1 uppercase tracking-wider">Jump to zone</p>
+                      <div className="grid grid-cols-4 gap-1">
+                        {ZONE_DEFS.map(z => (
+                          <button
+                            key={z.id}
+                            onClick={() => {
+                              const t = ZONE_ENTRY_T[z.id] ?? 0;
+                              robotTRef.current = t;
+                              setScrubberT(t);
+                              isScrubbing.current = true;
+                              setTimeout(() => { isScrubbing.current = false; }, 800);
+                            }}
+                            className="rounded-lg py-1 text-[9px] font-bold transition-all pointer-events-auto hover:scale-105"
+                            style={{ background: `${z.colorHex}22`, color: z.colorHex, border: `1px solid ${z.colorHex}44` }}
+                          >
+                            {z.id}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Measure tool */}
@@ -1405,6 +1527,54 @@ export default function LidarViewer3D({
                 >
                   <Navigation size={12} />Reset View
                 </button>
+
+                {/* Path Replay Scrubber */}
+                {showPath && (
+                  <div className="glass rounded-xl p-2 space-y-1.5 pointer-events-auto">
+                    <div className="flex items-center justify-between">
+                      <p className="text-[8px] text-white/30 uppercase tracking-wider">Path Replay</p>
+                      <span className="text-[9px] font-mono text-yellow-400">{Math.round(scrubberT * 100)}%</span>
+                    </div>
+                    <input
+                      type="range" min="0" max="100" step="1"
+                      value={Math.round(scrubberT * 100)}
+                      onMouseDown={() => { isScrubbing.current = true; }}
+                      onTouchStart={() => { isScrubbing.current = true; }}
+                      onChange={(e) => {
+                        const t = Number(e.target.value) / 100;
+                        setScrubberT(t);
+                        robotTRef.current = t;
+                      }}
+                      onMouseUp={() => { isScrubbing.current = false; }}
+                      onTouchEnd={() => { isScrubbing.current = false; }}
+                      className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
+                      style={{ accentColor: 'oklch(0.78 0.18 85)' }}
+                    />
+                    <div className="flex justify-between text-[7px] text-white/20 font-mono">
+                      <span>START</span>
+                      <span>50%</span>
+                      <span>END</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <p className="text-[8px] text-white/30">
+                        {isScrubbing.current ? '⏸ Paused' : '▶ Live'} · {Math.round(scrubberT * 762)}m
+                      </p>
+                      <div className="flex gap-0.5">
+                        {([1, 2, 5] as const).map(spd => (
+                          <button
+                            key={spd}
+                            onClick={() => setPlaybackSpeed(spd)}
+                            className={`px-1.5 py-0.5 rounded text-[8px] font-mono font-bold transition-all pointer-events-auto ${
+                              playbackSpeed === spd
+                                ? 'bg-yellow-400/20 text-yellow-300 border border-yellow-400/40'
+                                : 'text-white/30 hover:text-white/60'
+                            }`}
+                          >{spd}×</button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </motion.div>
             )}
           </AnimatePresence>

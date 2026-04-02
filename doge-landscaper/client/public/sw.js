@@ -6,11 +6,11 @@
  *   - All other assets: Stale-while-revalidate
  */
 
-const CACHE_NAME = "doge-landscaper-v1";
-const GLB_CACHE_NAME = "doge-landscaper-glb-v1";
+const CACHE_NAME = "doge-landscaper-v3";
+const GLB_CACHE_NAME = "doge-landscaper-glb-v3";
 
-// The 23MB compressed LiDAR scan — cache this aggressively
-const GLB_URL = "https://d2xsxph8kpxj0f.cloudfront.net/116029439/cao3qXUUr9zrMdetSxxjdj/backyard-compressed_8ffc7ad9.glb";
+// The 31MB final LiDAR scan (buffer:0 added to all bufferViews — Three.js r183 compatible)
+const GLB_URL = "https://d2xsxph8kpxj0f.cloudfront.net/116029439/cao3qXUUr9zrMdetSxxjdj/backyard-final_93fbdb48.glb";
 
 // ── Install: pre-cache the GLB in the background ──────────────────────────────
 self.addEventListener("install", (event) => {

@@ -1,313 +1,325 @@
-/**
- * Executive Dashboard — All American Concrete
- * Real-time operational overview: job sites, fleet, crew, alerts, materials
- */
-import DashboardLayout from "@/components/DashboardLayout";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from "recharts";
-import { AlertTriangle, Truck, Users, Package, CheckCircle2, Clock, Building2, Zap, Fuel } from "lucide-react";
+// DOGE Spatial Explorer — Dashboard Page
+// Overview with stats cards, recharts analytics, and recent items
+// Design: Spatial Intelligence Command Center
+
+import React, { useState, useEffect } from "react";
 import { Link } from "wouter";
+import { Database, Activity, TrendingUp, Globe, ArrowRight, Clock } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts";
+import StatusBadge from "@/components/StatusBadge";
+import { apiGetItems } from "@/lib/mockData";
+import type { Item } from "@/lib/types";
+import { useAuth } from "@/contexts/AuthContext";
 
-// ─── Job site data ────────────────────────────────────────────────────────────
-const JOB_SITES = [
-  { id: "JS-001", name: "County Road 22 Expansion",      status: "active",   yardage: 4200, pourStart: "06:30 AM", deadline: "1:00 PM", crew: 6, mixers: 3 },
-  { id: "JS-002", name: "West Liberty Community Center", status: "active",   yardage: 1850, pourStart: "08:00 AM", deadline: "3:00 PM", crew: 4, mixers: 2 },
-  { id: "JS-003", name: "Iowa 70 Bridge Deck Repair",    status: "standby",  yardage: 2600, pourStart: "TBD",      deadline: "TBD",     crew: 2, mixers: 1 },
-  { id: "JS-004", name: "Muscatine Co. Rd. 16 Overlay",  status: "scheduled", yardage: 3100, pourStart: "03/10",   deadline: "03/10",   crew: 0, mixers: 0 },
+// Mock time-series data for charts
+const WEEKLY_ACTIVITY = [
+  { day: "Mon", created: 2, updated: 5, deleted: 0 },
+  { day: "Tue", created: 1, updated: 3, deleted: 1 },
+  { day: "Wed", created: 3, updated: 7, deleted: 0 },
+  { day: "Thu", created: 0, updated: 4, deleted: 2 },
+  { day: "Fri", created: 4, updated: 6, deleted: 0 },
+  { day: "Sat", created: 1, updated: 2, deleted: 0 },
+  { day: "Sun", created: 0, updated: 1, deleted: 0 },
 ];
 
-// ─── Fleet summary ────────────────────────────────────────────────────────────
-const FLEET_SUMMARY = [
-  { label: "Operational",  count: 9,  color: "oklch(0.45 0.18 145)" },
-  { label: "Maintenance",  count: 2,  color: "oklch(0.55 0.18 75)"  },
-  { label: "Alert",        count: 1,  color: "oklch(0.50 0.22 25)"  },
+const MONTHLY_RECORDS = [
+  { month: "Oct", count: 3 },
+  { month: "Nov", count: 5 },
+  { month: "Dec", count: 4 },
+  { month: "Jan", count: 7 },
+  { month: "Feb", count: 6 },
+  { month: "Mar", count: 9 },
+  { month: "Apr", count: 4 },
 ];
 
-// ─── Material inventory ───────────────────────────────────────────────────────
-const MATERIALS = [
-  { name: "Portland Cement Type I/II", unit: "tons", stock: 42.5, reorder: 20, color: "oklch(0.45 0.20 240)" },
-  { name: "Coarse Aggregate #57",      unit: "tons", stock: 118,  reorder: 50, color: "oklch(0.45 0.18 145)" },
-  { name: "Fine Aggregate (Sand)",     unit: "tons", stock: 85,   reorder: 40, color: "oklch(0.55 0.18 75)"  },
-  { name: "Air Entraining Agent",      unit: "gal",  stock: 28,   reorder: 30, color: "oklch(0.50 0.22 25)"  },
-  { name: "Fly Ash Class C",           unit: "tons", stock: 8.5,  reorder: 15, color: "oklch(0.50 0.22 25)"  },
-  { name: "Rebar Grade 60 #4",         unit: "tons", stock: 3.2,  reorder: 5,  color: "oklch(0.50 0.22 25)"  },
-];
+const STATUS_COLORS = {
+  active: "#34d399",
+  draft: "#fbbf24",
+  archived: "#94a3b8",
+};
 
-// ─── Active alerts ────────────────────────────────────────────────────────────
-const ALERTS = [
-  { id: "ALT-001", title: "Batch Plant Moisture Sensor #3 Anomaly", severity: "warning", source: "IoT — Batch Plant", note: "Manual override active since 06:15 AM" },
-  { id: "ALT-002", title: "MT-007 Low Fuel (68%)", severity: "warning", source: "Fleet — MT-007", note: "Refuel stop at Yard ~09:30 AM" },
-  { id: "ALT-003", title: "JS-003 IDOT Inspector Pending", severity: "info", source: "Job Site — JS-003", note: "Iowa 70 pour on hold until inspector arrival" },
-  { id: "ALT-004", title: "MT-002 Drum Bearing Replacement", severity: "info", source: "Maintenance — MT-002", note: "ETA back in service: 03/09" },
-];
-
-// ─── Pour volume chart data ───────────────────────────────────────────────────
-const POUR_CHART = [
-  { site: "JS-001", planned: 4200, color: "oklch(0.45 0.20 240)" },
-  { site: "JS-002", planned: 1850, color: "oklch(0.45 0.18 145)" },
-  { site: "JS-003", planned: 2600, color: "oklch(0.55 0.18 75)"  },
-  { site: "JS-004", planned: 3100, color: "oklch(0.50 0.22 25)"  },
-];
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-function MetricCard({ label, value, sub, color, icon: Icon }: {
-  label: string; value: string | number; sub?: string; color: string; icon: React.ElementType;
-}) {
-  return (
-    <div className="data-card flex items-start gap-3">
-      <div className="rounded-lg p-2 flex-shrink-0" style={{ background: `${color}18` }}>
-        <Icon className="w-4 h-4" style={{ color }} />
-      </div>
-      <div>
-        <div className="section-label mb-0.5">{label}</div>
-        <div className="metric-value" style={{ color }}>{value}</div>
-        {sub && <div className="text-xs mt-0.5 font-mono" style={{ color: "oklch(0.52 0.010 250)" }}>{sub}</div>}
-      </div>
-    </div>
-  );
+function formatRelativeTime(isoDate: string): string {
+  const diff = Date.now() - new Date(isoDate).getTime();
+  const days = Math.floor(diff / 86400000);
+  if (days === 0) return "Today";
+  if (days === 1) return "Yesterday";
+  if (days < 30) return `${days}d ago`;
+  return new Date(isoDate).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
-const ChartTooltip = ({ active, payload }: any) => {
-  if (active && payload?.length) {
-    return (
-      <div className="px-3 py-2 rounded text-xs font-mono" style={{ background: "oklch(0.98 0.004 240)", border: "1px solid oklch(0 0 0 / 10%)", color: "oklch(0.25 0.018 250)" }}>
-        <div>{payload[0]?.payload?.site}</div>
-        <div style={{ color: "oklch(0.40 0.18 240)" }}>{payload[0]?.value?.toLocaleString()} cu yd</div>
-      </div>
-    );
-  }
-  return null;
+const CHART_TOOLTIP_STYLE = {
+  backgroundColor: "oklch(0.14 0.028 255)",
+  border: "1px solid oklch(1 0 0 / 10%)",
+  borderRadius: "8px",
+  color: "oklch(0.92 0.008 240)",
+  fontSize: "12px",
+  fontFamily: "'JetBrains Mono', monospace",
 };
 
 export default function Dashboard() {
-  const totalYardage = JOB_SITES.filter(s => s.status === "active").reduce((s, j) => s + j.yardage, 0);
-  const totalCrew = JOB_SITES.reduce((s, j) => s + j.crew, 0);
-  const lowStockCount = MATERIALS.filter(m => m.stock < m.reorder).length;
+  const { user } = useAuth();
+  const [items, setItems] = useState<Item[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({ total: 0, active: 0, draft: 0, archived: 0 });
+
+  useEffect(() => {
+    apiGetItems({ page: 1, pageSize: 100 }).then((res) => {
+      setItems(res.data);
+      setStats({
+        total: res.total,
+        active: res.data.filter((i) => i.status === "active").length,
+        draft: res.data.filter((i) => i.status === "draft").length,
+        archived: res.data.filter((i) => i.status === "archived").length,
+      });
+      setLoading(false);
+    });
+  }, []);
+
+  const recentItems = items
+    .slice()
+    .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+    .slice(0, 5);
+
+  const pieData = [
+    { name: "Active", value: stats.active, color: STATUS_COLORS.active },
+    { name: "Draft", value: stats.draft, color: STATUS_COLORS.draft },
+    { name: "Archived", value: stats.archived, color: STATUS_COLORS.archived },
+  ].filter((d) => d.value > 0);
+
+  const STAT_CARDS = [
+    {
+      label: "Total Records",
+      value: stats.total,
+      icon: Database,
+      color: "text-primary",
+      bg: "bg-primary/10 border-primary/20",
+      change: "+4 this week",
+    },
+    {
+      label: "Active",
+      value: stats.active,
+      icon: Activity,
+      color: "text-emerald-400",
+      bg: "bg-emerald-500/10 border-emerald-500/20",
+      change: "Operational",
+    },
+    {
+      label: "Draft",
+      value: stats.draft,
+      icon: TrendingUp,
+      color: "text-amber-400",
+      bg: "bg-amber-500/10 border-amber-500/20",
+      change: "Pending review",
+    },
+    {
+      label: "Archived",
+      value: stats.archived,
+      icon: Globe,
+      color: "text-slate-400",
+      bg: "bg-slate-500/10 border-slate-500/20",
+      change: "Historical",
+    },
+  ];
 
   return (
-    <DashboardLayout title="Executive Dashboard">
-      <div className="p-6 space-y-6">
-
-        {/* Critical alert banner */}
-        <div
-          className="flex items-center gap-3 px-4 py-3 rounded-lg"
-          style={{ background: "oklch(0.62 0.22 25 / 10%)", border: "1px solid oklch(0.62 0.22 25 / 25%)" }}
-        >
-          <AlertTriangle className="w-4 h-4 flex-shrink-0" style={{ color: "oklch(0.50 0.22 25)" }} />
-          <div className="text-sm" style={{ color: "oklch(0.50 0.22 25)" }}>
-            <strong>JS-001 critical window:</strong> 4,200 cu yd pour must complete before 1 PM weather cutoff.
-            Batch Plant moisture sensor #3 on manual override — verify spot-check plan with QC lead.
-          </div>
-          <Link href="/daily-brief" className="ml-auto text-xs font-semibold no-underline flex-shrink-0" style={{ color: "oklch(0.50 0.22 25)" }}>
-            View Brief →
-          </Link>
+    <div className="p-6 space-y-6 max-w-6xl">
+      {/* Header */}
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground tracking-tight">
+            Welcome back, {user?.name?.split(" ")[0] ?? "Analyst"}
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            {new Date().toLocaleDateString("en-US", {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
+          </p>
         </div>
+        <Link href="/app/items/new">
+          <Button size="sm" className="hidden sm:flex items-center gap-2">
+            <span>New Record</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Button>
+        </Link>
+      </div>
 
-        {/* KPI row */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <MetricCard icon={Building2} label="Active Pours Today"     value={`${JOB_SITES.filter(s => s.status === "active").length} sites`}  sub={`${totalYardage.toLocaleString()} cu yd total`} color="oklch(0.45 0.20 240)" />
-          <MetricCard icon={Truck}     label="Fleet Operational"      value="9 / 12"  sub="2 maintenance · 1 alert"  color="oklch(0.45 0.18 145)" />
-          <MetricCard icon={Users}     label="Crew On-Site / En-Route" value={`${totalCrew} staff`} sub="3 additional on standby"  color="oklch(0.45 0.18 270)" />
-          <MetricCard icon={Package}   label="Low Stock Materials"    value={lowStockCount}  sub="Reorder required"  color="oklch(0.50 0.22 25)" />
-        </div>
-
-        {/* Pour chart + Fleet pie */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {/* Bar chart */}
-          <div className="lg:col-span-2 data-card">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <div className="text-sm font-semibold" style={{ color: "oklch(0.18 0.018 250)" }}>Planned Pour Volume by Job Site</div>
-                <div className="text-xs mt-0.5" style={{ color: "oklch(0.48 0.012 250)" }}>March 7, 2026 — cubic yards</div>
+      {/* Stats grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {STAT_CARDS.map((card) => (
+          <Card key={card.label} className="bg-card border-border">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  {card.label}
+                </span>
+                <div className={`w-8 h-8 rounded-lg border flex items-center justify-center ${card.bg}`}>
+                  <card.icon className={`w-4 h-4 ${card.color}`} />
+                </div>
               </div>
-            </div>
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={POUR_CHART} barCategoryGap="35%">
-                <XAxis dataKey="site" tick={{ fontSize: 10, fill: "oklch(0.52 0.010 250)" }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 9, fill: "oklch(0.52 0.010 250)" }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1000).toFixed(1)}K`} />
-                <Tooltip content={<ChartTooltip />} cursor={{ fill: "oklch(1 0 0 / 4%)" }} />
-                <Bar dataKey="planned" radius={[4, 4, 0, 0]}>
-                  {POUR_CHART.map((d) => (
-                    <Cell key={d.site} fill={d.color} />
+              {loading ? (
+                <Skeleton className="h-8 w-16" />
+              ) : (
+                <>
+                  <p className={`text-3xl font-bold ${card.color}`}>{card.value}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{card.change}</p>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Charts row */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Weekly activity area chart */}
+        <Card className="lg:col-span-2 bg-card border-border">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-semibold text-foreground">Weekly Activity</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <ResponsiveContainer width="100%" height={180}>
+              <AreaChart data={WEEKLY_ACTIVITY} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorCreated" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="oklch(0.58 0.22 258)" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="oklch(0.58 0.22 258)" stopOpacity={0} />
+                  </linearGradient>
+                  <linearGradient id="colorUpdated" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#34d399" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#34d399" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="oklch(1 0 0 / 6%)" />
+                <XAxis dataKey="day" tick={{ fill: "oklch(0.60 0.015 255)", fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: "oklch(0.60 0.015 255)", fontSize: 11 }} axisLine={false} tickLine={false} />
+                <Tooltip contentStyle={CHART_TOOLTIP_STYLE} cursor={{ stroke: "oklch(1 0 0 / 10%)" }} />
+                <Area type="monotone" dataKey="created" stroke="oklch(0.58 0.22 258)" strokeWidth={2} fill="url(#colorCreated)" name="Created" />
+                <Area type="monotone" dataKey="updated" stroke="#34d399" strokeWidth={2} fill="url(#colorUpdated)" name="Updated" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        {/* Status breakdown pie */}
+        <Card className="bg-card border-border">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-semibold text-foreground">Status Breakdown</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            {loading ? (
+              <div className="h-[180px] flex items-center justify-center">
+                <Skeleton className="w-32 h-32 rounded-full" />
+              </div>
+            ) : (
+              <div className="flex flex-col items-center gap-3">
+                <ResponsiveContainer width="100%" height={130}>
+                  <PieChart>
+                    <Pie data={pieData} cx="50%" cy="50%" innerRadius={35} outerRadius={55} paddingAngle={3} dataKey="value">
+                      {pieData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="flex flex-wrap justify-center gap-3">
+                  {pieData.map((d) => (
+                    <div key={d.name} className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full" style={{ background: d.color }} />
+                      <span className="text-xs text-muted-foreground">{d.name} ({d.value})</span>
+                    </div>
                   ))}
-                </Bar>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Monthly records bar chart + recent items */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Monthly bar chart */}
+        <Card className="bg-card border-border">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-semibold text-foreground">Monthly Records</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <ResponsiveContainer width="100%" height={150}>
+              <BarChart data={MONTHLY_RECORDS} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="oklch(1 0 0 / 6%)" />
+                <XAxis dataKey="month" tick={{ fill: "oklch(0.60 0.015 255)", fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: "oklch(0.60 0.015 255)", fontSize: 11 }} axisLine={false} tickLine={false} />
+                <Tooltip contentStyle={CHART_TOOLTIP_STYLE} cursor={{ fill: "oklch(1 0 0 / 5%)" }} />
+                <Bar dataKey="count" fill="oklch(0.58 0.22 258)" radius={[4, 4, 0, 0]} name="Records" />
               </BarChart>
             </ResponsiveContainer>
-          </div>
+          </CardContent>
+        </Card>
 
-          {/* Fleet pie */}
-          <div className="data-card">
-            <div className="text-sm font-semibold mb-1" style={{ color: "oklch(0.18 0.018 250)" }}>Fleet Status</div>
-            <div className="text-xs mb-3" style={{ color: "oklch(0.48 0.012 250)" }}>12 total units</div>
-            <ResponsiveContainer width="100%" height={140}>
-              <PieChart>
-                <Pie data={FLEET_SUMMARY} cx="50%" cy="50%" innerRadius={38} outerRadius={60} dataKey="count" paddingAngle={3}>
-                  {FLEET_SUMMARY.map((entry, i) => (
-                    <Cell key={i} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(v: number) => `${v} units`} contentStyle={{ background: "oklch(0.98 0.004 240)", border: "1px solid oklch(0 0 0 / 10%)", fontSize: 11, color: "oklch(0.25 0.018 250)" }} />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="space-y-1.5 mt-2">
-              {FLEET_SUMMARY.map((r) => (
-                <div key={r.label} className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: r.color }} />
-                    <span className="text-[10px]" style={{ color: "oklch(0.48 0.012 250)" }}>{r.label}</span>
-                  </div>
-                  <span className="text-[10px] font-mono font-semibold" style={{ color: r.color }}>{r.count}</span>
-                </div>
-              ))}
+        {/* Recent items */}
+        <Card className="lg:col-span-2 bg-card border-border">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base font-semibold text-foreground">Recent Records</CardTitle>
+              <Link href="/app/items">
+                <Button variant="ghost" size="sm" className="text-xs text-muted-foreground h-7">
+                  View all <ArrowRight className="w-3 h-3 ml-1" />
+                </Button>
+              </Link>
             </div>
-            <Link href="/fleet" className="block mt-3 text-center text-xs no-underline" style={{ color: "oklch(0.55 0.18 240)" }}>
-              View Fleet Details →
-            </Link>
-          </div>
-        </div>
-
-        {/* Job site cards */}
-        <div>
-          <div className="flex items-center justify-between mb-3">
-            <div className="text-sm font-semibold" style={{ color: "oklch(0.18 0.018 250)" }}>Job Site Status</div>
-            <Link href="/operations" className="text-xs no-underline" style={{ color: "oklch(0.65 0.18 240)" }}>View all →</Link>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            {JOB_SITES.map((site) => {
-              const statusColor = site.status === "active" ? "oklch(0.45 0.18 145)" : site.status === "standby" ? "oklch(0.55 0.18 75)" : "oklch(0.52 0.010 250)";
-              const statusBg = site.status === "active" ? "oklch(0.97 0.010 145)" : site.status === "standby" ? "oklch(0.98 0.012 75)" : "oklch(0.985 0.003 240)";
-              return (
-                <div
-                  key={site.id}
-                  className="p-4 rounded-lg"
-                  style={{ background: statusBg, border: `1px solid ${statusColor}30` }}
-                >
-                  <div className="flex items-start justify-between gap-1 mb-2">
-                    <div className="text-xs font-bold leading-tight" style={{ color: "oklch(0.18 0.018 250)" }}>{site.name}</div>
-                    <div className="px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase flex-shrink-0" style={{ background: `${statusColor}18`, color: statusColor }}>
-                      {site.status}
-                    </div>
+          </CardHeader>
+          <CardContent className="pt-0">
+            {loading ? (
+              <div className="space-y-3">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <Skeleton className="h-4 flex-1" />
+                    <Skeleton className="h-4 w-16" />
                   </div>
-                  <div className="text-[10px] font-mono mb-1" style={{ color: "oklch(0.52 0.010 250)" }}>{site.id}</div>
-                  {site.yardage > 0 && (
-                    <div className="text-sm font-bold font-mono" style={{ color: statusColor }}>{site.yardage.toLocaleString()} <span className="text-[10px] font-normal">cu yd</span></div>
-                  )}
-                  {site.pourStart !== "TBD" && site.pourStart !== "03/10" && (
-                    <div className="text-[10px] mt-1" style={{ color: "oklch(0.52 0.010 250)" }}>
-                      Pour: {site.pourStart} → {site.deadline}
-                    </div>
-                  )}
-                  {site.crew > 0 && (
-                    <div className="flex items-center gap-2 mt-2 text-[10px]" style={{ color: "oklch(0.52 0.010 250)" }}>
-                      <span><Users className="w-3 h-3 inline mr-0.5" />{site.crew} crew</span>
-                      <span><Truck className="w-3 h-3 inline mr-0.5" />{site.mixers} mixers</span>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Alerts + Material inventory */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {/* Alerts */}
-          <div className="data-card">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4" style={{ color: "oklch(0.55 0.18 75)" }} />
-                <div className="text-sm font-semibold" style={{ color: "oklch(0.18 0.018 250)" }}>Active Alerts</div>
+                ))}
               </div>
-              <Link href="/daily-brief" className="text-xs no-underline" style={{ color: "oklch(0.65 0.18 240)" }}>Full brief →</Link>
-            </div>
-            <div className="space-y-2">
-              {ALERTS.map((alert) => (
-                <div key={alert.id} className="flex items-start gap-3 p-2.5 rounded" style={{ background: "oklch(0.985 0.003 240)" }}>
-                  <div className="mt-0.5">
-                    {alert.severity === "warning"
-                      ? <AlertTriangle className="w-3.5 h-3.5" style={{ color: "oklch(0.55 0.18 75)" }} />
-                      : <Clock className="w-3.5 h-3.5" style={{ color: "oklch(0.55 0.15 240)" }} />}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-xs font-medium truncate" style={{ color: "oklch(0.22 0.018 250)" }}>{alert.title}</div>
-                    <div className="text-[10px] mt-0.5" style={{ color: "oklch(0.52 0.010 250)" }}>{alert.source}</div>
-                    <div className="text-[10px] mt-0.5 italic" style={{ color: "oklch(0.48 0.012 250)" }}>{alert.note}</div>
-                  </div>
-                  <div className={`badge-${alert.severity === "warning" ? "warning" : "info"} mt-0.5 flex-shrink-0`}>{alert.severity}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Material inventory */}
-          <div className="data-card">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <Package className="w-4 h-4" style={{ color: "oklch(0.45 0.18 145)" }} />
-                <div className="text-sm font-semibold" style={{ color: "oklch(0.18 0.018 250)" }}>Material Inventory</div>
-              </div>
-              <span className="text-[10px] font-mono" style={{ color: "oklch(0.52 0.010 250)" }}>{lowStockCount} low-stock</span>
-            </div>
-            <div className="space-y-2.5">
-              {MATERIALS.map((mat) => {
-                const pct = Math.min((mat.stock / (mat.reorder * 3)) * 100, 100);
-                const isLow = mat.stock < mat.reorder;
-                return (
-                  <div key={mat.name}>
-                    <div className="flex items-center justify-between mb-1">
-                      <div className="flex items-center gap-1.5">
-                        {isLow && <AlertTriangle className="w-3 h-3 flex-shrink-0" style={{ color: "oklch(0.50 0.22 25)" }} />}
-                        <span className="text-[11px] font-medium" style={{ color: isLow ? "oklch(0.45 0.20 25)" : "oklch(0.22 0.018 250)" }}>{mat.name}</span>
+            ) : (
+              <div className="space-y-1">
+                {recentItems.map((item) => (
+                  <Link key={item.id} href={`/app/items/${item.id}`}>
+                    <a className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-accent/40 transition-colors group">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors">
+                          {item.name}
+                        </p>
+                        <p className="text-xs text-muted-foreground font-mono">{item.id}</p>
                       </div>
-                      <span className="text-[10px] font-mono" style={{ color: isLow ? "oklch(0.50 0.22 25)" : "oklch(0.52 0.010 250)" }}>
-                        {mat.stock} {mat.unit}
+                      <StatusBadge status={item.status} />
+                      <span className="text-xs text-muted-foreground whitespace-nowrap hidden sm:block">
+                        {formatRelativeTime(item.updatedAt)}
                       </span>
-                    </div>
-                    <div className="h-1 rounded-full overflow-hidden" style={{ background: "oklch(0.92 0.005 240)" }}>
-                      <div
-                        className="h-full rounded-full transition-all"
-                        style={{ width: `${pct}%`, background: isLow ? "oklch(0.50 0.22 25)" : mat.color }}
-                      />
-                    </div>
-                    {isLow && (
-                      <div className="text-[9px] mt-0.5" style={{ color: "oklch(0.55 0.18 25)" }}>
-                        Below reorder point ({mat.reorder} {mat.unit})
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-
-        {/* Quick actions */}
-        <div className="flex flex-wrap gap-3">
-          <Link
-            href="/daily-brief"
-            className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold no-underline transition-all"
-            style={{ background: "oklch(0.45 0.20 240)", color: "white", boxShadow: "0 2px 8px oklch(0.45 0.20 240 / 30%)" }}
-          >
-            <Zap className="w-4 h-4" />
-            Generate Daily Brief
-          </Link>
-          <Link
-            href="/fleet"
-            className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium no-underline"
-            style={{ background: "oklch(0.97 0.005 240)", border: "1px solid oklch(0.88 0.005 240)", color: "oklch(0.35 0.018 250)" }}
-          >
-            <Truck className="w-4 h-4" />
-            Fleet & Equipment
-          </Link>
-          <Link
-            href="/operations"
-            className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium no-underline"
-            style={{ background: "oklch(0.97 0.005 240)", border: "1px solid oklch(0.88 0.005 240)", color: "oklch(0.35 0.018 250)" }}
-          >
-            <Building2 className="w-4 h-4" />
-            Operations Center
-          </Link>
-        </div>
+                    </a>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
-    </DashboardLayout>
+    </div>
   );
 }

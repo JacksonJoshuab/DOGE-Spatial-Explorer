@@ -1,0 +1,27 @@
+{
+  "name": "DOGE-Landscaper",
+  "short_name": "Landscaper",
+  "description": "Humanoid Robot Groundskeeper POV Interface — 905 N Columbus St, West Liberty, Iowa",
+  "start_url": "/",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#0a0e1a",
+  "theme_color": "#0a0e1a",
+  "categories": ["utilities", "productivity"],
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "any",
+      "type": "image/x-icon",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "protocol_handlers": [],
+  "scope": "/",
+  "lang": "en-US",
+  "dir": "ltr"
+}

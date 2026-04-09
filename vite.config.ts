@@ -5,6 +5,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { defineConfig, type Plugin, type ViteDevServer } from "vite";
 import { vitePluginManusRuntime } from "vite-plugin-manus-runtime";
+import { VitePWA } from "vite-plugin-pwa";
 
 // =============================================================================
 // Manus Debug Collector - Vite Plugin
@@ -150,7 +151,77 @@ function vitePluginManusDebugCollector(): Plugin {
   };
 }
 
-const plugins = [react(), tailwindcss(), jsxLocPlugin(), vitePluginManusRuntime(), vitePluginManusDebugCollector()];
+const pwaPlugin = VitePWA({
+  registerType: "autoUpdate",
+  // Only activate SW in production; dev server stays hot-reload
+  devOptions: { enabled: false },
+  // Inline the SW so it works without a separate sw.js file
+  injectRegister: "auto",
+  strategies: "generateSW",
+  workbox: {
+    // Cache the GLB model (up to 150 MB), map tiles, and all app assets
+    globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+    maximumFileSizeToCacheInBytes: 160 * 1024 * 1024, // 160 MB
+    runtimeCaching: [
+      {
+        // Cache the Three.js GLB scene from CloudFront CDN
+        urlPattern: /\.glb$/i,
+        handler: "CacheFirst",
+        options: {
+          cacheName: "glb-models",
+          expiration: { maxEntries: 5, maxAgeSeconds: 30 * 24 * 60 * 60 },
+          cacheableResponse: { statuses: [0, 200] },
+        },
+      },
+      {
+        // Cache weather API responses for 10 minutes
+        urlPattern: /api\.open-meteo\.com/,
+        handler: "NetworkFirst",
+        options: {
+          cacheName: "weather-api",
+          networkTimeoutSeconds: 5,
+          expiration: { maxEntries: 20, maxAgeSeconds: 600 },
+          cacheableResponse: { statuses: [0, 200] },
+        },
+      },
+      {
+        // Cache Google Fonts
+        urlPattern: /fonts\.(googleapis|gstatic)\.com/,
+        handler: "CacheFirst",
+        options: {
+          cacheName: "google-fonts",
+          expiration: { maxEntries: 10, maxAgeSeconds: 365 * 24 * 60 * 60 },
+          cacheableResponse: { statuses: [0, 200] },
+        },
+      },
+      {
+        // Cache CDN static assets (LiDAR images, etc.)
+        urlPattern: /d2xsxph8kpxj0f\.cloudfront\.net/,
+        handler: "CacheFirst",
+        options: {
+          cacheName: "cdn-assets",
+          expiration: { maxEntries: 50, maxAgeSeconds: 7 * 24 * 60 * 60 },
+          cacheableResponse: { statuses: [0, 200] },
+        },
+      },
+    ],
+  },
+  manifest: {
+    name: "DOGE-Landscaper",
+    short_name: "Landscaper",
+    description: "Humanoid Robot Groundskeeper POV Interface — 905 N Columbus St, West Liberty, Iowa",
+    theme_color: "#0a0e1a",
+    background_color: "#0a0e1a",
+    display: "standalone",
+    orientation: "any",
+    start_url: "/",
+    icons: [
+      { src: "/favicon.ico", sizes: "any", type: "image/x-icon", purpose: "any maskable" },
+    ],
+  },
+});
+
+const plugins = [react(), tailwindcss(), jsxLocPlugin(), vitePluginManusRuntime(), vitePluginManusDebugCollector(), pwaPlugin];
 
 export default defineConfig({
   plugins,
@@ -163,12 +234,13 @@ export default defineConfig({
   },
   envDir: path.resolve(import.meta.dirname),
   root: path.resolve(import.meta.dirname, "client"),
-  publicDir: path.resolve(import.meta.dirname, "client", "public"),
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
   },
   server: {
+    port: 3000,
+    strictPort: false, // Will find next available port if 3000 is busy
     host: true,
     allowedHosts: [
       ".manuspre.computer",

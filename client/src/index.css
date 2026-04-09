@@ -1,9 +1,10 @@
-/* ============================================================
-   DOGE MUNICIPAL PLATFORM — CIVIC INTELLIGENCE LIGHT
-   Design System: Clean government intelligence — Bloomberg meets GOV.UK
-   Primary: Institutional blue | Accent: Amber-gold for alerts
-   Fonts: Syne (display) + DM Sans (body) + JetBrains Mono (data)
-   ============================================================ */
+/* 
+ * DOGE-LANDSCAPER — Spatial Glass Command Deck Design System
+ * Design Movement: Apple Liquid Glass × NASA Mission Control × visionOS Spatial Computing
+ * Color Philosophy: Deep navy base, Iowa Corn Gold accent, Prairie Green secondary
+ * Typography: system-ui (SF Pro on Apple), monospace for telemetry
+ * Animations: Framer Motion spring physics, 300-500ms transitions
+ */
 
 @import "tailwindcss";
 @import "tw-animate-css";
@@ -47,147 +48,58 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  /* Custom DOGE tokens */
+  --color-iowa-gold: var(--iowa-gold);
+  --color-prairie-green: var(--prairie-green);
+  --color-lidar-cyan: var(--lidar-cyan);
+  --color-glass-bg: var(--glass-bg);
+  --color-glass-border: var(--glass-border);
 }
 
-/* ============================================================
-   LIGHT THEME (default)
-   ============================================================ */
 :root {
-  --radius: 0.5rem;
+  /* Iowa Corn Gold — oklch(0.82 0.18 85) */
+  --iowa-gold: oklch(0.82 0.18 85);
+  /* Prairie Green — oklch(0.55 0.15 145) */
+  --prairie-green: oklch(0.55 0.15 145);
+  /* LiDAR Cyan */
+  --lidar-cyan: oklch(0.85 0.18 195);
+  /* Glass */
+  --glass-bg: oklch(1 0 0 / 0.08);
+  --glass-border: oklch(1 0 0 / 0.18);
 
-  /* Backgrounds */
-  --background: oklch(0.975 0.004 240);       /* Very light blue-grey */
-  --foreground: oklch(0.18 0.018 250);         /* Near-black text */
-
-  --card: oklch(1 0 0);                        /* White cards */
-  --card-foreground: oklch(0.18 0.018 250);
-  --card-elevated: oklch(0.98 0.004 240);
-
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.18 0.018 250);
-
-  /* Primary — Institutional blue */
-  --primary: oklch(0.45 0.20 240);
-  --primary-foreground: oklch(0.98 0.005 240);
-  --primary-dim: oklch(0.90 0.06 240);
-
-  /* Secondary */
-  --secondary: oklch(0.94 0.008 240);
-  --secondary-foreground: oklch(0.30 0.018 250);
-
-  /* Accent — Amber-gold */
-  --accent: oklch(0.65 0.18 75);
-  --accent-foreground: oklch(0.12 0.015 75);
-  --accent-dim: oklch(0.95 0.06 75);
-
-  /* Status */
-  --success: oklch(0.50 0.18 145);
-  --success-dim: oklch(0.93 0.06 145);
-  --warning: oklch(0.60 0.18 75);
-  --warning-dim: oklch(0.95 0.06 75);
-  --destructive: oklch(0.55 0.22 25);
-  --destructive-foreground: oklch(0.98 0.005 25);
-  --destructive-dim: oklch(0.95 0.06 25);
-
-  --muted: oklch(0.94 0.006 240);
-  --muted-foreground: oklch(0.48 0.014 250);
-
-  --border: oklch(0 0 0 / 10%);
-  --border-strong: oklch(0 0 0 / 18%);
-  --input: oklch(0 0 0 / 8%);
-  --ring: oklch(0.45 0.20 240);
-
-  /* Charts */
-  --chart-1: oklch(0.45 0.20 240);
-  --chart-2: oklch(0.60 0.18 75);
-  --chart-3: oklch(0.50 0.18 145);
-  --chart-4: oklch(0.55 0.22 25);
-  --chart-5: oklch(0.55 0.18 300);
-
-  /* Sidebar */
-  --sidebar: oklch(0.20 0.020 250);           /* Dark sidebar in light mode */
-  --sidebar-foreground: oklch(0.88 0.008 240);
-  --sidebar-primary: oklch(0.55 0.20 240);
-  --sidebar-primary-foreground: oklch(0.98 0.005 240);
-  --sidebar-accent: oklch(0.28 0.018 250);
-  --sidebar-accent-foreground: oklch(0.92 0.008 240);
-  --sidebar-border: oklch(1 0 0 / 8%);
-  --sidebar-ring: oklch(0.55 0.20 240);
-
-  /* Custom tokens */
-  --glow-blue: 0 0 20px oklch(0.45 0.20 240 / 20%);
-  --glow-amber: 0 0 20px oklch(0.65 0.18 75 / 20%);
-  --scanline: none;
-
-  /* Surface tokens used in inline styles */
-  --surface-1: oklch(1 0 0);
-  --surface-2: oklch(0.975 0.004 240);
-  --surface-3: oklch(0.96 0.006 240);
-  --text-primary: oklch(0.18 0.018 250);
-  --text-secondary: oklch(0.40 0.014 250);
-  --text-muted: oklch(0.55 0.010 250);
-}
-
-/* ============================================================
-   DARK THEME
-   ============================================================ */
-.dark {
-  --background: oklch(0.11 0.012 250);
-  --foreground: oklch(0.92 0.008 240);
-  --card: oklch(0.16 0.014 250);
-  --card-foreground: oklch(0.92 0.008 240);
-  --card-elevated: oklch(0.20 0.016 250);
-  --popover: oklch(0.18 0.014 250);
-  --popover-foreground: oklch(0.92 0.008 240);
-  --primary: oklch(0.58 0.20 240);
-  --primary-foreground: oklch(0.98 0.005 240);
-  --primary-dim: oklch(0.35 0.12 240);
-  --secondary: oklch(0.22 0.015 250);
-  --secondary-foreground: oklch(0.75 0.010 240);
-  --accent: oklch(0.75 0.18 75);
-  --accent-foreground: oklch(0.12 0.015 75);
-  --accent-dim: oklch(0.30 0.10 75);
-  --success: oklch(0.65 0.18 145);
-  --success-dim: oklch(0.25 0.08 145);
-  --warning: oklch(0.75 0.18 75);
-  --warning-dim: oklch(0.28 0.10 75);
-  --destructive: oklch(0.62 0.22 25);
-  --destructive-foreground: oklch(0.98 0.005 25);
-  --destructive-dim: oklch(0.25 0.10 25);
-  --muted: oklch(0.20 0.012 250);
-  --muted-foreground: oklch(0.55 0.012 250);
-  --border: oklch(1 0 0 / 8%);
-  --border-strong: oklch(1 0 0 / 14%);
-  --input: oklch(1 0 0 / 10%);
-  --ring: oklch(0.58 0.20 240);
-  --chart-1: oklch(0.58 0.20 240);
-  --chart-2: oklch(0.75 0.18 75);
-  --chart-3: oklch(0.65 0.18 145);
-  --chart-4: oklch(0.62 0.22 25);
-  --chart-5: oklch(0.65 0.18 300);
-  --sidebar: oklch(0.13 0.013 250);
-  --sidebar-foreground: oklch(0.85 0.008 240);
-  --sidebar-primary: oklch(0.58 0.20 240);
-  --sidebar-primary-foreground: oklch(0.98 0.005 240);
-  --sidebar-accent: oklch(0.20 0.015 250);
-  --sidebar-accent-foreground: oklch(0.92 0.008 240);
-  --sidebar-border: oklch(1 0 0 / 8%);
-  --sidebar-ring: oklch(0.58 0.20 240);
-  --glow-blue: 0 0 20px oklch(0.58 0.20 240 / 30%);
-  --glow-amber: 0 0 20px oklch(0.75 0.18 75 / 30%);
-  --scanline: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 2px,
-    oklch(0 0 0 / 3%) 2px,
-    oklch(0 0 0 / 3%) 4px
-  );
-  --surface-1: oklch(0.16 0.014 250);
-  --surface-2: oklch(0.13 0.013 250);
-  --surface-3: oklch(0.20 0.015 250);
-  --text-primary: oklch(0.92 0.008 240);
-  --text-secondary: oklch(0.70 0.010 240);
-  --text-muted: oklch(0.50 0.010 250);
+  --radius: 0.75rem;
+  --primary: oklch(0.82 0.18 85);
+  --primary-foreground: oklch(0.1 0.02 85);
+  --background: oklch(0.09 0.015 260);
+  --foreground: oklch(0.96 0.005 260);
+  --card: oklch(0.12 0.015 260);
+  --card-foreground: oklch(0.96 0.005 260);
+  --popover: oklch(0.12 0.015 260);
+  --popover-foreground: oklch(0.96 0.005 260);
+  --secondary: oklch(0.55 0.15 145);
+  --secondary-foreground: oklch(0.96 0.005 145);
+  --muted: oklch(0.18 0.01 260);
+  --muted-foreground: oklch(0.65 0.01 260);
+  --accent: oklch(0.85 0.18 195);
+  --accent-foreground: oklch(0.1 0.02 195);
+  --destructive: oklch(0.65 0.22 25);
+  --destructive-foreground: oklch(0.98 0 0);
+  --border: oklch(1 0 0 / 0.12);
+  --input: oklch(1 0 0 / 0.1);
+  --ring: oklch(0.82 0.18 85);
+  --chart-1: oklch(0.82 0.18 85);
+  --chart-2: oklch(0.55 0.15 145);
+  --chart-3: oklch(0.85 0.18 195);
+  --chart-4: oklch(0.65 0.22 25);
+  --chart-5: oklch(0.75 0.15 300);
+  --sidebar: oklch(0.1 0.015 260);
+  --sidebar-foreground: oklch(0.96 0.005 260);
+  --sidebar-primary: oklch(0.82 0.18 85);
+  --sidebar-primary-foreground: oklch(0.1 0.02 85);
+  --sidebar-accent: oklch(0.18 0.01 260);
+  --sidebar-accent-foreground: oklch(0.96 0.005 260);
+  --sidebar-border: oklch(1 0 0 / 0.1);
+  --sidebar-ring: oklch(0.82 0.18 85);
 }
 
 @layer base {
@@ -196,7 +108,7 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: 'DM Sans', system-ui, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -204,21 +116,154 @@
   [role="button"]:not([aria-disabled="true"]),
   [type="button"]:not(:disabled),
   [type="submit"]:not(:disabled),
+  [type="reset"]:not(:disabled),
   a[href],
-  select:not(:disabled) {
+  select:not(:disabled),
+  input[type="checkbox"]:not(:disabled),
+  input[type="radio"]:not(:disabled) {
     @apply cursor-pointer;
-  }
-
-  .font-mono, .data-readout {
-    font-family: 'JetBrains Mono', 'Fira Code', monospace;
-  }
-
-  .font-display {
-    font-family: 'Syne', system-ui, sans-serif;
-    font-weight: 800;
   }
 }
 
+/* ===== LIQUID GLASS SYSTEM ===== */
+.glass {
+  background: oklch(1 0 0 / 0.07);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid oklch(1 0 0 / 0.15);
+  box-shadow: 
+    0 0 0 0.5px oklch(1 0 0 / 0.08) inset,
+    0 8px 32px oklch(0 0 0 / 0.4),
+    0 1px 0 oklch(1 0 0 / 0.2) inset;
+}
+
+.glass-gold {
+  background: oklch(0.82 0.18 85 / 0.12);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid oklch(0.82 0.18 85 / 0.3);
+  box-shadow: 
+    0 0 0 0.5px oklch(0.82 0.18 85 / 0.1) inset,
+    0 8px 32px oklch(0 0 0 / 0.4),
+    0 1px 0 oklch(0.82 0.18 85 / 0.25) inset;
+}
+
+.glass-green {
+  background: oklch(0.55 0.15 145 / 0.12);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid oklch(0.55 0.15 145 / 0.3);
+  box-shadow: 
+    0 0 0 0.5px oklch(0.55 0.15 145 / 0.1) inset,
+    0 8px 32px oklch(0 0 0 / 0.4),
+    0 1px 0 oklch(0.55 0.15 145 / 0.25) inset;
+}
+
+.glass-red {
+  background: oklch(0.65 0.22 25 / 0.12);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid oklch(0.65 0.22 25 / 0.3);
+  box-shadow: 
+    0 0 0 0.5px oklch(0.65 0.22 25 / 0.1) inset,
+    0 8px 32px oklch(0 0 0 / 0.4),
+    0 1px 0 oklch(0.65 0.22 25 / 0.25) inset;
+}
+
+.glass:hover {
+  background: oklch(1 0 0 / 0.1);
+  border-color: oklch(1 0 0 / 0.22);
+  box-shadow: 
+    0 0 0 0.5px oklch(1 0 0 / 0.12) inset,
+    0 12px 40px oklch(0 0 0 / 0.5),
+    0 1px 0 oklch(1 0 0 / 0.28) inset;
+  transition: all 0.3s ease;
+}
+
+/* Specular highlight on glass — rainbow shimmer */
+.glass-specular::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    135deg,
+    oklch(1 0 0 / 0.12) 0%,
+    oklch(0.82 0.18 85 / 0.06) 25%,
+    transparent 50%,
+    oklch(0.85 0.18 195 / 0.06) 75%,
+    oklch(1 0 0 / 0.08) 100%
+  );
+  pointer-events: none;
+}
+
+/* ===== TELEMETRY MONOSPACE ===== */
+.telemetry {
+  font-family: "SF Mono", "Fira Code", "Cascadia Code", ui-monospace, monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  color: oklch(0.85 0.18 195);
+}
+
+.telemetry-gold {
+  font-family: "SF Mono", "Fira Code", "Cascadia Code", ui-monospace, monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  color: oklch(0.82 0.18 85);
+}
+
+/* ===== LIDAR SCAN ANIMATION ===== */
+@keyframes lidar-scan {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes lidar-pulse {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.05); }
+}
+
+@keyframes status-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+@keyframes scan-line {
+  0% { transform: translateY(-100%); opacity: 0; }
+  10% { opacity: 0.6; }
+  90% { opacity: 0.6; }
+  100% { transform: translateY(100vh); opacity: 0; }
+}
+
+@keyframes float-up {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+  100% { transform: translateY(0px); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes hud-flicker {
+  0%, 98%, 100% { opacity: 1; }
+  99% { opacity: 0.7; }
+}
+
+.animate-lidar-scan { animation: lidar-scan 4s linear infinite; }
+.animate-lidar-pulse { animation: lidar-pulse 2s ease-in-out infinite; }
+.animate-status-pulse { animation: status-pulse 1.5s ease-in-out infinite; }
+.animate-float { animation: float-up 3s ease-in-out infinite; }
+.animate-hud-flicker { animation: hud-flicker 8s ease-in-out infinite; }
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: oklch(1 0 0 / 0.2); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: oklch(1 0 0 / 0.35); }
+
+/* ===== CONTAINER ===== */
 @layer components {
   .container {
     width: 100%;
@@ -227,184 +272,225 @@
     padding-left: 1rem;
     padding-right: 1rem;
   }
-
   .flex {
     min-height: 0;
     min-width: 0;
   }
-
   @media (min-width: 640px) {
-    .container {
-      padding-left: 1.5rem;
-      padding-right: 1.5rem;
-    }
+    .container { padding-left: 1.5rem; padding-right: 1.5rem; }
   }
-
   @media (min-width: 1024px) {
-    .container {
-      padding-left: 2rem;
-      padding-right: 2rem;
-      max-width: 1280px;
-    }
-  }
-
-  /* Scanline texture overlay */
-  .scanlines::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: var(--scanline);
-    pointer-events: none;
-    z-index: 1;
-  }
-
-  /* Glowing status dot */
-  .status-dot {
-    @apply w-2 h-2 rounded-full inline-block;
-  }
-  .status-dot.green {
-    background: oklch(0.50 0.18 145);
-    box-shadow: 0 0 6px oklch(0.50 0.18 145 / 60%);
-    animation: pulse-green 2s ease-in-out infinite;
-  }
-  .status-dot.amber {
-    background: oklch(0.60 0.18 75);
-    box-shadow: 0 0 6px oklch(0.60 0.18 75 / 60%);
-    animation: pulse-amber 2s ease-in-out infinite;
-  }
-  .status-dot.red {
-    background: oklch(0.55 0.22 25);
-    box-shadow: 0 0 6px oklch(0.55 0.22 25 / 60%);
-    animation: pulse-red 1.5s ease-in-out infinite;
-  }
-  .status-dot.blue {
-    background: oklch(0.45 0.20 240);
-    box-shadow: 0 0 6px oklch(0.45 0.20 240 / 60%);
-  }
-
-  /* Data card */
-  .data-card {
-    @apply rounded-lg border p-4;
-    background: var(--card);
-    border-color: var(--border);
-    transition: border-color 150ms ease, box-shadow 150ms ease;
-  }
-  .data-card:hover {
-    border-color: var(--border-strong);
-    box-shadow: 0 4px 24px oklch(0 0 0 / 8%);
-  }
-
-  /* Metric value */
-  .metric-value {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 1.75rem;
-    font-weight: 700;
-    line-height: 1;
-    letter-spacing: -0.02em;
-  }
-
-  /* Section label */
-  .section-label {
-    font-size: 0.65rem;
-    font-weight: 600;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--muted-foreground);
-  }
-
-  /* Glow borders */
-  .glow-blue { box-shadow: var(--glow-blue); }
-  .glow-amber { box-shadow: var(--glow-amber); }
-
-  /* Badge variants — light mode adjusted */
-  .badge-critical {
-    @apply text-xs font-semibold px-2 py-0.5 rounded-full;
-    background: oklch(0.55 0.22 25 / 12%);
-    color: oklch(0.45 0.22 25);
-    border: 1px solid oklch(0.55 0.22 25 / 25%);
-  }
-  .badge-warning {
-    @apply text-xs font-semibold px-2 py-0.5 rounded-full;
-    background: oklch(0.65 0.18 75 / 12%);
-    color: oklch(0.50 0.18 75);
-    border: 1px solid oklch(0.65 0.18 75 / 25%);
-  }
-  .badge-success {
-    @apply text-xs font-semibold px-2 py-0.5 rounded-full;
-    background: oklch(0.50 0.18 145 / 12%);
-    color: oklch(0.38 0.18 145);
-    border: 1px solid oklch(0.50 0.18 145 / 25%);
-  }
-  .badge-info {
-    @apply text-xs font-semibold px-2 py-0.5 rounded-full;
-    background: oklch(0.45 0.20 240 / 12%);
-    color: oklch(0.38 0.18 240);
-    border: 1px solid oklch(0.45 0.20 240 / 25%);
-  }
-  .badge-classified {
-    @apply text-xs font-semibold px-2 py-0.5 rounded-full font-mono tracking-wider;
-    background: oklch(0.55 0.22 25 / 15%);
-    color: oklch(0.45 0.22 25);
-    border: 1px solid oklch(0.55 0.22 25 / 30%);
-  }
-
-  /* Light mode page surface helpers */
-  .page-surface {
-    background: oklch(0.975 0.004 240);
-  }
-  .card-surface {
-    background: oklch(1 0 0);
-    border: 1px solid oklch(0 0 0 / 8%);
-  }
-  .card-surface-2 {
-    background: oklch(0.97 0.005 240);
-    border: 1px solid oklch(0 0 0 / 8%);
+    .container { padding-left: 2rem; padding-right: 2rem; max-width: 1440px; }
   }
 }
 
-/* === ANIMATIONS === */
-@keyframes pulse-green {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
+/* ===== HUD OVERLAY ELEMENTS ===== */
+.hud-corner {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-color: oklch(0.82 0.18 85 / 0.7);
+  border-style: solid;
 }
-@keyframes pulse-amber {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
+.hud-corner-tl { top: 8px; left: 8px; border-width: 2px 0 0 2px; }
+.hud-corner-tr { top: 8px; right: 8px; border-width: 2px 2px 0 0; }
+.hud-corner-bl { bottom: 8px; left: 8px; border-width: 0 0 2px 2px; }
+.hud-corner-br { bottom: 8px; right: 8px; border-width: 0 2px 2px 0; }
+
+/* ===== IOWA GOLD GLOW ===== */
+.glow-gold {
+  box-shadow: 0 0 20px oklch(0.82 0.18 85 / 0.4), 0 0 40px oklch(0.82 0.18 85 / 0.2);
 }
-@keyframes pulse-red {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+.glow-green {
+  box-shadow: 0 0 20px oklch(0.55 0.15 145 / 0.4), 0 0 40px oklch(0.55 0.15 145 / 0.2);
 }
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(16px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-@keyframes slideInLeft {
-  from { opacity: 0; transform: translateX(-20px); }
-  to { opacity: 1; transform: translateX(0); }
+.glow-cyan {
+  box-shadow: 0 0 20px oklch(0.85 0.18 195 / 0.4), 0 0 40px oklch(0.85 0.18 195 / 0.2);
 }
 
-.animate-fade-up { animation: fadeUp 0.5s ease-out forwards; }
-.animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
-.animate-slide-left { animation: slideInLeft 0.4s ease-out forwards; }
+/* ===== TOAST OVERRIDES ===== */
+[data-sonner-toaster] [data-sonner-toast] {
+  background: oklch(0.12 0.015 260 / 0.9) !important;
+  backdrop-filter: blur(24px) !important;
+  border: 1px solid oklch(1 0 0 / 0.15) !important;
+  color: oklch(0.96 0.005 260) !important;
+}
 
-/* Stagger children */
-.stagger > *:nth-child(1) { animation-delay: 0ms; }
-.stagger > *:nth-child(2) { animation-delay: 60ms; }
-.stagger > *:nth-child(3) { animation-delay: 120ms; }
-.stagger > *:nth-child(4) { animation-delay: 180ms; }
-.stagger > *:nth-child(5) { animation-delay: 240ms; }
-.stagger > *:nth-child(6) { animation-delay: 300ms; }
-.stagger > *:nth-child(7) { animation-delay: 360ms; }
-.stagger > *:nth-child(8) { animation-delay: 420ms; }
-.stagger > *:nth-child(9) { animation-delay: 480ms; }
+/* ===== APPLE NATIVE — SAFE AREA INSETS ===== */
+/* Respects iPhone notch, Dynamic Island, and iPad multitasking bars */
+.safe-top    { padding-top:    env(safe-area-inset-top, 0px); }
+.safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
+.safe-left   { padding-left:   env(safe-area-inset-left, 0px); }
+.safe-right  { padding-right:  env(safe-area-inset-right, 0px); }
+.safe-x      { padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); }
+.safe-inset  { padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); }
 
-/* Scrollbar */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: oklch(0 0 0 / 15%); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: oklch(0 0 0 / 25%); }
+/* ===== VISIONOS SPATIAL GLASS DEPTH LAYERS ===== */
+/* Mimics RealityKit material depth hierarchy */
+.vision-layer-0 {
+  /* Base — furthest from viewer */
+  background: oklch(0.08 0.015 260 / 0.95);
+  backdrop-filter: blur(40px) saturate(160%);
+  -webkit-backdrop-filter: blur(40px) saturate(160%);
+}
+.vision-layer-1 {
+  /* Mid — standard panel depth */
+  background: oklch(1 0 0 / 0.07);
+  backdrop-filter: blur(28px) saturate(200%);
+  -webkit-backdrop-filter: blur(28px) saturate(200%);
+  box-shadow: 0 2px 32px oklch(0 0 0 / 0.5), 0 0 0 0.5px oklch(1 0 0 / 0.12) inset;
+}
+.vision-layer-2 {
+  /* Foreground — closest to viewer, highest contrast */
+  background: oklch(1 0 0 / 0.12);
+  backdrop-filter: blur(20px) saturate(220%) brightness(1.05);
+  -webkit-backdrop-filter: blur(20px) saturate(220%) brightness(1.05);
+  box-shadow: 0 4px 24px oklch(0 0 0 / 0.6), 0 0 0 1px oklch(1 0 0 / 0.2) inset, 0 1px 0 oklch(1 0 0 / 0.3) inset;
+}
+
+/* ===== DYNAMIC ISLAND ACTIVITY INDICATOR ===== */
+/* Pill-shaped live activity badge for iPhone 14 Pro+ */
+.dynamic-island-pill {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  background: oklch(0.05 0.01 260);
+  border-radius: 20px;
+  padding: 6px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 0 0 1px oklch(1 0 0 / 0.15), 0 8px 32px oklch(0 0 0 / 0.8);
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  pointer-events: none;
+}
+.dynamic-island-pill.expanded {
+  border-radius: 28px;
+  padding: 10px 20px;
+  gap: 12px;
+}
+
+/* ===== APPLE SPRING TRANSITIONS ===== */
+/* Matches UIKit spring animation curves */
+.spring-fast   { transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.spring-medium { transition: all 0.4s  cubic-bezier(0.34, 1.56, 0.64, 1); }
+.spring-slow   { transition: all 0.6s  cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+/* ===== SCROLLBAR NONE (iOS-style momentum scroll) ===== */
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar { display: none; }
+
+/* ===== MOMENTUM SCROLL (iOS native feel) ===== */
+.scroll-momentum {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* ===== VISIONOS ORNAMENT BORDER ===== */
+/* Thin specular edge highlight — RealityKit ornament style */
+.ornament {
+  position: relative;
+  overflow: hidden;
+}
+.ornament::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 1px solid oklch(1 0 0 / 0.18);
+  background: linear-gradient(
+    135deg,
+    oklch(1 0 0 / 0.1) 0%,
+    transparent 40%,
+    transparent 60%,
+    oklch(1 0 0 / 0.05) 100%
+  );
+  pointer-events: none;
+}
+
+/* ===== GLASS CYAN (for fleet/media panels) ===== */
+.glass-cyan {
+  background: oklch(0.85 0.18 195 / 0.1);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid oklch(0.85 0.18 195 / 0.25);
+  box-shadow:
+    0 0 0 0.5px oklch(0.85 0.18 195 / 0.08) inset,
+    0 8px 32px oklch(0 0 0 / 0.4),
+    0 1px 0 oklch(0.85 0.18 195 / 0.2) inset;
+}
+
+/* ===== FLEET ICON PULSE ===== */
+@keyframes fleet-online {
+  0%, 100% { box-shadow: 0 0 0 0 oklch(0.85 0.18 195 / 0.6); }
+  50%       { box-shadow: 0 0 0 6px oklch(0.85 0.18 195 / 0); }
+}
+.fleet-online { animation: fleet-online 2s ease-in-out infinite; }
+
+/* ===== DIGITAL TWIN SCAN LINE ===== */
+@keyframes twin-scan {
+  0%   { transform: translateY(-4px); opacity: 0; }
+  10%  { opacity: 0.8; }
+  90%  { opacity: 0.8; }
+  100% { transform: translateY(100%); opacity: 0; }
+}
+.twin-scan-line {
+  position: absolute;
+  left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, oklch(0.85 0.18 195 / 0.8), transparent);
+  animation: twin-scan 3s linear infinite;
+  pointer-events: none;
+}
+
+/* ===== ASSET REGISTRY GRAPH NODE ===== */
+.asset-node {
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.asset-node:hover { transform: scale(1.08); }
+.asset-node:active { transform: scale(0.96); }
+
+/* ===== MEDIA TIMELINE TRACK ===== */
+.timeline-track {
+  position: relative;
+}
+.timeline-track::before {
+  content: '';
+  position: absolute;
+  left: 0; right: 0;
+  top: 50%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, oklch(1 0 0 / 0.1) 10%, oklch(1 0 0 / 0.1) 90%, transparent);
+  pointer-events: none;
+}
+
+/* ===== APPLE HAPTIC FEEDBACK VISUAL ===== */
+/* Subtle scale pop that mirrors UIImpactFeedbackGenerator */
+@keyframes haptic-pop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(0.94); }
+  70%  { transform: scale(1.04); }
+  100% { transform: scale(1); }
+}
+.haptic:active { animation: haptic-pop 0.18s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+/* ===== VISIONOS WINDOW CHROME ===== */
+/* Matches the ornament window style in visionOS */
+.vision-window {
+  border-radius: 28px;
+  background: oklch(1 0 0 / 0.06);
+  backdrop-filter: blur(40px) saturate(200%);
+  -webkit-backdrop-filter: blur(40px) saturate(200%);
+  border: 1px solid oklch(1 0 0 / 0.14);
+  box-shadow:
+    0 0 0 0.5px oklch(1 0 0 / 0.1) inset,
+    0 20px 60px oklch(0 0 0 / 0.6),
+    0 2px 0 oklch(1 0 0 / 0.2) inset;
+}

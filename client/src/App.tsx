@@ -1,154 +1,82 @@
+/* 
+ * DOGE-LANDSCAPER App.tsx
+ * Design: Spatial Glass Command Deck — dark theme, Iowa Gold + Prairie Green accents
+ */
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
+import { useEffect } from "react";
+import { toast } from "sonner";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import { CommandPalette, CommandPaletteProvider } from "./components/CommandPalette";
-import { NotificationProvider, NotificationPanel } from "./components/NotificationPanel";
-import { AuthProvider } from "./contexts/AuthContext";
-import RouteGuard from "./components/RouteGuard";
-import AccessDenied from "./pages/AccessDenied";
-
-// Public pages
 import Home from "./pages/Home";
-import Platform from "./pages/Platform";
-import Solutions from "./pages/Solutions";
-import Roadmap from "./pages/Roadmap";
-import Contact from "./pages/Contact";
-import ROICalculator from "./pages/ROICalculator";
 
-// Marketplace & IP
-import HardwareMarketplace from "./pages/HardwareMarketplace";
-import IPPipeline from "./pages/IPPipeline";
-import CapitalHub from "./pages/CapitalHub";
-import DataCenter from "./pages/DataCenter";
+// ── Hard-refresh notice ───────────────────────────────────────────────────────
+// Shows once per session when the app is running as a PWA (standalone mode) or
+// when the service worker has a waiting update. Helps iOS Safari users who see
+// stale content from the PWA cache.
+function HardRefreshNotice() {
+  useEffect(() => {
+    // Only show if we haven't shown this session
+    const SESSION_KEY = "doge-refresh-notice-shown";
+    if (sessionStorage.getItem(SESSION_KEY)) return;
+    sessionStorage.setItem(SESSION_KEY, "1");
 
-// Dashboard / operational
-import Dashboard from "./pages/Dashboard";
-import AuditStudio from "./pages/AuditStudio";
-import OperationsCenter from "./pages/OperationsCenter";
-import SpatialMap from "./pages/SpatialMap";
+    // Check if running as installed PWA (standalone / fullscreen)
+    const isStandalone =
+      window.matchMedia("(display-mode: standalone)").matches ||
+      (window.navigator as { standalone?: boolean }).standalone === true;
 
-// Compliance / secure
-import RecordsManagement from "./pages/RecordsManagement";
-import SecureModules from "./pages/SecureModules";
+    // Listen for SW update available
+    const handleSWUpdate = () => {
+      toast.info("🔄 Update available", {
+        description: "Hold-reload (iOS) or Ctrl+Shift+R to get the latest version.",
+        duration: 8000,
+        action: {
+          label: "Reload",
+          onClick: () => window.location.reload(),
+        },
+      });
+    };
 
-// Resident portal
-import ResidentPortal from "./pages/ResidentPortal";
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.ready.then(reg => {
+        if (reg.waiting) {
+          handleSWUpdate();
+          return;
+        }
+        reg.addEventListener("updatefound", () => {
+          const newWorker = reg.installing;
+          if (!newWorker) return;
+          newWorker.addEventListener("statechange", () => {
+            if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+              handleSWUpdate();
+            }
+          });
+        });
+      }).catch(() => {/* SW not available — ignore */});
+    }
 
-// Expanded department hubs
-import LEHub from "./pages/LEHub";
-import UtilitiesHub from "./pages/UtilitiesHub";
-import ParksHub from "./pages/ParksHub";
-import CommunityDevHub from "./pages/CommunityDevHub";
-import CouncilReport from "./pages/CouncilReport";
-import StaffDirectory from "./pages/StaffDirectory";
-import FinanceHub from "./pages/FinanceHub";
-import ResidentMobile from "./pages/ResidentMobile";
-import UtilityBillQR from "./pages/UtilityBillQR";
-import Transparency from "./pages/Transparency";
-import AdminRoles from "./pages/AdminRoles";
-import SensorDetail from "./pages/SensorDetail";
-import MsGraphExplorer from "./pages/MsGraphExplorer";
-import MsGraphCallback from "./pages/MsGraphCallback";
-import IntelFeedHub from "./pages/IntelFeedHub";
-import EmsDispatch from "./pages/EmsDispatch";
-import EmsFleet from "./pages/EmsFleet";
-import EmsBilling from "./pages/EmsBilling";
-import EmsCompliance from "./pages/EmsCompliance";
-import SpatialStudio from "./pages/SpatialStudio";
-import SpatialCollaboration from "./pages/SpatialCollaboration";
-import DeviceManager from "./pages/DeviceManager";
-import AIGenerationStudio from "./pages/AIGenerationStudio";
-import PrivacyDashboard from "./pages/PrivacyDashboard";
-import AssetLibrary from "./pages/AssetLibrary";
-import DailyBrief from "./pages/DailyBrief";
-import FleetEquipment from "./pages/FleetEquipment";
+    // On first PWA launch, show a brief "offline-ready" confirmation
+    if (isStandalone) {
+      setTimeout(() => {
+        toast.success("📡 Offline ready", {
+          description: "DOGE-Landscaper is cached for field use without cell coverage.",
+          duration: 5000,
+        });
+      }, 2000);
+    }
+  }, []);
 
-function AppShell() {
-  return (
-    <>
-      <Router />
-      <CommandPalette />
-      <NotificationPanel />
-    </>
-  );
+  return null;
 }
+
 function Router() {
-  // make sure to consider if you need authentication for certain routes
   return (
     <Switch>
-      {/* Public marketing */}
-      <Route path="/" component={Home} />
-      <Route path="/platform" component={Platform} />
-      <Route path="/solutions" component={Solutions} />
-      <Route path="/roadmap" component={Roadmap} />
-      <Route path="/contact" component={Contact} />
-      <Route path="/roi" component={ROICalculator} />
-
-      {/* Marketplace & IP */}
-      <Route path="/hardware" component={HardwareMarketplace} />
-      <Route path="/ip-pipeline" component={IPPipeline} />
-      <Route path="/capital-hub" component={CapitalHub} />
-      <Route path="/data-center" component={DataCenter} />
-
-      {/* Operational dashboard */}
-      <Route path="/dashboard">{() => <RouteGuard path="/dashboard"><Dashboard /></RouteGuard>}</Route>
-      <Route path="/daily-brief">{() => <RouteGuard path="/daily-brief"><DailyBrief /></RouteGuard>}</Route>
-      <Route path="/fleet">{() => <RouteGuard path="/fleet"><FleetEquipment /></RouteGuard>}</Route>
-      <Route path="/audit">{() => <RouteGuard path="/audit"><AuditStudio /></RouteGuard>}</Route>
-      <Route path="/operations">{() => <RouteGuard path="/operations"><OperationsCenter /></RouteGuard>}</Route>
-      <Route path="/map">{() => <RouteGuard path="/map"><SpatialMap /></RouteGuard>}</Route>
-      <Route path="/map/sensor/:id">{(params) => <RouteGuard path="/map"><SensorDetail /></RouteGuard>}</Route>
-
-      {/* Compliance & secure */}
-      <Route path="/records">{() => <RouteGuard path="/records"><RecordsManagement /></RouteGuard>}</Route>
-      <Route path="/secure">{() => <RouteGuard path="/secure"><SecureModules /></RouteGuard>}</Route>
-
-      {/* Resident portal */}
-      <Route path="/resident" component={ResidentPortal} />
-
-      {/* Department hubs */}
-      <Route path="/le-hub">{() => <RouteGuard path="/le-hub"><LEHub /></RouteGuard>}</Route>
-      <Route path="/utilities">{() => <RouteGuard path="/utilities"><UtilitiesHub /></RouteGuard>}</Route>
-      <Route path="/parks">{() => <RouteGuard path="/parks"><ParksHub /></RouteGuard>}</Route>
-      <Route path="/community-dev">{() => <RouteGuard path="/community-dev"><CommunityDevHub /></RouteGuard>}</Route>
-      <Route path="/council-report">{() => <RouteGuard path="/council-report"><CouncilReport /></RouteGuard>}</Route>
-      <Route path="/staff">{() => <RouteGuard path="/staff"><StaffDirectory /></RouteGuard>}</Route>
-      <Route path="/finance">{() => <RouteGuard path="/finance"><FinanceHub /></RouteGuard>}</Route>
-      <Route path="/resident/m" component={ResidentMobile} />
-      <Route path="/utility-bill-qr" component={UtilityBillQR} />
-      <Route path="/transparency">{() => <RouteGuard path="/transparency"><Transparency /></RouteGuard>}</Route>
-
-      {/* Admin */}
-      <Route path="/admin/roles">{() => <RouteGuard path="/admin/roles"><AdminRoles /></RouteGuard>}</Route>
-
-      {/* Intelligence Feed Hub */}
-      <Route path="/feeds">{() => <RouteGuard path="/feeds"><IntelFeedHub /></RouteGuard>}</Route>
-
-      {/* EMS / Fire Service Suite */}
-      <Route path="/ems/dispatch">{() => <RouteGuard path="/ems/dispatch"><EmsDispatch /></RouteGuard>}</Route>
-      <Route path="/ems/fleet">{() => <RouteGuard path="/ems/fleet"><EmsFleet /></RouteGuard>}</Route>
-      <Route path="/ems/billing">{() => <RouteGuard path="/ems/billing"><EmsBilling /></RouteGuard>}</Route>
-      <Route path="/ems/compliance">{() => <RouteGuard path="/ems/compliance"><EmsCompliance /></RouteGuard>}</Route>
-
-      {/* Spatial Studio */}
-      <Route path="/spatial-studio">{() => <RouteGuard path="/spatial-studio"><SpatialStudio /></RouteGuard>}</Route>
-      <Route path="/spatial-collab">{() => <RouteGuard path="/spatial-collab"><SpatialCollaboration /></RouteGuard>}</Route>
-      <Route path="/devices">{() => <RouteGuard path="/devices"><DeviceManager /></RouteGuard>}</Route>
-      <Route path="/ai-studio">{() => <RouteGuard path="/ai-studio"><AIGenerationStudio /></RouteGuard>}</Route>
-      <Route path="/privacy">{() => <RouteGuard path="/privacy"><PrivacyDashboard /></RouteGuard>}</Route>
-      <Route path="/assets">{() => <RouteGuard path="/assets"><AssetLibrary /></RouteGuard>}</Route>
-
-      {/* Microsoft Graph integration */}
-      <Route path="/ms-graph">{() => <RouteGuard path="/ms-graph"><MsGraphExplorer /></RouteGuard>}</Route>
-      <Route path="/ms-graph/callback" component={MsGraphCallback} />
-
-      {/* Access denied */}
-      <Route path="/access-denied" component={AccessDenied} />
-
-      <Route path="/404" component={NotFound} />
+      <Route path={"/"} component={Home} />
+      <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -157,17 +85,23 @@ function Router() {
 function App() {
   return (
     <ErrorBoundary>
-      <ThemeProvider defaultTheme="light" switchable>
-        <AuthProvider>
-          <CommandPaletteProvider>
-            <NotificationProvider>
-              <TooltipProvider>
-                <Toaster />
-                <AppShell />
-              </TooltipProvider>
-            </NotificationProvider>
-          </CommandPaletteProvider>
-        </AuthProvider>
+      <ThemeProvider defaultTheme="dark">
+        <TooltipProvider>
+          <Toaster 
+            position="top-right"
+            toastOptions={{
+              duration: 4000,
+              style: {
+                background: 'oklch(0.12 0.015 260 / 0.92)',
+                backdropFilter: 'blur(24px)',
+                border: '1px solid oklch(1 0 0 / 0.15)',
+                color: 'oklch(0.96 0.005 260)',
+              }
+            }}
+          />
+          <HardRefreshNotice />
+          <Router />
+        </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>
   );

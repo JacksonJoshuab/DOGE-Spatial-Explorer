@@ -1,10 +1,9 @@
-// DOGE Spatial Explorer — Dashboard Page
+// DOGE Spatial Explorer — Dashboard
 // Overview with stats cards, recharts analytics, and recent items
-// Design: Spatial Intelligence Command Center
+// Uses tRPC for persistent backend storage
 
-import React, { useState, useEffect } from "react";
 import { Link } from "wouter";
-import { Database, Activity, TrendingUp, Globe, ArrowRight, Clock } from "lucide-react";
+import { Database, Activity, TrendingUp, Globe, ArrowRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -23,19 +22,18 @@ import {
   Cell,
 } from "recharts";
 import StatusBadge from "@/components/StatusBadge";
-import { apiGetItems } from "@/lib/mockData";
-import type { Item } from "@/lib/types";
+import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/contexts/AuthContext";
 
-// Mock time-series data for charts
+// Static time-series data for charts
 const WEEKLY_ACTIVITY = [
-  { day: "Mon", created: 2, updated: 5, deleted: 0 },
-  { day: "Tue", created: 1, updated: 3, deleted: 1 },
-  { day: "Wed", created: 3, updated: 7, deleted: 0 },
-  { day: "Thu", created: 0, updated: 4, deleted: 2 },
-  { day: "Fri", created: 4, updated: 6, deleted: 0 },
-  { day: "Sat", created: 1, updated: 2, deleted: 0 },
-  { day: "Sun", created: 0, updated: 1, deleted: 0 },
+  { day: "Mon", created: 2, updated: 5 },
+  { day: "Tue", created: 1, updated: 3 },
+  { day: "Wed", created: 3, updated: 7 },
+  { day: "Thu", created: 0, updated: 4 },
+  { day: "Fri", created: 4, updated: 6 },
+  { day: "Sat", created: 1, updated: 2 },
+  { day: "Sun", created: 0, updated: 1 },
 ];
 
 const MONTHLY_RECORDS = [
@@ -54,15 +52,6 @@ const STATUS_COLORS = {
   archived: "#94a3b8",
 };
 
-function formatRelativeTime(isoDate: string): string {
-  const diff = Date.now() - new Date(isoDate).getTime();
-  const days = Math.floor(diff / 86400000);
-  if (days === 0) return "Today";
-  if (days === 1) return "Yesterday";
-  if (days < 30) return `${days}d ago`;
-  return new Date(isoDate).toLocaleDateString("en-US", { month: "short", day: "numeric" });
-}
-
 const CHART_TOOLTIP_STYLE = {
   backgroundColor: "oklch(0.14 0.028 255)",
   border: "1px solid oklch(1 0 0 / 10%)",
@@ -72,48 +61,48 @@ const CHART_TOOLTIP_STYLE = {
   fontFamily: "'JetBrains Mono', monospace",
 };
 
+function formatRelativeTime(d: Date): string {
+  const diff = Date.now() - new Date(d).getTime();
+  const days = Math.floor(diff / 86400000);
+  if (days === 0) return "Today";
+  if (days === 1) return "Yesterday";
+  if (days < 30) return `${days}d ago`;
+  return new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
 export default function Dashboard() {
   const { user } = useAuth();
-  const [items, setItems] = useState<Item[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({ total: 0, active: 0, draft: 0, archived: 0 });
 
-  useEffect(() => {
-    apiGetItems({ page: 1, pageSize: 100 }).then((res) => {
-      setItems(res.data);
-      setStats({
-        total: res.total,
-        active: res.data.filter((i) => i.status === "active").length,
-        draft: res.data.filter((i) => i.status === "draft").length,
-        archived: res.data.filter((i) => i.status === "archived").length,
-      });
-      setLoading(false);
-    });
-  }, []);
+  const { data: stats, isLoading: statsLoading } = trpc.items.stats.useQuery();
+  const { data: recentData, isLoading: recentLoading } = trpc.items.list.useQuery({
+    page: 1,
+    pageSize: 5,
+    query: "",
+    status: "",
+  });
 
-  const recentItems = items
-    .slice()
-    .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
-    .slice(0, 5);
+  const loading = statsLoading || recentLoading;
 
-  const pieData = [
-    { name: "Active", value: stats.active, color: STATUS_COLORS.active },
-    { name: "Draft", value: stats.draft, color: STATUS_COLORS.draft },
-    { name: "Archived", value: stats.archived, color: STATUS_COLORS.archived },
-  ].filter((d) => d.value > 0);
+  const pieData = stats
+    ? [
+        { name: "Active", value: stats.active, color: STATUS_COLORS.active },
+        { name: "Draft", value: stats.draft, color: STATUS_COLORS.draft },
+        { name: "Archived", value: stats.archived, color: STATUS_COLORS.archived },
+      ].filter((d) => d.value > 0)
+    : [];
 
   const STAT_CARDS = [
     {
       label: "Total Records",
-      value: stats.total,
+      value: stats?.total ?? 0,
       icon: Database,
       color: "text-primary",
       bg: "bg-primary/10 border-primary/20",
-      change: "+4 this week",
+      change: "All records",
     },
     {
       label: "Active",
-      value: stats.active,
+      value: stats?.active ?? 0,
       icon: Activity,
       color: "text-emerald-400",
       bg: "bg-emerald-500/10 border-emerald-500/20",
@@ -121,7 +110,7 @@ export default function Dashboard() {
     },
     {
       label: "Draft",
-      value: stats.draft,
+      value: stats?.draft ?? 0,
       icon: TrendingUp,
       color: "text-amber-400",
       bg: "bg-amber-500/10 border-amber-500/20",
@@ -129,7 +118,7 @@ export default function Dashboard() {
     },
     {
       label: "Archived",
-      value: stats.archived,
+      value: stats?.archived ?? 0,
       icon: Globe,
       color: "text-slate-400",
       bg: "bg-slate-500/10 border-slate-500/20",
@@ -299,20 +288,20 @@ export default function Dashboard() {
               </div>
             ) : (
               <div className="space-y-1">
-                {recentItems.map((item) => (
-                  <Link key={item.id} href={`/app/items/${item.id}`}>
-                    <a className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-accent/40 transition-colors group">
+                {(recentData?.data ?? []).map((item) => (
+                  <Link key={item.slug} href={`/app/items/${item.slug}`}>
+                    <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-accent/40 transition-colors group cursor-pointer">
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors">
                           {item.name}
                         </p>
-                        <p className="text-xs text-muted-foreground font-mono">{item.id}</p>
+                        <p className="text-xs text-muted-foreground font-mono">{item.slug}</p>
                       </div>
                       <StatusBadge status={item.status} />
                       <span className="text-xs text-muted-foreground whitespace-nowrap hidden sm:block">
                         {formatRelativeTime(item.updatedAt)}
                       </span>
-                    </a>
+                    </div>
                   </Link>
                 ))}
               </div>

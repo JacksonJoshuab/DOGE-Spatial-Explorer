@@ -16,6 +16,7 @@ import {
   Activity,
   Globe,
   Plus,
+  ShieldCheck,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Items", href: "/app/items", icon: Database, permission: "items:read" },
   { label: "Geospatial", href: "/app/geospatial", icon: Globe },
   { label: "Activity", href: "/app/activity", icon: Activity },
+  { label: "Admin Panel", href: "/app/admin", icon: ShieldCheck, permission: "admin:access" },
   { label: "Settings", href: "/app/settings", icon: Settings },
 ];
 
@@ -143,7 +145,12 @@ export default function AppShell({ children }: AppShellProps) {
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
-              <div className="text-sm font-medium text-foreground truncate">{user?.name}</div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-sm font-medium text-foreground truncate">{user?.name}</span>
+                {user?.role === "admin" && (
+                  <Badge className="text-[10px] px-1 py-0 h-4 bg-amber-500/20 text-amber-400 border-amber-500/30" variant="outline">ADMIN</Badge>
+                )}
+              </div>
               <div className="text-xs text-muted-foreground truncate font-mono">{user?.email}</div>
             </div>
             <Button
@@ -199,6 +206,9 @@ export default function AppShell({ children }: AppShellProps) {
 
           {/* User avatar in topbar (desktop) */}
           <div className="hidden lg:flex items-center gap-2">
+            {user?.role === "admin" && (
+              <Badge className="text-[10px] px-1.5 py-0 h-5 bg-amber-500/20 text-amber-400 border-amber-500/30" variant="outline">ADMIN</Badge>
+            )}
             <span className="text-sm text-muted-foreground">{user?.name}</span>
             <Avatar className="w-7 h-7">
               <AvatarFallback className="bg-primary/20 text-primary text-xs font-bold">

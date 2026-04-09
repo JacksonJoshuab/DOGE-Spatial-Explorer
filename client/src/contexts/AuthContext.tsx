@@ -1,16 +1,39 @@
 // DOGE Spatial Explorer — Auth Context
-// Manages authentication state, login/logout flows, and permission checks
+// Bridges the tRPC auth.me hook into the existing AuthContext interface
+// so all pages/components continue to work without changes
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
-import type { User, Session } from "@/lib/types";
-import { apiLogin, apiLogout, apiGetMe } from "@/lib/mockData";
+import React, { createContext, useContext, useCallback, useMemo } from "react";
+import { useAuth as useTrpcAuth } from "@/_core/hooks/useAuth";
+import { getLoginUrl } from "@/const";
+
+// User shape from the DB (via tRPC auth.me)
+type DbUser = {
+  id: number;
+  openId: string;
+  name: string | null;
+  email: string | null;
+  loginMethod: string | null;
+  role: "user" | "admin";
+  createdAt: Date;
+  updatedAt: Date;
+  lastSignedIn: Date;
+};
+
+// Legacy-compatible user shape exposed to the rest of the app
+type User = {
+  id: string;
+  name?: string;
+  email?: string;
+  roles: string[];
+  permissions: string[];
+  role: "user" | "admin";
+  dbUser: DbUser;
+};
 
 type AuthContextType = {
   user: User | null;
-  session: Session | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   hasPermission: (permission: string) => boolean;
   hasRole: (role: string) => boolean;
@@ -18,65 +41,44 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-const SESSION_KEY = "doge_session";
-const USER_KEY = "doge_user";
+// Map DB role → permissions
+function roleToPermissions(role: "user" | "admin"): string[] {
+  if (role === "admin") {
+    return ["items:read", "items:write", "items:delete", "admin:access"];
+  }
+  return ["items:read", "items:write"];
+}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { user: dbUser, loading, logout: trpcLogout, isAuthenticated } = useTrpcAuth();
 
-  // Restore session from localStorage on mount
-  useEffect(() => {
-    try {
-      const storedSession = localStorage.getItem(SESSION_KEY);
-      const storedUser = localStorage.getItem(USER_KEY);
-      if (storedSession && storedUser) {
-        const parsedSession: Session = JSON.parse(storedSession);
-        const parsedUser: User = JSON.parse(storedUser);
-        // Check expiry
-        if (new Date(parsedSession.expiresAt) > new Date()) {
-          setSession(parsedSession);
-          setUser(parsedUser);
-        } else {
-          localStorage.removeItem(SESSION_KEY);
-          localStorage.removeItem(USER_KEY);
-        }
-      }
-    } catch {
-      // ignore parse errors
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  const login = useCallback(async (email: string, password: string) => {
-    const { user: u, session: s } = await apiLogin(email, password);
-    setUser(u);
-    setSession(s);
-    localStorage.setItem(SESSION_KEY, JSON.stringify(s));
-    localStorage.setItem(USER_KEY, JSON.stringify(u));
-  }, []);
+  const user = useMemo<User | null>(() => {
+    if (!dbUser) return null;
+    const role = (dbUser as DbUser).role ?? "user";
+    const permissions = roleToPermissions(role);
+    return {
+      id: String((dbUser as DbUser).id ?? (dbUser as DbUser).openId),
+      name: (dbUser as DbUser).name ?? undefined,
+      email: (dbUser as DbUser).email ?? undefined,
+      roles: [role],
+      permissions,
+      role,
+      dbUser: dbUser as DbUser,
+    };
+  }, [dbUser]);
 
   const logout = useCallback(async () => {
-    await apiLogout();
-    setUser(null);
-    setSession(null);
-    localStorage.removeItem(SESSION_KEY);
-    localStorage.removeItem(USER_KEY);
-  }, []);
+    await trpcLogout();
+    window.location.href = getLoginUrl();
+  }, [trpcLogout]);
 
   const hasPermission = useCallback(
-    (permission: string) => {
-      return user?.permissions?.includes(permission) ?? false;
-    },
+    (permission: string) => user?.permissions?.includes(permission) ?? false,
     [user]
   );
 
   const hasRole = useCallback(
-    (role: string) => {
-      return user?.roles?.includes(role) ?? false;
-    },
+    (role: string) => user?.roles?.includes(role) ?? false,
     [user]
   );
 
@@ -84,10 +86,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     <AuthContext.Provider
       value={{
         user,
-        session,
-        isAuthenticated: !!user && !!session,
-        isLoading,
-        login,
+        isAuthenticated,
+        isLoading: loading,
         logout,
         hasPermission,
         hasRole,

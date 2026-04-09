@@ -1,9 +1,8 @@
 // DOGE Spatial Explorer — Item Detail Page
-// View a single record with full metadata display
-// Design: Spatial Intelligence Command Center
+// Uses tRPC for persistent backend storage
 
-import React, { useState, useEffect } from "react";
-import { Link, useLocation, useParams } from "wouter";
+import React, { useState } from "react";
+import { Link, useParams, useLocation } from "wouter";
 import { ArrowLeft, Pencil, Trash2, Loader2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -11,11 +10,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import StatusBadge from "@/components/StatusBadge";
 import ConfirmDialog from "@/components/ConfirmDialog";
-import { apiGetItem, apiDeleteItem } from "@/lib/mockData";
-import type { Item } from "@/lib/types";
+import { trpc } from "@/lib/trpc";
+import { useAuth } from "@/contexts/AuthContext";
 
-function formatDateTime(iso: string) {
-  return new Date(iso).toLocaleString("en-US", {
+function formatDateTime(d: Date) {
+  return new Date(d).toLocaleString("en-US", {
     month: "long",
     day: "numeric",
     year: "numeric",
@@ -25,40 +24,31 @@ function formatDateTime(iso: string) {
 }
 
 export default function ItemDetail() {
-  const params = useParams<{ id: string }>();
+  const { id: slug } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
-  const [item, setItem] = useState<Item | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { hasRole } = useAuth();
+  const isAdmin = hasRole("admin");
   const [showDelete, setShowDelete] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const utils = trpc.useUtils();
 
-  useEffect(() => {
-    if (!params.id) return;
-    setLoading(true);
-    setError(null);
-    apiGetItem(params.id)
-      .then(setItem)
-      .catch((e: { message?: string }) => setError(e?.message ?? "Record not found."))
-      .finally(() => setLoading(false));
-  }, [params.id]);
+  const { data: item, isLoading, error } = trpc.items.get.useQuery(
+    { slug: slug ?? "" },
+    { enabled: !!slug }
+  );
 
-  const handleDelete = async () => {
-    if (!item) return;
-    setIsDeleting(true);
-    try {
-      await apiDeleteItem(item.id);
+  const deleteMutation = trpc.items.delete.useMutation({
+    onSuccess: () => {
       toast.success("Record deleted");
+      utils.items.list.invalidate();
+      utils.items.stats.invalidate();
       navigate("/app/items");
-    } catch (e: unknown) {
-      const err = e as { message?: string };
-      toast.error("Delete failed", { description: err?.message });
-    } finally {
-      setIsDeleting(false);
-    }
-  };
+    },
+    onError: (err) => {
+      toast.error("Delete failed", { description: err.message });
+    },
+  });
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="p-6 flex items-center justify-center h-64">
         <Loader2 className="w-6 h-6 text-primary animate-spin" />
@@ -75,7 +65,7 @@ export default function ItemDetail() {
           </div>
           <div className="text-center">
             <p className="text-sm font-medium text-foreground">Record not found</p>
-            <p className="text-xs text-muted-foreground mt-1">{error}</p>
+            <p className="text-xs text-muted-foreground mt-1">{error?.message}</p>
           </div>
           <Link href="/app/items">
             <Button variant="outline" size="sm">
@@ -101,26 +91,28 @@ export default function ItemDetail() {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3 mb-2">
             <StatusBadge status={item.status} />
-            <span className="text-xs text-muted-foreground font-mono">{item.id}</span>
+            <span className="text-xs text-muted-foreground font-mono">{item.slug}</span>
           </div>
           <h1 className="text-2xl font-bold text-foreground tracking-tight break-words">
             {item.name}
           </h1>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
-          <Link href={`/app/items/${item.id}/edit`}>
+          <Link href={`/app/items/${item.slug}/edit`}>
             <Button variant="outline" size="sm" className="gap-2">
               <Pencil className="w-3.5 h-3.5" /> Edit
             </Button>
           </Link>
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-2 text-destructive border-destructive/30 hover:bg-destructive/10"
-            onClick={() => setShowDelete(true)}
-          >
-            <Trash2 className="w-3.5 h-3.5" /> Delete
-          </Button>
+          {isAdmin && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 text-destructive border-destructive/30 hover:bg-destructive/10"
+              onClick={() => setShowDelete(true)}
+            >
+              <Trash2 className="w-3.5 h-3.5" /> Delete
+            </Button>
+          )}
         </div>
       </div>
 
@@ -133,7 +125,7 @@ export default function ItemDetail() {
         </CardHeader>
         <CardContent className="pt-0 space-y-0">
           {[
-            { label: "Record ID", value: item.id, mono: true },
+            { label: "Record ID", value: item.slug, mono: true },
             { label: "Name", value: item.name },
             { label: "Status", value: <StatusBadge status={item.status} /> },
             { label: "Owner ID", value: item.ownerId, mono: true },
@@ -161,9 +153,9 @@ export default function ItemDetail() {
         title="Delete Record"
         description={`Are you sure you want to permanently delete "${item.name}"? This action cannot be undone.`}
         confirmLabel="Delete"
-        onConfirm={handleDelete}
+        onConfirm={() => deleteMutation.mutate({ slug: item.slug })}
         onCancel={() => setShowDelete(false)}
-        isLoading={isDeleting}
+        isLoading={deleteMutation.isPending}
         variant="destructive"
       />
     </div>

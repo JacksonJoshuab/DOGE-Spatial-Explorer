@@ -1,8 +1,7 @@
 // DOGE Spatial Explorer — New Item Page
-// Create a new record with form validation
-// Design: Spatial Intelligence Command Center
+// Uses tRPC for persistent backend storage
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
@@ -10,28 +9,24 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import ItemForm from "@/components/ItemForm";
 import InlineAlert from "@/components/InlineAlert";
-import { apiCreateItem } from "@/lib/mockData";
-import type { ItemStatus } from "@/lib/types";
+import { trpc } from "@/lib/trpc";
 
 export default function ItemNew() {
   const [, navigate] = useLocation();
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
+  const utils = trpc.useUtils();
 
-  const handleSubmit = async (values: { name: string; status: ItemStatus }) => {
-    setIsSubmitting(true);
-    setServerError(null);
-    try {
-      const item = await apiCreateItem(values);
-      toast.success("Record created", { description: `"${item.name}" has been added.` });
-      navigate(`/app/items/${item.id}`);
-    } catch (e: unknown) {
-      const err = e as { message?: string };
-      setServerError(err?.message ?? "Failed to create record.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  const createMutation = trpc.items.create.useMutation({
+    onSuccess: (item) => {
+      toast.success("Record created", { description: `"${item.name}" has been saved.` });
+      utils.items.list.invalidate();
+      utils.items.stats.invalidate();
+      navigate(`/app/items/${item.slug}`);
+    },
+    onError: (err) => {
+      setServerError(err.message);
+    },
+  });
 
   return (
     <div className="p-6 space-y-5 max-w-xl">
@@ -67,9 +62,12 @@ export default function ItemNew() {
         <CardContent className="pt-0">
           <ItemForm
             mode="create"
-            onSubmit={handleSubmit}
+            onSubmit={(values) => {
+              setServerError(null);
+              createMutation.mutate(values as { name: string; status: "draft" | "active" | "archived" });
+            }}
             onCancel={() => navigate("/app/items")}
-            isSubmitting={isSubmitting}
+            isSubmitting={createMutation.isPending}
           />
         </CardContent>
       </Card>

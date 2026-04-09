@@ -20,6 +20,7 @@ import ItemNew from "./pages/ItemNew";
 import ItemDetail from "./pages/ItemDetail";
 import ItemEdit from "./pages/ItemEdit";
 import Geospatial from "./pages/Geospatial";
+import AdminPanel from "./pages/AdminPanel";
 import Activity from "./pages/Activity";
 import Settings from "./pages/Settings";
 
@@ -31,8 +32,8 @@ function Protected({ children, permissions }: { children: React.ReactNode; permi
     </AuthGate>
   );
 }
-
 function Router() {
+  // make sure to consider if you need authentication for certain routes
   return (
     <Switch>
       {/* Public */}
@@ -57,6 +58,9 @@ function Router() {
       </Route>
       <Route path="/app/items">
         <Protected permissions={["items:read"]}><ItemsList /></Protected>
+      </Route>
+      <Route path="/app/admin">
+        <Protected permissions={["admin:access"]}><AdminPanel /></Protected>
       </Route>
       <Route path="/app/geospatial">
         <Protected><Geospatial /></Protected>

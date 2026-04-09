@@ -29,7 +29,7 @@ type ItemFormValues = z.infer<typeof itemSchema>;
 type ItemFormProps = {
   mode: "create" | "edit";
   initial?: Partial<Item>;
-  onSubmit: (values: ItemFormValues) => Promise<void>;
+  onSubmit: (values: ItemFormValues) => void | Promise<void>;
   onCancel?: () => void;
   isSubmitting?: boolean;
 };

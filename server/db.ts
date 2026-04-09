@@ -1,6 +1,6 @@
-import { and, desc, eq, gte, lte } from "drizzle-orm";
+import { and, count, eq, like, or } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { auditLog, InsertAuditLogRow, InsertUser, users } from "../drizzle/schema";
+import { InsertItem, InsertUser, Item, items, users } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -89,160 +89,114 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// ─── Audit Log helpers ────────────────────────────────────────────────────────
+// ─── Items CRUD ───────────────────────────────────────────────────────────────
 
-export async function insertAuditEntry(entry: InsertAuditLogRow): Promise<void> {
+export async function getItems(opts: {
+  page: number;
+  pageSize: number;
+  query?: string;
+  status?: "draft" | "active" | "archived" | "";
+}): Promise<{ data: Item[]; total: number }> {
   const db = await getDb();
-  if (!db) {
-    console.warn("[Database] Cannot insert audit entry: database not available");
-    return;
-  }
-  await db.insert(auditLog).values(entry);
-}
+  if (!db) throw new Error("Database not available");
 
-export interface AuditQueryOptions {
-  category?: string;
-  severity?: string;
-  actor?: string;
-  fromTs?: number;
-  toTs?: number;
-  limit?: number;
-}
-
-export async function queryAuditLog(opts: AuditQueryOptions = {}) {
-  const db = await getDb();
-  if (!db) return [];
+  const { page, pageSize, query = "", status = "" } = opts;
+  const offset = (page - 1) * pageSize;
 
   const conditions = [];
-  if (opts.category) conditions.push(eq(auditLog.category, opts.category));
-  if (opts.severity) conditions.push(eq(auditLog.severity, opts.severity as "info" | "warning" | "critical"));
-  if (opts.actor) conditions.push(eq(auditLog.actor, opts.actor));
-  if (opts.fromTs) conditions.push(gte(auditLog.ts, opts.fromTs));
-  if (opts.toTs) conditions.push(lte(auditLog.ts, opts.toTs));
+  if (query) conditions.push(like(items.name, `%${query}%`));
+  if (status) conditions.push(eq(items.status, status));
 
-  const query = db
-    .select()
-    .from(auditLog)
-    .orderBy(desc(auditLog.ts))
-    .limit(opts.limit ?? 500);
+  const where = conditions.length > 0 ? and(...conditions) : undefined;
 
-  if (conditions.length > 0) {
-    return query.where(and(...conditions));
-  }
-  return query;
+  const [rows, totalRows] = await Promise.all([
+    db.select().from(items).where(where).limit(pageSize).offset(offset).orderBy(items.updatedAt),
+    db.select({ count: count() }).from(items).where(where),
+  ]);
+
+  // Reverse to show newest first
+  return { data: rows.reverse(), total: totalRows[0]?.count ?? 0 };
 }
 
-export async function clearAuditLog(): Promise<void> {
-  const db = await getDb();
-  if (!db) return;
-  await db.delete(auditLog);
-}
-
-// ─── TOTP / MFA helpers ───────────────────────────────────────────────────────
-
-/** Store a newly generated TOTP secret for a staff member (pre-enrollment). */
-export async function saveTotpSecret(openId: string, secret: string): Promise<void> {
-  const db = await getDb();
-  if (!db) return;
-  await db.update(users)
-    .set({ totpSecret: secret, mfaEnabled: 0 })
-    .where(eq(users.openId, openId));
-}
-
-/** Mark MFA as fully enrolled after the user verifies their first code. */
-export async function enableMfa(openId: string): Promise<void> {
-  const db = await getDb();
-  if (!db) return;
-  await db.update(users)
-    .set({ mfaEnabled: 1 })
-    .where(eq(users.openId, openId));
-}
-
-/** Retrieve the TOTP secret for a given openId (returns null if not set). */
-export async function getTotpSecret(openId: string): Promise<string | null> {
-  const db = await getDb();
-  if (!db) return null;
-  const rows = await db.select({ totpSecret: users.totpSecret })
-    .from(users)
-    .where(eq(users.openId, openId))
-    .limit(1);
-  return rows[0]?.totpSecret ?? null;
-}
-
-/** Check whether MFA is enabled for a given openId. */
-export async function isMfaEnabled(openId: string): Promise<boolean> {
-  const db = await getDb();
-  if (!db) return false;
-  const rows = await db.select({ mfaEnabled: users.mfaEnabled })
-    .from(users)
-    .where(eq(users.openId, openId))
-    .limit(1);
-  return (rows[0]?.mfaEnabled ?? 0) === 1;
-}
-
-// ─── Work Order helpers ───────────────────────────────────────────────────────
-import { InsertWorkOrder, InsertSensorReading, workOrders, sensorReadings } from "../drizzle/schema";
-
-export async function createWorkOrder(wo: InsertWorkOrder): Promise<void> {
+export async function getItemBySlug(slug: string): Promise<Item | undefined> {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  await db.insert(workOrders).values(wo);
+
+  const result = await db.select().from(items).where(eq(items.slug, slug)).limit(1);
+  return result[0];
 }
 
-export async function listWorkOrders(limit = 100) {
-  const db = await getDb();
-  if (!db) return [];
-  return db.select().from(workOrders).orderBy(desc(workOrders.createdAt)).limit(limit);
-}
-
-export async function updateWorkOrderStatus(
-  woNumber: string,
-  status: "open" | "in_progress" | "resolved" | "cancelled",
-): Promise<void> {
+export async function createItem(payload: {
+  name: string;
+  status: "draft" | "active" | "archived";
+  ownerId: string;
+}): Promise<Item> {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  const resolvedAt = status === "resolved" ? new Date() : null;
-  await db.update(workOrders)
-    .set({ status, ...(resolvedAt ? { resolvedAt } : {}) })
-    .where(eq(workOrders.woNumber, woNumber));
+
+  // Generate a unique slug
+  const slug = `i${Date.now()}`;
+  await db.insert(items).values({ ...payload, slug });
+
+  const created = await db.select().from(items).where(eq(items.slug, slug)).limit(1);
+  if (!created[0]) throw new Error("Failed to create item");
+  return created[0];
 }
 
-export async function getWorkOrdersBySensor(sensorId: string, limit = 50) {
+export async function updateItem(
+  slug: string,
+  payload: Partial<{ name: string; status: "draft" | "active" | "archived" }>
+): Promise<Item> {
   const db = await getDb();
-  if (!db) return [];
-  return db.select().from(workOrders)
-    .where(eq(workOrders.sensorId, sensorId))
-    .orderBy(desc(workOrders.createdAt))
-    .limit(limit);
+  if (!db) throw new Error("Database not available");
+
+  await db.update(items).set(payload).where(eq(items.slug, slug));
+
+  const updated = await db.select().from(items).where(eq(items.slug, slug)).limit(1);
+  if (!updated[0]) throw new Error("Item not found");
+  return updated[0];
 }
 
-// ─── Sensor Reading helpers ───────────────────────────────────────────────────
-
-export async function recordSensorReading(reading: InsertSensorReading): Promise<void> {
+export async function deleteItem(slug: string): Promise<void> {
   const db = await getDb();
-  if (!db) return; // silent fail — telemetry is best-effort
-  await db.insert(sensorReadings).values(reading);
+  if (!db) throw new Error("Database not available");
+
+  const existing = await db.select().from(items).where(eq(items.slug, slug)).limit(1);
+  if (!existing[0]) throw new Error("Item not found");
+
+  await db.delete(items).where(eq(items.slug, slug));
 }
 
-export async function getSensorReadings(sensorId: string, sinceTs: number, limit = 300) {
-  const db = await getDb();
-  if (!db) return [];
-  return db.select().from(sensorReadings)
-    .where(and(eq(sensorReadings.sensorId, sensorId), gte(sensorReadings.ts, sinceTs)))
-    .orderBy(desc(sensorReadings.ts))
-    .limit(limit);
-}
-
-export async function pruneOldSensorReadings(olderThanTs: number): Promise<void> {
+export async function seedItemsIfEmpty(ownerId: string): Promise<void> {
   const db = await getDb();
   if (!db) return;
-  await db.delete(sensorReadings).where(lte(sensorReadings.ts, olderThanTs));
+
+  const existing = await db.select({ count: count() }).from(items);
+  if ((existing[0]?.count ?? 0) > 0) return;
+
+  const seedData: InsertItem[] = [
+    { slug: "i1", name: "Federal Contract Review — DOD Q1", status: "active", ownerId },
+    { slug: "i2", name: "SAM.gov Vendor Audit Trail", status: "draft", ownerId },
+    { slug: "i3", name: "FPDS Procurement Analysis — FY2025", status: "active", ownerId },
+    { slug: "i4", name: "Grants.gov Opportunity Tracker", status: "archived", ownerId },
+    { slug: "i5", name: "Geospatial Shipping Lane Monitor", status: "active", ownerId },
+    { slug: "i6", name: "NOAA Weather Impact Assessment", status: "draft", ownerId },
+    { slug: "i7", name: "Coast Guard AIS Vessel Tracking", status: "active", ownerId },
+    { slug: "i8", name: "Supply Chain Rail Capacity Report", status: "archived", ownerId },
+    { slug: "i9", name: "USDA Commodity Futures Intelligence", status: "draft", ownerId },
+    { slug: "i10", name: "Executive Order Compliance Tracker", status: "active", ownerId },
+  ];
+
+  await db.insert(items).values(seedData);
 }
 
-export async function updateWorkOrderAssignee(woNumber: string, assignee: string): Promise<void> {
+export async function switchUserRole(
+  openId: string,
+  role: "user" | "admin"
+): Promise<{ role: "user" | "admin" }> {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  await db.update(workOrders)
-    .set({ assignee })
-    .where(eq(workOrders.woNumber, woNumber));
+
+  await db.update(users).set({ role }).where(eq(users.openId, openId));
+  return { role };
 }

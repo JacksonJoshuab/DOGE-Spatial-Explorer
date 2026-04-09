@@ -1,97 +1,379 @@
-// DOGE Spatial Explorer — Geospatial Page (Placeholder)
-// Future: Real-time ship/flight tracking, AIS vessel data, shipping lane visualization
+// DOGE Spatial Explorer — Geospatial Monitor
+// Full Google Maps integration with AIS vessel markers, shipping lane overlays,
+// and layer toggle controls
 
-import React from "react";
-import { Globe, Satellite, Ship, Plane, MapPin } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { useRef, useState, useCallback } from "react";
+import { MapView } from "@/components/Map";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Ship, Plane, Anchor, Layers, MapPin, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 
-const FEATURE_CARDS = [
+// ─── Simulated AIS vessel data ────────────────────────────────────────────────
+const AIS_VESSELS = [
+  { id: "V001", name: "MV Atlantic Star", type: "Container", lat: 40.68, lng: -73.97, speed: 14.2, heading: 220, flag: "US", status: "Underway" },
+  { id: "V002", name: "SS Gulf Pioneer", type: "Tanker", lat: 29.75, lng: -93.85, speed: 11.8, heading: 135, flag: "PA", status: "Underway" },
+  { id: "V003", name: "MV Pacific Bridge", type: "Bulk Carrier", lat: 37.82, lng: -122.47, speed: 9.5, heading: 280, flag: "MH", status: "Anchored" },
+  { id: "V004", name: "SS Chesapeake Bay", type: "Ro-Ro", lat: 36.95, lng: -76.32, speed: 12.1, heading: 45, flag: "US", status: "Underway" },
+  { id: "V005", name: "MV Great Lakes Trader", type: "Bulk Carrier", lat: 43.05, lng: -79.05, speed: 8.3, heading: 90, flag: "CA", status: "Underway" },
+  { id: "V006", name: "SS Mississippi Queen", type: "River Barge", lat: 29.95, lng: -90.07, speed: 6.1, heading: 180, flag: "US", status: "Underway" },
+  { id: "V007", name: "MV Savannah Express", type: "Container", lat: 32.08, lng: -80.90, speed: 16.4, heading: 60, flag: "DE", status: "Underway" },
+  { id: "V008", name: "SS Port Arthur", type: "Tanker", lat: 29.90, lng: -93.93, speed: 0, heading: 0, flag: "US", status: "Moored" },
+];
+
+// ─── Shipping lane polylines ──────────────────────────────────────────────────
+const SHIPPING_LANES = [
   {
-    icon: Ship,
-    title: "AIS Vessel Tracking",
-    desc: "Real-time ship positions from Coast Guard AIS data feeds",
-    color: "text-primary",
-    bg: "bg-primary/10 border-primary/20",
+    id: "lane-1",
+    name: "East Coast Corridor",
+    color: "#3b82f6",
+    path: [
+      { lat: 45.0, lng: -66.0 },
+      { lat: 40.7, lng: -73.9 },
+      { lat: 36.9, lng: -76.3 },
+      { lat: 32.1, lng: -80.9 },
+      { lat: 25.8, lng: -80.2 },
+    ],
   },
   {
-    icon: Plane,
-    title: "Flight Route Monitor",
-    desc: "Live aircraft positions and route aggregation",
-    color: "text-emerald-400",
-    bg: "bg-emerald-500/10 border-emerald-500/20",
+    id: "lane-2",
+    name: "Gulf Coast Route",
+    color: "#10b981",
+    path: [
+      { lat: 25.8, lng: -80.2 },
+      { lat: 29.9, lng: -90.1 },
+      { lat: 29.8, lng: -93.9 },
+      { lat: 27.8, lng: -97.4 },
+    ],
   },
   {
-    icon: MapPin,
-    title: "Shipping Lane Analysis",
-    desc: "Corps of Engineers data with Mississippi River visualization",
-    color: "text-amber-400",
-    bg: "bg-amber-500/10 border-amber-500/20",
+    id: "lane-3",
+    name: "Pacific Coast Route",
+    color: "#8b5cf6",
+    path: [
+      { lat: 48.5, lng: -124.7 },
+      { lat: 47.6, lng: -122.3 },
+      { lat: 37.8, lng: -122.5 },
+      { lat: 34.0, lng: -118.3 },
+      { lat: 32.7, lng: -117.2 },
+    ],
   },
   {
-    icon: Satellite,
-    title: "Satellite Geodata",
-    desc: "NOAA and USDA geospatial data integration",
-    color: "text-violet-400",
-    bg: "bg-violet-500/10 border-violet-500/20",
+    id: "lane-4",
+    name: "Mississippi River System",
+    color: "#f59e0b",
+    path: [
+      { lat: 45.0, lng: -93.2 },
+      { lat: 43.0, lng: -91.5 },
+      { lat: 40.6, lng: -90.2 },
+      { lat: 37.0, lng: -89.1 },
+      { lat: 32.3, lng: -90.9 },
+      { lat: 29.9, lng: -90.1 },
+    ],
   },
 ];
 
-export default function Geospatial() {
-  return (
-    <div className="p-6 space-y-6 max-w-4xl">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground tracking-tight">Geospatial Monitor</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">
-          Real-time global movement tracking and geodata analysis
-        </p>
-      </div>
+type LayerState = {
+  vessels: boolean;
+  lanes: boolean;
+  traffic: boolean;
+};
 
-      {/* Map placeholder */}
-      <div
-        className="relative rounded-xl border border-border overflow-hidden"
-        style={{ height: "320px" }}
-      >
-        <div
-          className="absolute inset-0 bg-cover bg-center opacity-30"
-          style={{
-            backgroundImage:
-              "url(https://d2xsxph8kpxj0f.cloudfront.net/116029439/69mnn7kDrambwunF6LqmC3/hero-login-bg-ViXMPsJa9bkiBj9vYaauTv.webp)",
-          }}
-          aria-hidden="true"
-        />
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
-          <div className="w-16 h-16 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center">
-            <Globe className="w-8 h-8 text-primary" />
-          </div>
-          <div className="text-center">
-            <p className="text-base font-semibold text-foreground">Interactive Map Coming Soon</p>
-            <p className="text-sm text-muted-foreground mt-1 max-w-xs">
-              Live vessel tracking, flight routes, and geopolitical data overlay
-            </p>
-          </div>
-          <Button size="sm" onClick={() => toast.info("Feature coming soon")}>
-            Enable Preview
+export default function Geospatial() {
+  const mapRef = useRef<google.maps.Map | null>(null);
+  const markersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>([]);
+  const polylinesRef = useRef<google.maps.Polyline[]>([]);
+  const trafficLayerRef = useRef<google.maps.TrafficLayer | null>(null);
+  const infoWindowRef = useRef<google.maps.InfoWindow | null>(null);
+
+  const [layers, setLayers] = useState<LayerState>({
+    vessels: true,
+    lanes: true,
+    traffic: false,
+  });
+  const [selectedVessel, setSelectedVessel] = useState<(typeof AIS_VESSELS)[0] | null>(null);
+  const [mapReady, setMapReady] = useState(false);
+
+  const addVesselMarkers = useCallback((map: google.maps.Map) => {
+    markersRef.current.forEach((m) => (m.map = null));
+    markersRef.current = [];
+
+    AIS_VESSELS.forEach((vessel) => {
+      const color =
+        vessel.status === "Underway"
+          ? "#34d399"
+          : vessel.status === "Anchored"
+          ? "#fbbf24"
+          : "#94a3b8";
+      const el = document.createElement("div");
+      el.innerHTML = `
+        <div style="
+          width:28px;height:28px;border-radius:50%;
+          background:${color}22;border:2px solid ${color};
+          display:flex;align-items:center;justify-content:center;
+          cursor:pointer;
+        ">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="${color}" xmlns="http://www.w3.org/2000/svg">
+            <path d="M20 21c-1.39 0-2.78-.47-4-1.32-2.44 1.71-5.56 1.71-8 0C6.78 20.53 5.39 21 4 21H2v2h2c1.38 0 2.74-.35 4-.99 2.52 1.29 5.48 1.29 8 0 1.26.64 2.62.99 4 .99h2v-2h-2zM3.95 19H4c1.6 0 3.02-.88 4-2 .98 1.12 2.4 2 4 2s3.02-.88 4-2c.98 1.12 2.4 2 4 2h.05l1.89-6.68c.08-.26.06-.54-.06-.78s-.34-.42-.6-.5L20 10.62V6c0-1.1-.9-2-2-2h-3V1H9v3H6c-1.1 0-2 .9-2 2v4.62l-1.29.42c-.26.08-.48.26-.6.5s-.14.52-.06.78L3.95 19z"/>
+          </svg>
+        </div>
+      `;
+
+      const marker = new google.maps.marker.AdvancedMarkerElement({
+        map,
+        position: { lat: vessel.lat, lng: vessel.lng },
+        title: vessel.name,
+        content: el,
+      });
+
+      marker.addListener("click", () => {
+        setSelectedVessel(vessel);
+        if (infoWindowRef.current) infoWindowRef.current.close();
+        const iw = new google.maps.InfoWindow({
+          content: `
+            <div style="font-family:monospace;padding:4px;min-width:200px;">
+              <div style="font-weight:bold;font-size:13px;margin-bottom:6px;color:#2563eb">${vessel.name}</div>
+              <div style="font-size:11px;line-height:1.8;color:#374151">
+                <b>ID:</b> ${vessel.id}<br/>
+                <b>Type:</b> ${vessel.type}<br/>
+                <b>Flag:</b> ${vessel.flag}<br/>
+                <b>Speed:</b> ${vessel.speed} kn<br/>
+                <b>Heading:</b> ${vessel.heading}°<br/>
+                <b>Status:</b> ${vessel.status}
+              </div>
+            </div>
+          `,
+        });
+        iw.open({ map, anchor: marker });
+        infoWindowRef.current = iw;
+      });
+
+      markersRef.current.push(marker);
+    });
+  }, []);
+
+  const addShippingLanes = useCallback((map: google.maps.Map) => {
+    polylinesRef.current.forEach((p) => p.setMap(null));
+    polylinesRef.current = [];
+
+    SHIPPING_LANES.forEach((lane) => {
+      const polyline = new google.maps.Polyline({
+        path: lane.path,
+        geodesic: true,
+        strokeColor: lane.color,
+        strokeOpacity: 0.7,
+        strokeWeight: 3,
+        map,
+      });
+      polylinesRef.current.push(polyline);
+    });
+  }, []);
+
+  const handleMapReady = useCallback(
+    (map: google.maps.Map) => {
+      mapRef.current = map;
+      setMapReady(true);
+      addVesselMarkers(map);
+      addShippingLanes(map);
+      trafficLayerRef.current = new google.maps.TrafficLayer();
+    },
+    [addVesselMarkers, addShippingLanes]
+  );
+
+  const toggleLayer = (layer: keyof LayerState) => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    setLayers((prev) => {
+      const next = { ...prev, [layer]: !prev[layer] };
+      if (layer === "vessels") {
+        markersRef.current.forEach((m) => (m.map = next.vessels ? map : null));
+      }
+      if (layer === "lanes") {
+        polylinesRef.current.forEach((p) => p.setMap(next.lanes ? map : null));
+      }
+      if (layer === "traffic") {
+        trafficLayerRef.current?.setMap(next.traffic ? map : null);
+      }
+      return next;
+    });
+  };
+
+  const refreshVessels = () => {
+    if (!mapRef.current) return;
+    addVesselMarkers(mapRef.current);
+    toast.success("AIS data refreshed", { description: `${AIS_VESSELS.length} vessels updated` });
+  };
+
+  return (
+    <div className="p-6 space-y-5 max-w-7xl">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground tracking-tight">Geospatial Monitor</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Real-time AIS vessel tracking and shipping lane analysis
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Badge
+            variant="outline"
+            className="text-emerald-400 border-emerald-400/30 bg-emerald-400/10 font-mono text-xs"
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5 animate-pulse inline-block" />
+            LIVE
+          </Badge>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={refreshVessels}
+            disabled={!mapReady}
+            className="gap-2"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            Refresh
           </Button>
         </div>
       </div>
 
-      {/* Feature grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {FEATURE_CARDS.map((card) => (
-          <Card
-            key={card.title}
-            className="bg-card border-border cursor-pointer hover:border-primary/30 transition-colors"
-            onClick={() => toast.info("Feature coming soon", { description: card.desc })}
-          >
-            <CardContent className="p-4 flex items-start gap-3">
-              <div className={`w-9 h-9 rounded-lg border flex items-center justify-center flex-shrink-0 ${card.bg}`}>
-                <card.icon className={`w-4 h-4 ${card.color}`} />
+      {/* Layer controls */}
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-xs text-muted-foreground flex items-center gap-1.5">
+          <Layers className="w-3.5 h-3.5" /> Layers:
+        </span>
+        <Button
+          variant={layers.vessels ? "default" : "outline"}
+          size="sm"
+          className="h-7 text-xs gap-1.5"
+          onClick={() => toggleLayer("vessels")}
+        >
+          <Ship className="w-3 h-3" /> AIS Vessels ({AIS_VESSELS.length})
+        </Button>
+        <Button
+          variant={layers.lanes ? "default" : "outline"}
+          size="sm"
+          className="h-7 text-xs gap-1.5"
+          onClick={() => toggleLayer("lanes")}
+        >
+          <Anchor className="w-3 h-3" /> Shipping Lanes ({SHIPPING_LANES.length})
+        </Button>
+        <Button
+          variant={layers.traffic ? "default" : "outline"}
+          size="sm"
+          className="h-7 text-xs gap-1.5"
+          onClick={() => toggleLayer("traffic")}
+        >
+          <MapPin className="w-3 h-3" /> Traffic Layer
+        </Button>
+      </div>
+
+      {/* Map + sidebar */}
+      <div className="grid grid-cols-1 xl:grid-cols-4 gap-4">
+        {/* Map */}
+        <div className="xl:col-span-3">
+          <Card className="bg-card border-border overflow-hidden">
+            <MapView
+              className="w-full h-[520px]"
+              initialCenter={{ lat: 37.5, lng: -95.0 }}
+              initialZoom={4}
+              onMapReady={handleMapReady}
+            />
+          </Card>
+        </div>
+
+        {/* Vessel list sidebar */}
+        <div className="space-y-3">
+          <Card className="bg-card border-border">
+            <CardHeader className="pb-2 pt-3 px-4">
+              <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <Ship className="w-4 h-4 text-primary" />
+                Active Vessels
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="px-2 pb-3">
+              <div className="space-y-1 max-h-[460px] overflow-y-auto">
+                {AIS_VESSELS.map((vessel) => {
+                  const color =
+                    vessel.status === "Underway"
+                      ? "text-emerald-400"
+                      : vessel.status === "Anchored"
+                      ? "text-amber-400"
+                      : "text-slate-400";
+                  const isSelected = selectedVessel?.id === vessel.id;
+                  return (
+                    <button
+                      key={vessel.id}
+                      onClick={() => {
+                        setSelectedVessel(vessel);
+                        mapRef.current?.panTo({ lat: vessel.lat, lng: vessel.lng });
+                        mapRef.current?.setZoom(8);
+                      }}
+                      className={`w-full text-left px-3 py-2 rounded-lg transition-colors text-xs ${
+                        isSelected
+                          ? "bg-primary/20 border border-primary/30"
+                          : "hover:bg-accent/40"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-medium text-foreground truncate">{vessel.name}</span>
+                        <span className={`${color} whitespace-nowrap font-mono`}>{vessel.speed}kn</span>
+                      </div>
+                      <div className="flex items-center justify-between mt-0.5">
+                        <span className="text-muted-foreground">{vessel.type}</span>
+                        <span className={`${color} font-mono`}>{vessel.status}</span>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Shipping lanes legend */}
+          <Card className="bg-card border-border">
+            <CardHeader className="pb-2 pt-3 px-4">
+              <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <Anchor className="w-4 h-4 text-primary" />
+                Shipping Lanes
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="px-4 pb-3">
+              <div className="space-y-2">
+                {SHIPPING_LANES.map((lane) => (
+                  <div key={lane.id} className="flex items-center gap-2 text-xs">
+                    <span
+                      className="w-6 h-1.5 rounded-full flex-shrink-0"
+                      style={{ background: lane.color }}
+                    />
+                    <span className="text-muted-foreground">{lane.name}</span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* Stats row */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {[
+          { label: "Vessels Tracked", value: AIS_VESSELS.length, icon: Ship, color: "text-primary" },
+          {
+            label: "Underway",
+            value: AIS_VESSELS.filter((v) => v.status === "Underway").length,
+            icon: Plane,
+            color: "text-emerald-400",
+          },
+          { label: "Shipping Lanes", value: SHIPPING_LANES.length, icon: Anchor, color: "text-blue-400" },
+          { label: "Data Points", value: "1,247", icon: MapPin, color: "text-amber-400" },
+        ].map((stat) => (
+          <Card key={stat.label} className="bg-card border-border">
+            <CardContent className="p-3 flex items-center gap-3">
+              <stat.icon className={`w-5 h-5 ${stat.color} flex-shrink-0`} />
               <div>
-                <p className="text-sm font-semibold text-foreground">{card.title}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{card.desc}</p>
+                <p className={`text-xl font-bold ${stat.color}`}>{stat.value}</p>
+                <p className="text-xs text-muted-foreground">{stat.label}</p>
               </div>
             </CardContent>
           </Card>

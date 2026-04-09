@@ -1,10 +1,9 @@
 // DOGE Spatial Explorer — Settings Page
-// Account settings, preferences, and session info
-// Design: Spatial Intelligence Command Center
+// Account settings, preferences, role-switcher for RBAC demo
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
-import { User, Shield, Bell, Key, LogOut, Save } from "lucide-react";
+import { User, Shield, Bell, Key, LogOut, Save, RefreshCw, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,10 +13,12 @@ import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
+import { trpc } from "@/lib/trpc";
 
 export default function Settings() {
-  const { user, session, logout } = useAuth();
+  const { user, logout } = useAuth();
   const [notifications, setNotifications] = useState({ email: true, push: false, digest: true });
+  const utils = trpc.useUtils();
 
   const userInitials = user?.name
     ? user.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
@@ -26,6 +27,23 @@ export default function Settings() {
   const handleSaveProfile = () => {
     toast.success("Profile saved", { description: "Your changes have been applied." });
   };
+
+  // Role-switcher mutation for RBAC demo
+  const switchRoleMutation = trpc.users.switchRole.useMutation({
+    onSuccess: (result) => {
+      toast.success("Role updated", {
+        description: `You are now "${result.role}". Refreshing auth state…`,
+      });
+      // Invalidate auth.me so the UI re-reads the new role
+      utils.auth.me.invalidate();
+    },
+    onError: (err) => {
+      toast.error("Role switch failed", { description: err.message });
+    },
+  });
+
+  const currentRole = user?.role ?? "user";
+  const isAdmin = currentRole === "admin";
 
   return (
     <div className="p-6 space-y-6 max-w-2xl">
@@ -53,11 +71,15 @@ export default function Settings() {
               </AvatarFallback>
             </Avatar>
             <div>
-              <p className="font-semibold text-foreground">{user?.name}</p>
-              <p className="text-sm text-muted-foreground font-mono">{user?.email}</p>
+              <p className="font-semibold text-foreground">{user?.name ?? "—"}</p>
+              <p className="text-sm text-muted-foreground font-mono">{user?.email ?? "—"}</p>
               <div className="flex items-center gap-1.5 mt-1.5">
                 {user?.roles?.map((role) => (
-                  <Badge key={role} variant="secondary" className="text-xs capitalize">
+                  <Badge
+                    key={role}
+                    variant="secondary"
+                    className={`text-xs capitalize ${role === "admin" ? "bg-amber-500/20 text-amber-400 border-amber-500/30" : ""}`}
+                  >
                     {role}
                   </Badge>
                 ))}
@@ -91,6 +113,75 @@ export default function Settings() {
           <Button size="sm" onClick={handleSaveProfile} className="gap-2">
             <Save className="w-3.5 h-3.5" /> Save Profile
           </Button>
+        </CardContent>
+      </Card>
+
+      {/* RBAC Demo — Role Switcher */}
+      <Card className="bg-card border-border border-amber-500/20">
+        <CardHeader className="pb-4">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4 text-amber-400" />
+            <CardTitle className="text-base">Role Demo (RBAC)</CardTitle>
+          </div>
+          <CardDescription>
+            Switch between <code className="font-mono text-xs">member</code> and{" "}
+            <code className="font-mono text-xs">admin</code> to see how role-based access control
+            affects available actions (e.g., delete buttons, admin nav).
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border">
+            <div>
+              <p className="text-sm font-medium text-foreground">Current Role</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {isAdmin
+                  ? "Admin — full access including delete and admin panel"
+                  : "Member — read/write access, no delete"}
+              </p>
+            </div>
+            <Badge
+              className={`text-sm font-mono ${
+                isAdmin
+                  ? "bg-amber-500/20 text-amber-400 border-amber-500/30"
+                  : "bg-primary/20 text-primary border-primary/30"
+              }`}
+              variant="outline"
+            >
+              {currentRole}
+            </Badge>
+          </div>
+
+          <div className="flex gap-2">
+            <Button
+              variant={!isAdmin ? "default" : "outline"}
+              size="sm"
+              className="flex-1"
+              disabled={!isAdmin || switchRoleMutation.isPending}
+              onClick={() => switchRoleMutation.mutate({ role: "user" })}
+            >
+              {switchRoleMutation.isPending && !isAdmin ? (
+                <RefreshCw className="w-3.5 h-3.5 mr-2 animate-spin" />
+              ) : null}
+              Switch to Member
+            </Button>
+            <Button
+              variant={isAdmin ? "default" : "outline"}
+              size="sm"
+              className="flex-1"
+              disabled={isAdmin || switchRoleMutation.isPending}
+              onClick={() => switchRoleMutation.mutate({ role: "admin" })}
+            >
+              {switchRoleMutation.isPending && isAdmin ? (
+                <RefreshCw className="w-3.5 h-3.5 mr-2 animate-spin" />
+              ) : null}
+              Switch to Admin
+            </Button>
+          </div>
+
+          <p className="text-xs text-muted-foreground">
+            After switching, navigate to Records to see delete buttons appear/disappear based on your
+            role. Admin users also see an "Admin" badge in the sidebar.
+          </p>
         </CardContent>
       </Card>
 
@@ -161,21 +252,15 @@ export default function Settings() {
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Token</span>
+            <span className="text-muted-foreground">User ID</span>
             <code className="font-mono text-xs bg-muted px-2 py-1 rounded text-muted-foreground">
-              {session?.accessToken?.slice(0, 20)}…
+              {user?.id ?? "—"}
             </code>
           </div>
           <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Expires</span>
-            <span className="font-mono text-xs text-foreground">
-              {session?.expiresAt
-                ? new Date(session.expiresAt).toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })
-                : "—"}
+            <span className="text-muted-foreground">Login Method</span>
+            <span className="font-mono text-xs text-foreground capitalize">
+              {user?.dbUser?.loginMethod ?? "oauth"}
             </span>
           </div>
           <Separator className="opacity-50" />

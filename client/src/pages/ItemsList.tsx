@@ -1,8 +1,8 @@
 // DOGE Spatial Explorer — Items List Page
 // Full CRUD table with search, status filter, pagination, and delete confirmation
-// Design: Spatial Intelligence Command Center
+// Uses tRPC for persistent backend storage
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { Plus, Search, Trash2, Pencil, Eye, Filter } from "lucide-react";
 import { toast } from "sonner";
@@ -18,11 +18,21 @@ import {
 import DataTable, { type Column } from "@/components/DataTable";
 import StatusBadge from "@/components/StatusBadge";
 import ConfirmDialog from "@/components/ConfirmDialog";
-import { apiGetItems, apiDeleteItem } from "@/lib/mockData";
-import type { Item, ItemStatus } from "@/lib/types";
+import { trpc } from "@/lib/trpc";
+import { useAuth } from "@/contexts/AuthContext";
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-US", {
+type ItemRow = {
+  id: number;
+  slug: string;
+  name: string;
+  status: "draft" | "active" | "archived";
+  ownerId: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+function formatDate(d: Date) {
+  return new Date(d).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -31,70 +41,50 @@ function formatDate(iso: string) {
 
 export default function ItemsList() {
   const [, navigate] = useLocation();
-  const [items, setItems] = useState<Item[]>([]);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { hasRole } = useAuth();
+  const isAdmin = hasRole("admin");
+
   const [page, setPage] = useState(1);
   const [query, setQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<ItemStatus | "">("");
-  const [deleteTarget, setDeleteTarget] = useState<Item | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<"draft" | "active" | "archived" | "">("");
+  const [deleteTarget, setDeleteTarget] = useState<ItemRow | null>(null);
 
   const PAGE_SIZE = 8;
+  const utils = trpc.useUtils();
 
-  const fetchItems = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await apiGetItems({ page, pageSize: PAGE_SIZE, query, status: statusFilter });
-      setItems(res.data);
-      setTotal(res.total);
-    } catch (e: unknown) {
-      const err = e as { message?: string };
-      setError(err?.message ?? "Failed to load items.");
-    } finally {
-      setLoading(false);
-    }
-  }, [page, query, statusFilter]);
+  const { data, isLoading, error, refetch } = trpc.items.list.useQuery({
+    page,
+    pageSize: PAGE_SIZE,
+    query,
+    status: statusFilter,
+  });
 
-  useEffect(() => {
-    fetchItems();
-  }, [fetchItems]);
-
-  // Reset to page 1 when filters change
-  useEffect(() => {
-    setPage(1);
-  }, [query, statusFilter]);
-
-  const handleDelete = async () => {
-    if (!deleteTarget) return;
-    setIsDeleting(true);
-    try {
-      await apiDeleteItem(deleteTarget.id);
-      toast.success("Record deleted", { description: `"${deleteTarget.name}" has been removed.` });
+  const deleteMutation = trpc.items.delete.useMutation({
+    onSuccess: () => {
+      toast.success("Record deleted", {
+        description: `"${deleteTarget?.name}" has been removed.`,
+      });
       setDeleteTarget(null);
-      fetchItems();
-    } catch (e: unknown) {
-      const err = e as { message?: string };
-      toast.error("Delete failed", { description: err?.message });
-    } finally {
-      setIsDeleting(false);
-    }
-  };
+      utils.items.list.invalidate();
+      utils.items.stats.invalidate();
+    },
+    onError: (err) => {
+      toast.error("Delete failed", { description: err.message });
+    },
+  });
 
-  const columns: Column<Item>[] = [
+  const columns: Column<ItemRow>[] = [
     {
       key: "name",
       header: "Name",
       render: (row) => (
         <div>
-          <Link href={`/app/items/${row.id}`}>
-            <a className="font-medium text-foreground hover:text-primary transition-colors">
+          <Link href={`/app/items/${row.slug}`}>
+            <span className="font-medium text-foreground hover:text-primary transition-colors cursor-pointer">
               {row.name}
-            </a>
+            </span>
           </Link>
-          <p className="text-xs text-muted-foreground font-mono mt-0.5">{row.id}</p>
+          <p className="text-xs text-muted-foreground font-mono mt-0.5">{row.slug}</p>
         </div>
       ),
     },
@@ -129,7 +119,7 @@ export default function ItemsList() {
             variant="ghost"
             size="icon"
             className="w-7 h-7 text-muted-foreground hover:text-foreground"
-            onClick={() => navigate(`/app/items/${row.id}`)}
+            onClick={() => navigate(`/app/items/${row.slug}`)}
             aria-label={`View ${row.name}`}
           >
             <Eye className="w-3.5 h-3.5" />
@@ -138,20 +128,22 @@ export default function ItemsList() {
             variant="ghost"
             size="icon"
             className="w-7 h-7 text-muted-foreground hover:text-primary"
-            onClick={() => navigate(`/app/items/${row.id}/edit`)}
+            onClick={() => navigate(`/app/items/${row.slug}/edit`)}
             aria-label={`Edit ${row.name}`}
           >
             <Pencil className="w-3.5 h-3.5" />
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="w-7 h-7 text-muted-foreground hover:text-destructive"
-            onClick={() => setDeleteTarget(row)}
-            aria-label={`Delete ${row.name}`}
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-          </Button>
+          {isAdmin && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="w-7 h-7 text-muted-foreground hover:text-destructive"
+              onClick={() => setDeleteTarget(row)}
+              aria-label={`Delete ${row.name}`}
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </Button>
+          )}
         </div>
       ),
       className: "w-28",
@@ -184,7 +176,10 @@ export default function ItemsList() {
           <Input
             placeholder="Search records…"
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setPage(1);
+            }}
             className="pl-9 bg-card border-border"
             aria-label="Search records"
           />
@@ -193,7 +188,10 @@ export default function ItemsList() {
           <Filter className="w-4 h-4 text-muted-foreground flex-shrink-0" />
           <Select
             value={statusFilter || "all"}
-            onValueChange={(v) => setStatusFilter(v === "all" ? "" : (v as ItemStatus))}
+            onValueChange={(v) => {
+              setStatusFilter(v === "all" ? "" : (v as "draft" | "active" | "archived"));
+              setPage(1);
+            }}
           >
             <SelectTrigger className="w-36 bg-card border-border" aria-label="Filter by status">
               <SelectValue />
@@ -211,15 +209,15 @@ export default function ItemsList() {
       {/* Table */}
       <DataTable
         cols={columns}
-        rows={items}
-        loading={loading}
-        error={error}
-        onRetry={fetchItems}
-        rowKey={(row) => row.id}
+        rows={(data?.data ?? []) as ItemRow[]}
+        loading={isLoading}
+        error={error?.message ?? null}
+        onRetry={() => refetch()}
+        rowKey={(row) => row.slug}
         pagination={{
           page,
           pageSize: PAGE_SIZE,
-          total,
+          total: data?.total ?? 0,
           onPageChange: setPage,
         }}
         emptyMessage="No records found"
@@ -236,9 +234,9 @@ export default function ItemsList() {
         title="Delete Record"
         description={`Are you sure you want to delete "${deleteTarget?.name}"? This action cannot be undone.`}
         confirmLabel="Delete"
-        onConfirm={handleDelete}
+        onConfirm={() => { if (deleteTarget) deleteMutation.mutate({ slug: deleteTarget.slug }); }}
         onCancel={() => setDeleteTarget(null)}
-        isLoading={isDeleting}
+        isLoading={deleteMutation.isPending}
         variant="destructive"
       />
     </div>

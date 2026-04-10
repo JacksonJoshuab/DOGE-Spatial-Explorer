@@ -1,6 +1,6 @@
-import { and, count, eq, like, or } from "drizzle-orm";
+import { and, count, desc, eq, like } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertItem, InsertUser, Item, items, users } from "../drizzle/schema";
+import { AuditLog, InsertAuditLog, InsertItem, InsertUser, Item, auditLog, items, users } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -199,4 +199,46 @@ export async function switchUserRole(
 
   await db.update(users).set({ role }).where(eq(users.openId, openId));
   return { role };
+}
+
+// ─── Audit Log ────────────────────────────────────────────────────────────────
+
+export async function writeAuditLog(entry: InsertAuditLog): Promise<void> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[AuditLog] Database not available, skipping audit log entry");
+    return;
+  }
+  try {
+    await db.insert(auditLog).values(entry);
+  } catch (error) {
+    // Audit log failures should never break the main operation
+    console.error("[AuditLog] Failed to write entry:", error);
+  }
+}
+
+export async function getAuditLog(opts: {
+  page: number;
+  pageSize: number;
+  resourceType?: string;
+  action?: "create" | "update" | "delete" | "";
+}): Promise<{ data: AuditLog[]; total: number }> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const { page, pageSize, resourceType = "", action = "" } = opts;
+  const offset = (page - 1) * pageSize;
+
+  const conditions = [];
+  if (resourceType) conditions.push(eq(auditLog.resourceType, resourceType));
+  if (action) conditions.push(eq(auditLog.action, action));
+
+  const where = conditions.length > 0 ? and(...conditions) : undefined;
+
+  const [rows, totalRows] = await Promise.all([
+    db.select().from(auditLog).where(where).orderBy(desc(auditLog.createdAt)).limit(pageSize).offset(offset),
+    db.select({ count: count() }).from(auditLog).where(where),
+  ]);
+
+  return { data: rows, total: totalRows[0]?.count ?? 0 };
 }

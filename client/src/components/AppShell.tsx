@@ -110,27 +110,27 @@ export default function AppShell({ children }: AppShellProps) {
           {visibleNav.map((item) => {
             const active = isActive(item.href);
             return (
-              <Link key={item.href} href={item.href}>
-                <a
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150",
-                    "hover:bg-accent hover:text-accent-foreground",
-                    active
-                      ? "bg-primary/15 text-primary border-l-2 border-primary pl-[10px]"
-                      : "text-muted-foreground border-l-2 border-transparent"
-                  )}
-                  aria-current={active ? "page" : undefined}
-                  onClick={() => setSidebarOpen(false)}
-                >
-                  <item.icon className="w-4 h-4 flex-shrink-0" />
-                  <span className="flex-1">{item.label}</span>
-                  {item.badge && (
-                    <Badge variant="secondary" className="text-xs px-1.5 py-0">
-                      {item.badge}
-                    </Badge>
-                  )}
-                  {active && <ChevronRight className="w-3 h-3 opacity-60" />}
-                </a>
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150",
+                  "hover:bg-accent hover:text-accent-foreground",
+                  active
+                    ? "bg-primary/15 text-primary border-l-2 border-primary pl-[10px]"
+                    : "text-muted-foreground border-l-2 border-transparent"
+                )}
+                aria-current={active ? "page" : undefined}
+                onClick={() => setSidebarOpen(false)}
+              >
+                <item.icon className="w-4 h-4 flex-shrink-0" />
+                <span className="flex-1">{item.label}</span>
+                {item.badge && (
+                  <Badge variant="secondary" className="text-xs px-1.5 py-0">
+                    {item.badge}
+                  </Badge>
+                )}
+                {active && <ChevronRight className="w-3 h-3 opacity-60" />}
               </Link>
             );
           })}

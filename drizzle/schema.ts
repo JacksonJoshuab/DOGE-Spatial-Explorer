@@ -34,3 +34,29 @@ export const items = mysqlTable("items", {
 
 export type Item = typeof items.$inferSelect;
 export type InsertItem = typeof items.$inferInsert;
+
+/**
+ * Audit log table — records every create/update/delete action with user, timestamp, and changed fields.
+ */
+export const auditLog = mysqlTable("audit_log", {
+  id: int("id").autoincrement().primaryKey(),
+  /** The action performed */
+  action: mysqlEnum("action", ["create", "update", "delete"]).notNull(),
+  /** The resource type (e.g., "item") */
+  resourceType: varchar("resourceType", { length: 64 }).notNull(),
+  /** The resource identifier (slug or id) */
+  resourceId: varchar("resourceId", { length: 64 }).notNull(),
+  /** Human-readable resource name at the time of the action */
+  resourceName: varchar("resourceName", { length: 200 }),
+  /** The user who performed the action */
+  actorId: varchar("actorId", { length: 64 }).notNull(),
+  actorName: varchar("actorName", { length: 200 }),
+  /** JSON-encoded changed fields: { field: { from, to } } */
+  changes: text("changes"),
+  /** Additional context (e.g., status transition details) */
+  context: text("context"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type AuditLog = typeof auditLog.$inferSelect;
+export type InsertAuditLog = typeof auditLog.$inferInsert;

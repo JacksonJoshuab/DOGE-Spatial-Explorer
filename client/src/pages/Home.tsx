@@ -97,6 +97,13 @@ export default function Home() {
   const [sheetDragStart, setSheetDragStart] = useState(0);
   const [sheetSwipeStartX, setSheetSwipeStartX] = useState(0);
   const [showMobileControls, setShowMobileControls] = useState(false);
+  const [hudExpanded, setHudExpanded] = useState(false);
+  // Auto-collapse HUD after 5 seconds
+  useEffect(() => {
+    if (!hudExpanded) return;
+    const t = setTimeout(() => setHudExpanded(false), 5000);
+    return () => clearTimeout(t);
+  }, [hudExpanded]);
   // One-time swipe hint — shown until user performs first horizontal swipe or 8s elapses
   const [showSwipeHint, setShowSwipeHint] = useState(() => {
     try { return !localStorage.getItem("doge-swipe-hint-seen"); } catch { return true; }
@@ -130,33 +137,24 @@ export default function Home() {
 
   // Welcome toasts
   useEffect(() => {
+    // Only show the Chip online toast — suppress all other noisy startup notifications
     const t1 = setTimeout(() => toast.success("🌱 Chip McHaymaker is online!", {
       description: `West Liberty, Iowa — Zone 5b — Battery ${Math.round(telemetry.batteryLevel)}%`,
-      duration: 5000,
-    }), 1000);
-    const t2 = setTimeout(() => toast.info(`🛰️ Telemetry: ${wsStatus.toUpperCase()}`, {
-      description: `Jetson Orin AGX · GPU ${Math.round(telemetry.gpuUsage)}%`,
-      duration: 3000,
-    }), 2500);
-    const t3 = setTimeout(() => {
-      if (device.isMobile) toast.info("📱 Touch optimized for iPhone Pro Max", {
-        description: "1 finger: orbit · 2 fingers: zoom/pan · tap zones",
-        duration: 4000,
-      });
-    }, 4000);
-    // First-visit controls hint — only shown once
-    const hasSeenHint = localStorage.getItem("doge-controls-hint-seen");
-    let t4: ReturnType<typeof setTimeout> | null = null;
-    if (device.isMobile && !hasSeenHint) {
-      t4 = setTimeout(() => {
-        toast.info("🕹️ Tap \"Controls\" button (bottom-right) for D-pad & E-STOP", {
-          description: "Hidden by default to keep your view clear",
-          duration: 6000,
+      duration: 4000,
+    }), 800);
+    // First-visit pinch-to-zoom hint on mobile (shown once, replaces all other hints)
+    const hasSeen = localStorage.getItem("doge-pinch-hint-seen");
+    let t2: ReturnType<typeof setTimeout> | null = null;
+    if (device.isMobile && !hasSeen) {
+      t2 = setTimeout(() => {
+        toast.info("👌 Pinch to zoom · 2 fingers to pan · tap zones", {
+          description: "Swipe up the bottom sheet for mission details",
+          duration: 5000,
         });
-        localStorage.setItem("doge-controls-hint-seen", "1");
-      }, 6500);
+        localStorage.setItem("doge-pinch-hint-seen", "1");
+      }, 2500);
     }
-    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); if (t4) clearTimeout(t4); };
+    return () => { clearTimeout(t1); if (t2) clearTimeout(t2); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -411,7 +409,48 @@ export default function Home() {
           onToggleDebug={() => setDebugVisible(v => !v)}
           onToggleStream={() => { setIsStreaming(v => !v); toast.info(isStreaming ? "📷 Paused" : "📷 Resumed"); }}
           isStreaming={isStreaming}
+          onClearHints={() => {
+            const keys = ["doge-swipe-hint-seen", "doge-pinch-hint-seen", "doge-notify-emails"];
+            keys.forEach(k => { try { localStorage.removeItem(k); } catch { /* ignore */ } });
+            toast.success("🔄 All hints reset — they'll reappear on next load");
+          }}
         />
+
+        {/* Collapsible Telemetry HUD pill — top-left, below TopNav */}
+        <div className="absolute top-14 left-2 z-30">
+          <button
+            onClick={() => { setHudExpanded(v => !v); try { navigator.vibrate?.(8); } catch { /* ignore */ } }}
+            className="glass rounded-xl px-2.5 py-1.5 flex items-center gap-2 pointer-events-auto"
+          >
+            <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+              wsStatus === "simulated" ? "bg-yellow-400" : "bg-green-400"
+            } animate-pulse`} />
+            <span className="text-[9px] font-mono text-white/70">
+              {hudExpanded ? "▲ HUD" : `GPU ${Math.round(telemetry.gpuUsage)}% · ${wsStatus === "simulated" ? "SIM" : "LIVE"}`}
+            </span>
+          </button>
+          <AnimatePresence>
+            {hudExpanded && (
+              <motion.div
+                initial={{ opacity: 0, y: -6, scale: 0.96 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -6, scale: 0.96 }}
+                transition={{ type: "spring", damping: 22, stiffness: 320 }}
+                className="mt-1 glass rounded-xl px-2.5 py-2 space-y-1 pointer-events-none"
+              >
+                <div className="flex items-center gap-1.5">
+                  <div className={`w-1.5 h-1.5 rounded-full ${
+                    wsStatus === "simulated" ? "bg-yellow-400" : "bg-green-400"
+                  } animate-pulse`} />
+                  <span className="text-[9px] font-mono text-white/60">WS:{wsStatus.toUpperCase()} · {telemetry.packetCount.toLocaleString()} pkts</span>
+                </div>
+                <div><span className="text-[9px] font-mono text-cyan-400">GPU {Math.round(telemetry.gpuUsage)}% · {telemetry.inferenceMs}ms · {Math.round(telemetry.aiConfidence)}% conf</span></div>
+                <div><span className="text-[9px] font-mono text-green-400">LiDAR {(telemetry.lidarPoints / 1000).toFixed(0)}K pts · {telemetry.lidarHz}Hz</span></div>
+                <div><span className="text-[9px] font-mono text-white/50">{telemetry.lat.toFixed(5)}, {telemetry.lon.toFixed(5)}</span></div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
 
         {/* Full-screen 3D POV — fills entire screen behind the sheet */}
         <div className="absolute inset-0">
@@ -430,6 +469,7 @@ export default function Home() {
             uvIndex={weather.current.uvIndex}
             windDir={weather.current.windDir}
             chipSpeechText={chipSpeechText}
+            bottomInset={sheetPx}
           />
         </div>
 
@@ -477,7 +517,7 @@ export default function Home() {
             )}
           </AnimatePresence>
           <button
-            onClick={() => setShowMobileControls(v => !v)}
+            onClick={() => { setShowMobileControls(v => !v); try { navigator.vibrate?.(10); } catch { /* ignore */ } }}
             className={`glass rounded-2xl p-2.5 flex items-center gap-1.5 text-[10px] font-medium transition-all ${
               showMobileControls ? "border border-yellow-400/40 text-yellow-300" : "text-white/40"
             }`}
@@ -741,6 +781,11 @@ export default function Home() {
         onToggleDebug={() => setDebugVisible(v => !v)}
         onToggleStream={() => { setIsStreaming(v => !v); toast.info(isStreaming ? "📷 Stream paused" : "📷 Stream resumed"); }}
         isStreaming={isStreaming}
+        onClearHints={() => {
+          const keys = ["doge-swipe-hint-seen", "doge-pinch-hint-seen", "doge-notify-emails"];
+          keys.forEach(k => { try { localStorage.removeItem(k); } catch { /* ignore */ } });
+          toast.success("🔄 All hints reset — they'll reappear on next load");
+        }}
       />
 
       <div className="flex h-[calc(100vh-56px)] pt-14">
@@ -811,7 +856,7 @@ export default function Home() {
           </motion.div>
 
           {/* Telemetry HUD */}
-          <div className="absolute top-2 left-2 z-20 space-y-1 pointer-events-none">
+          <div className="absolute top-2 left-40 z-20 space-y-1 pointer-events-none">
             <div className="glass rounded-lg px-2 py-1 flex items-center gap-2">
               <div className={`w-1.5 h-1.5 rounded-full ${wsStatus === "simulated" ? "bg-yellow-400" : "bg-green-400"} animate-pulse`} />
               <span className="text-[9px] font-mono text-white/60">WS:{wsStatus.toUpperCase()} · {telemetry.packetCount.toLocaleString()} pkts</span>
@@ -917,24 +962,24 @@ function MobileRobotControls({
         <div className="grid grid-cols-3 gap-1" style={{ width: 108 }}>
           <div />
           <button className="w-9 h-9 glass rounded-xl flex items-center justify-center text-white/70 active:bg-white/20"
-            onTouchStart={() => toast.info("⬆️ Forward")}>
+            onTouchStart={() => { try { navigator.vibrate?.(8); } catch { /* ignore */ } }}>
             <span className="text-sm">▲</span>
           </button>
           <div />
           <button className="w-9 h-9 glass rounded-xl flex items-center justify-center text-white/70 active:bg-white/20"
-            onTouchStart={() => toast.info("⬅️ Left")}>
+            onTouchStart={() => { try { navigator.vibrate?.(8); } catch { /* ignore */ } }}>
             <span className="text-sm">◀</span>
           </button>
           <div className="w-9 h-9 glass rounded-xl flex items-center justify-center">
             <div className={`w-3 h-3 rounded-full ${robotStatus === "working" ? "bg-green-400 animate-pulse" : robotStatus === "paused" ? "bg-yellow-400" : "bg-red-400"}`} />
           </div>
           <button className="w-9 h-9 glass rounded-xl flex items-center justify-center text-white/70 active:bg-white/20"
-            onTouchStart={() => toast.info("➡️ Right")}>
+            onTouchStart={() => { try { navigator.vibrate?.(8); } catch { /* ignore */ } }}>
             <span className="text-sm">▶</span>
           </button>
           <div />
           <button className="w-9 h-9 glass rounded-xl flex items-center justify-center text-white/70 active:bg-white/20"
-            onTouchStart={() => toast.info("⬇️ Back")}>
+            onTouchStart={() => { try { navigator.vibrate?.(8); } catch { /* ignore */ } }}>
             <span className="text-sm">▼</span>
           </button>
           <div />
@@ -968,7 +1013,7 @@ function MobileRobotControls({
           )}
         </button>
         <button
-          onTouchStart={() => { onStatusChange("error"); toast.error("🛑 E-STOP ACTIVATED"); }}
+          onTouchStart={() => { onStatusChange("error"); toast.error("🛑 E-STOP ACTIVATED"); try { navigator.vibrate?.([50, 30, 50, 30, 200]); } catch { /* ignore */ } }}
           className="h-10 rounded-xl flex items-center justify-center gap-1.5 text-xs font-bold bg-red-600/90 text-white"
           style={{ width: 108 }}
         >

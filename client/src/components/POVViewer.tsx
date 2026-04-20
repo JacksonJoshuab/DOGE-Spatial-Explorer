@@ -28,6 +28,7 @@ interface POVViewerProps {
   uvIndex?: number;
   windDir?: number;
   chipSpeechText?: string | null;
+  bottomInset?: number;
 }
 
 const DETECTED_OBJECTS = [
@@ -49,6 +50,7 @@ export default function POVViewer({
   weatherCondition = "Clear", isDay = true,
   precipitation = 0, uvIndex = 5, windDir = 180,
   chipSpeechText = null,
+  bottomInset = 0,
 }: POVViewerProps) {
   const [viewMode, setViewMode] = useState<ViewMode>("3d");
   const [showObjects, setShowObjects] = useState(true);
@@ -112,7 +114,7 @@ export default function POVViewer({
       {viewMode === "split" && (
         <div ref={splitContainerRef} className="absolute inset-0 overflow-hidden select-none">
           <div className="absolute inset-0" style={{ clipPath: `inset(0 ${100 - splitPos}% 0 0)` }}>
-            <LidarViewer3D isSprayActive={isSprayActive} completedTaskIds={completedTaskIds} fleetAgents={fleetAgents} selectedMedia={selectedMedia} weatherCondition={weatherCondition} isDay={isDay} precipitation={precipitation} uvIndex={uvIndex} windDir={windDir} chipSpeechText={chipSpeechText} />
+            <LidarViewer3D isSprayActive={isSprayActive} completedTaskIds={completedTaskIds} fleetAgents={fleetAgents} selectedMedia={selectedMedia} weatherCondition={weatherCondition} isDay={isDay} precipitation={precipitation} uvIndex={uvIndex} windDir={windDir} chipSpeechText={chipSpeechText} bottomInset={bottomInset} />
           </div>
           <div className="absolute inset-0" style={{ clipPath: `inset(0 0 0 ${splitPos}%)` }}>
             <div className="w-full h-full bg-cover bg-center" style={{ backgroundImage: `url(${YARD_PHOTO_URL})` }}>
@@ -146,7 +148,7 @@ export default function POVViewer({
       <AnimatePresence mode="wait">
         {viewMode === "3d" && (
           <motion.div key="3d" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }} className="absolute inset-0">
-            <LidarViewer3D isSprayActive={isSprayActive} completedTaskIds={completedTaskIds} fleetAgents={fleetAgents} selectedMedia={selectedMedia} weatherCondition={weatherCondition} isDay={isDay} precipitation={precipitation} uvIndex={uvIndex} windDir={windDir} chipSpeechText={chipSpeechText} />
+            <LidarViewer3D isSprayActive={isSprayActive} completedTaskIds={completedTaskIds} fleetAgents={fleetAgents} selectedMedia={selectedMedia} weatherCondition={weatherCondition} isDay={isDay} precipitation={precipitation} uvIndex={uvIndex} windDir={windDir} chipSpeechText={chipSpeechText} bottomInset={bottomInset} />
           </motion.div>
         )}
 

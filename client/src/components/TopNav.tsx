@@ -17,6 +17,7 @@ interface TopNavProps {
   onToggleDebug: () => void;
   onToggleStream: () => void;
   isStreaming: boolean;
+  onClearHints?: () => void;
 }
 
 const STATUS_BG: Record<string, string> = {
@@ -31,7 +32,7 @@ const STATUS_COLORS: Record<string, string> = {
 
 export default function TopNav({
   persona, batteryLevel, signalStrength, robotStatus,
-  debugVisible, onToggleDebug, onToggleStream, isStreaming
+  debugVisible, onToggleDebug, onToggleStream, isStreaming, onClearHints
 }: TopNavProps) {
   const batteryColor = batteryLevel > 50 ? "text-green-400" : batteryLevel > 25 ? "text-yellow-400" : "text-red-400";
   const [showMenu, setShowMenu] = useState(false);
@@ -163,7 +164,7 @@ export default function TopNav({
                     {/* Debug toggle */}
                     <button
                       onClick={() => { onToggleDebug(); setShowMenu(false); }}
-                      className="w-full flex items-center justify-between px-4 py-2.5 active:bg-white/5"
+                      className="w-full flex items-center justify-between px-4 py-2.5 border-b border-white/8 active:bg-white/5"
                     >
                       <div className="flex items-center gap-2">
                         <Bug size={13} className={debugVisible ? "text-yellow-400" : "text-white/40"} />
@@ -172,6 +173,17 @@ export default function TopNav({
                       <span className={`text-[11px] font-mono font-bold ${debugVisible ? "text-yellow-400" : "text-white/40"}`}>
                         {debugVisible ? "ON" : "OFF"}
                       </span>
+                    </button>
+                    {/* Clear All Hints */}
+                    <button
+                      onClick={() => { onClearHints?.(); setShowMenu(false); try { navigator.vibrate?.(12); } catch { /* ignore */ } }}
+                      className="w-full flex items-center justify-between px-4 py-2.5 active:bg-white/5"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="text-[13px]">🔄</span>
+                        <span className="text-[11px] text-white/60">Clear All Hints</span>
+                      </div>
+                      <span className="text-[11px] font-mono text-white/30">RESET</span>
                     </button>
                   </motion.div>
                 )}

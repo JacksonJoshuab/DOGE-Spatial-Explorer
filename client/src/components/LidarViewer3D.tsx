@@ -20,11 +20,12 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import {
   Maximize2, Minimize2, Navigation, Eye, Plane, RotateCcw,
   Layers, Zap, Move, Info, MapPin, Route, Droplets, Sun,
-  ChevronUp, ChevronDown, Ruler, X, PenLine, Trash2, Check, Share2
+  ChevronUp, ChevronDown, Ruler, X, PenLine, Trash2, Check, Share2, Settings
 } from "lucide-react";
 import { useDevice } from "@/hooks/useDevice";
 import DualJoystick, { type JoystickState } from "@/components/DualJoystick";
 import { Slider } from "@/components/ui/slider";
+import MtSipleExperience from "@/components/MtSipleExperience";
 
 // v16: Fresh GLB built directly from original USDZ via USD Python API
 // 30MB, JPEG textures, FLOAT32 geometry, standards-compliant glTF 2.0 — Safari iOS compatible
@@ -119,6 +120,7 @@ export interface LidarViewer3DProps {
   uvIndex?: number;           // 0-11 — drives sun brightness
   windDir?: number;           // degrees — drives sun azimuth approximation
   chipSpeechText?: string | null; // text to show in Chip's 3D speech bubble (auto-clears after 3s)
+  bottomInset?: number; // px offset from bottom to clear the bottom sheet on mobile
 }
 
 export default function LidarViewer3D({
@@ -134,6 +136,7 @@ export default function LidarViewer3D({
   uvIndex = 5,
   windDir = 180,
   chipSpeechText = null,
+  bottomInset = 0,
 }: LidarViewer3DProps) {
   const device = useDevice();
   const mountRef = useRef<HTMLDivElement>(null);
@@ -229,6 +232,33 @@ export default function LidarViewer3D({
   const mapUnderlayModeRef = useRef<MapUnderlayMode>("satellite");
   const parcelBoundaryRef = useRef<THREE.LineLoop | null>(null);
   const parcelCornersRef = useRef<THREE.Group | null>(null);
+  // GIS parcel boundary overlay (MAGIC GIS polygon, always on top)
+  const [showGisBoundary, setShowGisBoundary] = useState(true);
+  const gisBoundaryGroupRef = useRef<THREE.Group | null>(null);
+  // ── Model rotation fine-tune dial (0–360° added on top of auto-rotate) ──────────────────
+  const [modelRotationDeg, setModelRotationDeg] = useState(0);
+  const modelRotationDegRef = useRef(0);
+  useEffect(() => {
+    modelRotationDegRef.current = modelRotationDeg;
+    if (modelRef.current) {
+      const baseRot = (modelRef.current.userData.baseRotationY as number) ?? 0;
+      modelRef.current.rotation.y = baseRot + (modelRotationDeg * Math.PI) / 180;
+    }
+  }, [modelRotationDeg]);
+  // ── True North calibration state ────────────────────────────────────────────────
+  type CalibStep = "idle" | "picking_p1" | "picking_p2" | "done";
+  const [calibStep, setCalibStep] = useState<CalibStep>("idle");
+  const [calibP1, setCalibP1] = useState<THREE.Vector3 | null>(null);
+  const [calibOffset, setCalibOffset] = useState<number | null>(null);
+  // ── Satellite tile ground plane ────────────────────────────────────────────────
+  const satelliteGroundRef = useRef<THREE.Mesh | null>(null);
+  const [showSatelliteGround, setShowSatelliteGround] = useState(false);
+  // ── Mt. Siple Gaussian Splat swap ─────────────────────────────────────────────
+  const [isMtSiple, setIsMtSiple] = useState(false);
+  const [splatLoading, setSplatLoading] = useState(false);
+  const [showMtSipleExperience, setShowMtSipleExperience] = useState(false);
+  const splatMeshRef = useRef<import('@sparkjsdev/spark').SplatMesh | null>(null);
+  const sparkRendererRef = useRef<import('@sparkjsdev/spark').SparkRenderer | null>(null);
   const ambientLightRef = useRef<THREE.AmbientLight | null>(null);
   const chipSpeechSpriteRef = useRef<THREE.Sprite | null>(null);
   const [mapUnderlayOpacity, setMapUnderlayOpacity] = useState(80); // 0–100
@@ -316,6 +346,8 @@ export default function LidarViewer3D({
   const [pendingZoneTreatment, setPendingZoneTreatment] = useState("Scotts Weed & Feed");
   const [showZoneNameDialog, setShowZoneNameDialog] = useState(false);
   const ZONE_COLORS = ["#ff6644", "#44ffaa", "#ff44cc", "#44ccff", "#ffcc44", "#cc44ff"];
+  // Compass: azimuth angle in degrees (0 = camera looking north, 90 = east, etc.)
+  const [compassHeading, setCompassHeading] = useState(0);
 
   // ── Reactive refs — keep state values accessible in animation loop without
   //    causing setupScene to re-run when they change ─────────────────────────
@@ -624,9 +656,27 @@ export default function LidarViewer3D({
 
   // ── Map underlay ──────────────────────────────────────────────────────────
   // Yard GPS: 41.5769°N, 91.2607°W — 905 N Columbus St, West Liberty IA (Parcel 0112177049)
-  // Lot: 68ft × 259ft = 20.7m wide × 78.9m deep (Muscatine County MAGIC GIS)
-  const YARD_W_M = 20.7;  // meters east-west (68 ft)
-  const YARD_D_M = 78.9;  // meters north-south (259 ft)
+  // REAL surveyed geometry from Muscatine County MAGIC GIS ArcGIS REST API (queried 2026-04-09)
+  // Legal: "N 68 E 259 OUT LOT 3 SE NW  2007-06934"
+  // The lot is 259ft E-W (along N Columbus St) × 68ft N-S (depth into backyard)
+  // Centroid: 41.576943°N, -91.261215°W
+  // Real corners (WGS84):
+  //   SW: [-91.26074363, 41.57685164]  SE: [-91.26169050, 41.57685029]
+  //   NW: [-91.26074034, 41.57703625]  NE: [-91.26168700, 41.57703613]
+  const YARD_W_M = 79.12;  // meters east-west (259 ft) — MAGIC GIS surveyed
+  const YARD_D_M = 20.70;  // meters north-south (68 ft) — MAGIC GIS surveyed
+  // Real parcel centroid (MAGIC GIS)
+  const YARD_LAT_REAL = 41.576943;
+  const YARD_LON_REAL = -91.261215;
+  // Real corner coordinates (WGS84, MAGIC GIS)
+  const GIS_CORNERS = [
+    { lon: -91.26074363, lat: 41.57685164, label: "SW" },
+    { lon: -91.26074034, lat: 41.57703625, label: "NW" },
+    { lon: -91.26147446, lat: 41.57703627, label: "N-mid" },
+    { lon: -91.26168700, lat: 41.57703613, label: "NE" },
+    { lon: -91.26169050, lat: 41.57685029, label: "SE" },
+    { lon: -91.26168136, lat: 41.57685030, label: "SE-inner" },
+  ] as const;
 
   // Sync mapUnderlayMode ref and rebuild when mode changes
   useEffect(() => {
@@ -893,10 +943,271 @@ export default function LidarViewer3D({
     parcelCornersRef.current = cornerGroup;
   }, []);
 
+  // ── MAGIC GIS parcel boundary overlay ────────────────────────────────────
+  // Draws the REAL Muscatine County MAGIC GIS parcel polygon in magenta.
+  // Parcel 0112177049 — 905 N Columbus St, West Liberty IA
+  // Legal: "N 68 E 259 OUT LOT 3 SE NW  2007-06934"
+  // 259 ft E-W (along N Columbus St) × 68 ft N-S (backyard depth)
+  // Real corners from MAGIC GIS ArcGIS REST API (WGS84, queried 2026-04-09):
+  //   SW: [-91.26074363, 41.57685164]  NW: [-91.26074034, 41.57703625]
+  //   NE: [-91.26168700, 41.57703613]  SE: [-91.26169050, 41.57685029]
+  // Back-of-house: house sits at the NORTH edge (N Columbus St side, lat ~41.57703);
+  // the backyard extends SOUTH (lat ~41.57685). In Three.js +Z runs south.
+  const buildGisBoundary = useCallback((scene: THREE.Scene, center: THREE.Vector3, size: THREE.Vector3) => {
+    // Remove existing GIS group
+    if (gisBoundaryGroupRef.current) {
+      scene.remove(gisBoundaryGroupRef.current);
+      gisBoundaryGroupRef.current = null;
+    }
+
+    const group = new THREE.Group();
+    group.name = "gisBoundary";
+
+    // ── GPS → scene coordinate conversion ──────────────────────────────────────────
+    // We map GPS coordinates to Three.js scene units by anchoring the model
+    // center to the real parcel centroid, then using the model's bounding box
+    // extent to determine the meters-per-scene-unit scale.
+    // The model's X axis = E-W (east is +X), Z axis = N-S (south is +Z).
+    const LAT_M = 111320;
+    const LON_M = 111320 * Math.cos((YARD_LAT_REAL * Math.PI) / 180);
+    // Scale: use the model's X extent vs real lot E-W width (259ft = 79.12m)
+    const metersToUnits = size.x / YARD_W_M;
+
+    // Convert a GPS coordinate to Three.js scene XZ position
+    const gpsToScene = (lat: number, lon: number): [number, number] => {
+      const dLat = lat - YARD_LAT_REAL;
+      const dLon = lon - YARD_LON_REAL;
+      const sceneX = center.x + dLon * LON_M * metersToUnits; // east = +X
+      const sceneZ = center.z - dLat * LAT_M * metersToUnits; // north = -Z
+      return [sceneX, sceneZ];
+    };
+
+    // Ground plane Y — slightly above the map underlay, below zone markers
+    const bY = center.y - size.y * 0.5 + 0.04;
+
+    // Build the real polygon vertices from MAGIC GIS corners
+    // Use the 4 true corners (SW, NW, NE, SE) for a clean rectangle
+    const realCorners = [
+      { lon: -91.26074363, lat: 41.57685164, label: "SW", sx: 1,  sz: -1 },
+      { lon: -91.26074034, lat: 41.57703625, label: "NW", sx: 1,  sz: 1  },
+      { lon: -91.26168700, lat: 41.57703613, label: "NE", sx: -1, sz: 1  },
+      { lon: -91.26169050, lat: 41.57685029, label: "SE", sx: -1, sz: -1 },
+    ];
+    const polyPts3D = realCorners.map(c => {
+      const [sx, sz] = gpsToScene(c.lat, c.lon);
+      return new THREE.Vector3(sx, bY + 0.05, sz);
+    });
+
+    // ── 1. Semi-transparent fill plane ────────────────────────────────────────────
+    // Compute bounding box of real polygon for fill plane size
+    const xs = polyPts3D.map(p => p.x), zs = polyPts3D.map(p => p.z);
+    const fillW = Math.max(...xs) - Math.min(...xs);
+    const fillD = Math.max(...zs) - Math.min(...zs);
+    const fillCX = (Math.max(...xs) + Math.min(...xs)) / 2;
+    const fillCZ = (Math.max(...zs) + Math.min(...zs)) / 2;
+    const fillGeo = new THREE.PlaneGeometry(fillW, fillD);
+    const fillMat = new THREE.MeshBasicMaterial({ color: 0xff00cc, transparent: true, opacity: 0.04, side: THREE.DoubleSide, depthTest: false });
+    const fillMesh = new THREE.Mesh(fillGeo, fillMat);
+    fillMesh.rotation.x = -Math.PI / 2;
+    fillMesh.position.set(fillCX, bY + 0.01, fillCZ);
+    fillMesh.renderOrder = 0;
+    group.add(fillMesh);
+
+    // ── 2. Outer boundary — real MAGIC GIS polygon (bold magenta) ────────────────
+    const outerGeo = new THREE.BufferGeometry().setFromPoints(polyPts3D);
+    const outerMat = new THREE.LineBasicMaterial({ color: 0xff00cc, transparent: true, opacity: 0.9, linewidth: 3, depthTest: false });
+    const outerLine = new THREE.LineLoop(outerGeo, outerMat);
+    outerLine.renderOrder = 5;
+    outerLine.userData.role = "gisBorder";
+    group.add(outerLine);
+
+    // ── 3. Inner grid lines (every ~10m real-world) ─────────────────────────────
+    const gridMat = new THREE.LineBasicMaterial({ color: 0xff00cc, transparent: true, opacity: 0.12, depthTest: false });
+    const gridStep10 = 10 * metersToUnits;
+    const minX = Math.min(...xs), maxX = Math.max(...xs);
+    const minZ = Math.min(...zs), maxZ = Math.max(...zs);
+    for (let gx = minX + gridStep10; gx < maxX; gx += gridStep10) {
+      const g = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(gx, bY + 0.02, minZ), new THREE.Vector3(gx, bY + 0.02, maxZ)]);
+      group.add(new THREE.Line(g, gridMat));
+    }
+    for (let gz = minZ + gridStep10; gz < maxZ; gz += gridStep10) {
+      const g = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(minX, bY + 0.02, gz), new THREE.Vector3(maxX, bY + 0.02, gz)]);
+      group.add(new THREE.Line(g, gridMat));
+    }
+
+    // ── 4. Corner pins — L-brackets + GPS labels ───────────────────────────────────
+    const tickLen = Math.min(fillW, fillD) * 0.06;
+    const pinMat = new THREE.LineBasicMaterial({ color: 0xff44dd, transparent: true, opacity: 1.0, depthTest: false });
+    realCorners.forEach((c, i) => {
+      const [px, pz] = gpsToScene(c.lat, c.lon);
+      const py = bY + 0.06;
+      const sx = c.sx, sz = c.sz;
+      // L-bracket arms
+      const hg = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(px, py, pz), new THREE.Vector3(px + sx * tickLen, py, pz)]);
+      const hl = new THREE.Line(hg, pinMat); hl.renderOrder = 6; group.add(hl);
+      const vg = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(px, py, pz), new THREE.Vector3(px, py, pz + sz * tickLen)]);
+      const vl = new THREE.Line(vg, pinMat); vl.renderOrder = 6; group.add(vl);
+      // Vertical pole
+      const pg = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(px, py, pz), new THREE.Vector3(px, py + tickLen * 2, pz)]);
+      const pl = new THREE.Line(pg, new THREE.LineBasicMaterial({ color: 0xff44dd, transparent: true, opacity: 0.5, depthTest: false }));
+      pl.renderOrder = 6; group.add(pl);
+      // GPS label sprite
+      const lc = document.createElement("canvas");
+      lc.width = 280; lc.height = 64;
+      const ctx = lc.getContext("2d")!;
+      ctx.fillStyle = "rgba(30,0,30,0.85)";
+      ctx.roundRect(0, 0, 280, 64, 7); ctx.fill();
+      ctx.strokeStyle = "#ff44dd"; ctx.lineWidth = 1.5;
+      ctx.roundRect(0, 0, 280, 64, 7); ctx.stroke();
+      ctx.fillStyle = "#ff88ee"; ctx.font = "bold 13px monospace"; ctx.textAlign = "center";
+      ctx.fillText(`${c.label} — MAGIC GIS`, 140, 18);
+      ctx.fillStyle = "#ffccff"; ctx.font = "11px monospace";
+      ctx.fillText(`${c.lat.toFixed(5)}°N  ${Math.abs(c.lon).toFixed(5)}°W`, 140, 38);
+      ctx.fillStyle = "#ff88ee"; ctx.font = "10px monospace";
+      ctx.fillText("Parcel 0112177049 · Surveyed", 140, 56);
+      const tex = new THREE.CanvasTexture(lc);
+      const spr = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, opacity: 0.9, depthTest: false }));
+      const ls = tickLen * 3.0;
+      spr.scale.set(ls, ls * (64 / 280), 1);
+      spr.position.set(px + sx * tickLen * 1.8, py + tickLen * 2.6, pz + sz * tickLen * 1.8);
+      spr.renderOrder = 7; spr.userData.role = "gisCornerLabel";
+      group.add(spr);
+      void i; // suppress unused warning
+    });
+
+    // ── 5. Center label — parcel ID, legal description, and dimensions ────────────
+    // Only show the center label on desktop — it's too large and obstructive on mobile
+    if (!device.isMobile) {
+      const cl = document.createElement("canvas");
+      cl.width = 380; cl.height = 80;
+      const cctx = cl.getContext("2d")!;
+      cctx.fillStyle = "rgba(30,0,30,0.88)";
+      cctx.roundRect(0, 0, 380, 80, 8); cctx.fill();
+      cctx.strokeStyle = "#ff00cc"; cctx.lineWidth = 2;
+      cctx.roundRect(0, 0, 380, 80, 8); cctx.stroke();
+      cctx.fillStyle = "#ff66ee"; cctx.font = "bold 14px monospace"; cctx.textAlign = "center";
+      cctx.fillText("MAGIC GIS — Parcel 0112177049", 190, 20);
+      cctx.fillStyle = "#ffccff"; cctx.font = "12px monospace";
+      cctx.fillText("905 N Columbus St · West Liberty IA 52776", 190, 40);
+      cctx.fillStyle = "#ff88ee"; cctx.font = "11px monospace";
+      cctx.fillText("259 ft E–W × 68 ft N–S  |  0.40 ac  |  Surveyed", 190, 58);
+      cctx.fillStyle = "#ff44dd"; cctx.font = "10px monospace";
+      cctx.fillText("N 68 E 259 OUT LOT 3 SE NW  2007-06934", 190, 74);
+      const ctex = new THREE.CanvasTexture(cl);
+      const cspr = new THREE.Sprite(new THREE.SpriteMaterial({ map: ctex, transparent: true, opacity: 0.92, depthTest: false }));
+      const cs = fillW * 0.5;
+      cspr.scale.set(cs, cs * (80 / 380), 1);
+      cspr.position.set(fillCX, bY + fillD * 0.15, fillCZ);
+      cspr.renderOrder = 7; cspr.userData.role = "gisCenterLabel";
+      group.add(cspr);
+    }
+
+    scene.add(group);
+    gisBoundaryGroupRef.current = group;
+  }, [YARD_LAT_REAL, YARD_LON_REAL, YARD_W_M, device.isMobile]);
+
+  // ── Satellite tile ground plane ────────────────────────────────────────────────
+  // Fetches a real Google Maps satellite tile via the Manus proxy and projects it
+  // as a horizontal ground plane aligned with the GIS parcel boundary.
+  const buildSatelliteGround = useCallback((scene: THREE.Scene, center: THREE.Vector3, size: THREE.Vector3) => {
+    // Remove existing satellite ground
+    if (satelliteGroundRef.current) {
+      scene.remove(satelliteGroundRef.current);
+      satelliteGroundRef.current.geometry.dispose();
+      (satelliteGroundRef.current.material as THREE.Material).dispose();
+      satelliteGroundRef.current = null;
+    }
+
+    // Parcel dimensions in scene units (same scale as GIS overlay)
+    const metersToUnits = size.x / YARD_W_M;
+    const planeW = YARD_W_M * metersToUnits * 1.05; // slight bleed past boundary
+    const planeD = YARD_D_M * metersToUnits * 1.05;
+    const groundY = center.y - size.y * 0.5 - 0.02; // just below model floor
+
+    // Parcel centroid GPS
+    const LAT = YARD_LAT_REAL, LON = YARD_LON_REAL;
+    const FORGE_BASE = import.meta.env.VITE_FRONTEND_FORGE_API_URL || "https://forge.butterfly-effect.dev";
+    const API_KEY   = import.meta.env.VITE_FRONTEND_FORGE_API_KEY || "";
+    // Zoom 20 gives ~0.15m/px at this latitude — enough for house-level detail
+    const tileUrl = `${FORGE_BASE}/v1/maps/proxy/maps/api/staticmap?center=${LAT},${LON}&zoom=20&size=640x640&maptype=satellite&key=${API_KEY}`;
+
+    const buildFallback = () => {
+      // Canvas fallback: dark green yard with house footprint outline
+      const cv = document.createElement("canvas");
+      cv.width = 512; cv.height = 512;
+      const cx = cv.getContext("2d")!;
+      cx.save(); cx.translate(0, 512); cx.scale(1, -1);
+      cx.fillStyle = "#0d1a0d"; cx.fillRect(0, 0, 512, 512);
+      // Yard boundary
+      cx.strokeStyle = "#22cc55"; cx.lineWidth = 2; cx.setLineDash([6, 3]);
+      cx.strokeRect(20, 20, 472, 472);
+      // House footprint (approx center of parcel)
+      cx.fillStyle = "#2a2a1a"; cx.setLineDash([]);
+      cx.fillRect(156, 156, 200, 200);
+      cx.strokeStyle = "#888855"; cx.lineWidth = 1;
+      cx.strokeRect(156, 156, 200, 200);
+      // North label
+      cx.fillStyle = "#44ff88"; cx.font = "bold 14px monospace";
+      cx.fillText("N", 248, 500);
+      cx.fillStyle = "#ffffff88"; cx.font = "10px monospace";
+      cx.fillText("905 N Columbus St · West Liberty IA", 60, 40);
+      cx.restore();
+      const tex = new THREE.CanvasTexture(cv);
+      const geo = new THREE.PlaneGeometry(planeW, planeD);
+      const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: 0.85, depthWrite: false });
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.rotation.x = -Math.PI / 2;
+      mesh.position.set(center.x, groundY, center.z);
+      mesh.renderOrder = -2;
+      mesh.name = "satelliteGround";
+      scene.add(mesh);
+      satelliteGroundRef.current = mesh;
+    };
+
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      // Remove any fallback that may have appeared during async load
+      if (satelliteGroundRef.current) {
+        scene.remove(satelliteGroundRef.current);
+        satelliteGroundRef.current.geometry.dispose();
+        (satelliteGroundRef.current.material as THREE.Material).dispose();
+        satelliteGroundRef.current = null;
+      }
+      const tex = new THREE.Texture(img);
+      tex.needsUpdate = true;
+      const geo = new THREE.PlaneGeometry(planeW, planeD);
+      const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: 0.88, depthWrite: false });
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.rotation.x = -Math.PI / 2;
+      mesh.position.set(center.x, groundY, center.z);
+      mesh.renderOrder = -2;
+      mesh.name = "satelliteGround";
+      scene.add(mesh);
+      satelliteGroundRef.current = mesh;
+    };
+    img.onerror = buildFallback;
+    img.src = tileUrl;
+  }, [YARD_D_M, YARD_LAT_REAL, YARD_LON_REAL, YARD_W_M]);
+
+  // Toggle satellite ground plane visibility
+  useEffect(() => {
+    if (!sceneRef.current || !modelCenterRef.current || !modelSizeRef.current) return;
+    if (showSatelliteGround) {
+      if (!satelliteGroundRef.current) {
+        buildSatelliteGround(sceneRef.current, modelCenterRef.current, modelSizeRef.current);
+      } else {
+        satelliteGroundRef.current.visible = true;
+      }
+    } else {
+      if (satelliteGroundRef.current) satelliteGroundRef.current.visible = false;
+    }
+  }, [showSatelliteGround, buildSatelliteGround]);
+
   //  // ── Fleet agent 3D markers ────────────────────────────────────────────────
-  // Yard origin GPS (center of the 3D model's ground plane)
-  const YARD_LAT = 41.57688; // 905 N Columbus St, West Liberty IA
-  const YARD_LON = -91.26073;
+  // Yard origin GPS (real MAGIC GIS centroid — 905 N Columbus St, West Liberty IA)
+  const YARD_LAT = YARD_LAT_REAL; // 41.576943 (MAGIC GIS surveyed centroid)
+  const YARD_LON = YARD_LON_REAL; // -91.261215 (MAGIC GIS surveyed centroid)
   // Conversion: 1 degree lat ≈ 111,320 m; 1 degree lon ≈ 111,320 * cos(lat) m
   const LAT_M_PER_DEG = 111320;
   const LON_M_PER_DEG = 111320 * Math.cos((YARD_LAT * Math.PI) / 180);
@@ -1607,6 +1918,12 @@ export default function LidarViewer3D({
     container.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
+    // ── Spark Gaussian Splatting renderer (lazy init, shared with THREE renderer) ──────────
+    // SparkRenderer wraps the existing THREE.WebGLRenderer so splats render in the same pass.
+    import('@sparkjsdev/spark').then(({ SparkRenderer }) => {
+      sparkRendererRef.current = new SparkRenderer({ renderer });
+    }).catch(() => { /* Spark unavailable, splat mode will show placeholder */ });
+
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x0a0f1a);
     scene.fog = new THREE.FogExp2(0x0a0f1a, 0.006);
@@ -1662,7 +1979,35 @@ export default function LidarViewer3D({
       const box = new THREE.Box3().setFromObject(model);
       const center = box.getCenter(new THREE.Vector3());
       const size = box.getSize(new THREE.Vector3());
-      const scale = 40 / Math.max(size.x, size.y, size.z);
+      // ── GIS-aligned scaling ──────────────────────────────────────────────────────────────────────────────────────
+      // Real parcel (MAGIC GIS): 259 ft E-W (79.12m) × 68 ft N-S (20.70m)
+      // The lot is WIDER east-west than it is deep north-south.
+      // We scale so the model's longest horizontal axis = 40 scene units.
+      // The GIS overlay uses size.x / YARD_W_M (79.12m) as the meters-to-units ratio,
+      // so both the model and the GIS polygon share the same scale.
+      // Back-of-house: N Columbus St is on the NORTH edge (model -Z or -X depending
+      // on how the scan was captured). The backyard extends away from the street.
+      // ── GIS orientation alignment ─────────────────────────────────────────────
+      // The real parcel is 259 ft E-W (X axis) × 68 ft N-S (Z axis).
+      // If the scan was captured with the long axis along Z (front-back), rotate
+      // 90° around Y so the long axis aligns with X (left-right = east-west).
+      // We detect this by comparing size.x vs size.z: if size.z > size.x, rotate.
+      const baseRotY = size.z > size.x ? Math.PI / 2 : 0;
+      if (baseRotY !== 0) {
+        model.rotation.y = baseRotY; // 90° CCW — aligns long Z axis → X axis
+        // Recompute bounding box after rotation
+        model.updateMatrixWorld(true);
+        const rotBox = new THREE.Box3().setFromObject(model);
+        const rotCenter = rotBox.getCenter(new THREE.Vector3());
+        const rotSize = rotBox.getSize(new THREE.Vector3());
+        center.copy(rotCenter);
+        size.copy(rotSize);
+      }
+      // Store base rotation so the fine-tune dial can add on top
+      model.userData.baseRotationY = baseRotY;
+      const longestH = Math.max(size.x, size.z); // horizontal longest dimension
+      const scale = 40 / longestH; // 40 scene units = real lot's longest axis
+      // Center the model at origin
       model.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
       model.scale.setScalar(scale);
       model.traverse(c => {
@@ -1707,6 +2052,7 @@ export default function LidarViewer3D({
       buildRobotPath(scene, nc, ns);
       buildSprayPlane(scene, nc, ns);
       buildMapUnderlay(scene, nc, ns, mapUnderlayModeRef.current);
+      buildGisBoundary(scene, nc, ns);
       buildWeatherOverlay(scene, nc, ns);
       buildWindArrows(scene, nc, ns);
       // Fleet markers and media frustum — use latest values from refs
@@ -1905,8 +2251,35 @@ export default function LidarViewer3D({
         });
       }
 
+      // Animate GIS boundary — pulsing magenta border + corner label fade
+      if (gisBoundaryGroupRef.current) {
+        const gisPulse = 0.7 + 0.3 * Math.sin(elapsed * 1.2);
+        gisBoundaryGroupRef.current.traverse((obj) => {
+          const ud = obj.userData as { role?: string };
+          if (ud.role === "gisBorder") {
+            const m = (obj as THREE.LineLoop).material as THREE.LineBasicMaterial;
+            if (m) m.opacity = gisPulse;
+          }
+          if (ud.role === "gisCornerLabel" || ud.role === "gisCenterLabel") {
+            const m = (obj as THREE.Sprite).material as THREE.SpriteMaterial;
+            if (m) m.opacity = 0.6 + 0.35 * Math.sin(elapsed * 0.8);
+          }
+        });
+      }
+
+      // Compass heading: project camera forward onto XZ plane, compute azimuth
+      if (cameraRef.current) {
+        const fwdC = new THREE.Vector3();
+        cameraRef.current.getWorldDirection(fwdC);
+        // atan2(x, z) gives angle from +Z (south in our scene) — negate for north-up
+        const azRad = Math.atan2(fwdC.x, fwdC.z);
+        const azDeg = ((azRad * 180) / Math.PI + 360) % 360;
+        setCompassHeading(Math.round(azDeg));
+      }
       controls.update();
       renderer.render(scene, camera);
+      // Spark splat pass (no-op when SparkRenderer not yet initialized or no splats)
+      sparkRendererRef.current?.render(scene, camera);
     };
     animate();
 
@@ -1921,7 +2294,7 @@ export default function LidarViewer3D({
   // excluded from this dep array. They are read via refs (isSprayActiveRef, showSprayRef,
   // cameraModeRef, showBreadcrumbRef) inside the animation loop so the scene is never
   // rebuilt when they change — preventing the infinite THREE.Clock loop.
-  }, [device.isMobile, device.isTouch, buildZoneMarkers, buildRobotPath, buildSprayPlane, buildPointCloud, updateSprayHeatmap, loadAttempt]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [device.isMobile, device.isTouch, buildZoneMarkers, buildRobotPath, buildSprayPlane, buildPointCloud, updateSprayHeatmap, buildGisBoundary, loadAttempt]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!mountRef.current) return;
@@ -2008,6 +2381,45 @@ export default function LidarViewer3D({
 
   useEffect(() => { zoneMarkersRef.current.forEach(zm => { zm.mesh.visible = showZones; zm.ring.visible = showZones; }); }, [showZones]);
   useEffect(() => { if (robotDotRef.current) robotDotRef.current.visible = showPath; if (pathLineRef.current) pathLineRef.current.visible = showPath; }, [showPath]);
+  // GIS boundary visibility toggle
+  useEffect(() => {
+    if (gisBoundaryGroupRef.current) gisBoundaryGroupRef.current.visible = showGisBoundary;
+    if (parcelBoundaryRef.current) parcelBoundaryRef.current.visible = showGisBoundary;
+    if (parcelCornersRef.current) parcelCornersRef.current.visible = showGisBoundary;
+  }, [showGisBoundary]);
+
+  // Camera angle presets for multi-angle inspection
+  const snapToAngle = useCallback((angle: "overhead" | "south" | "east" | "west" | "north") => {
+    if (!cameraRef.current || !orbitControlsRef.current) return;
+    const c = modelCenterRef.current, s = modelSizeRef.current;
+    const d = Math.max(s.x, s.z) * 1.1;
+    orbitControlsRef.current.enabled = true;
+    if (!device.isTouch) { orbitControlsRef.current.enableZoom = true; orbitControlsRef.current.enablePan = true; orbitControlsRef.current.enableRotate = true; }
+    switch (angle) {
+      case "overhead":
+        cameraRef.current.position.set(c.x, c.y + d * 2.2, c.z);
+        orbitControlsRef.current.target.set(c.x, c.y, c.z);
+        break;
+      case "south": // Looking north from the south end (backyard view)
+        cameraRef.current.position.set(c.x, c.y + s.y * 0.4, c.z + d * 1.4);
+        orbitControlsRef.current.target.set(c.x, c.y, c.z - s.z * 0.2);
+        break;
+      case "north": // Looking south from the north end (house back wall view)
+        cameraRef.current.position.set(c.x, c.y + s.y * 0.4, c.z - d * 1.4);
+        orbitControlsRef.current.target.set(c.x, c.y, c.z + s.z * 0.2);
+        break;
+      case "east":
+        cameraRef.current.position.set(c.x + d * 1.4, c.y + s.y * 0.5, c.z);
+        orbitControlsRef.current.target.set(c.x, c.y, c.z);
+        break;
+      case "west":
+        cameraRef.current.position.set(c.x - d * 1.4, c.y + s.y * 0.5, c.z);
+        orbitControlsRef.current.target.set(c.x, c.y, c.z);
+        break;
+    }
+    orbitControlsRef.current.update();
+    setCameraMode("orbit");
+  }, [device.isTouch]);
 
   // Camera mode
   const switchCameraMode = (mode: CameraMode) => {
@@ -2203,7 +2615,63 @@ export default function LidarViewer3D({
   };
   const handleMouseUp = () => { mouseRef.current.isDown = false; };
 
+  // Helper: raycast a click to a 3D world point on the model or ground plane
+  const raycastWorldPoint = (clientX: number, clientY: number): THREE.Vector3 | null => {
+    if (!mountRef.current || !cameraRef.current) return null;
+    const rect = mountRef.current.getBoundingClientRect();
+    const mouse = new THREE.Vector2(
+      ((clientX - rect.left) / rect.width) * 2 - 1,
+      -((clientY - rect.top) / rect.height) * 2 + 1
+    );
+    raycasterRef.current.setFromCamera(mouse, cameraRef.current);
+    if (modelRef.current) {
+      const meshes: THREE.Mesh[] = [];
+      modelRef.current.traverse(obj => { if ((obj as THREE.Mesh).isMesh) meshes.push(obj as THREE.Mesh); });
+      const hits = raycasterRef.current.intersectObjects(meshes, false);
+      if (hits.length > 0) return hits[0].point.clone();
+    }
+    // Fallback: ground plane
+    const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+    const target = new THREE.Vector3();
+    raycasterRef.current.ray.intersectPlane(plane, target);
+    return target;
+  };
+
   const handleCanvasClick = (e: React.MouseEvent) => {
+    // True North calibration intercepts clicks when active
+    if (calibStep === 'picking_p1') {
+      const pt = raycastWorldPoint(e.clientX, e.clientY);
+      if (pt) {
+        setCalibP1(pt);
+        setCalibStep('picking_p2');
+        toast.info('② Calibration: click Point 2 on the model (e.g. NE corner of house)', { duration: 5000 });
+      }
+      return;
+    }
+    if (calibStep === 'picking_p2') {
+      const pt = raycastWorldPoint(e.clientX, e.clientY);
+      if (pt && calibP1) {
+        // The vector from P1 (NW) to P2 (NE) should point due East (+X in GIS coords)
+        // Compute the angle between the P1→P2 vector and the +X axis in the XZ plane
+        const dx = pt.x - calibP1.x;
+        const dz = pt.z - calibP1.z;
+        // Angle of P1→P2 in XZ plane (atan2 gives angle from +X axis)
+        const scanAngle = Math.atan2(dz, dx); // radians, 0 = pointing East
+        // We want this vector to point East (0 rad), so the correction is -scanAngle
+        const offsetDeg = -(scanAngle * 180) / Math.PI;
+        setCalibOffset(offsetDeg);
+        setModelRotationDeg(prev => {
+          const newRot = prev + offsetDeg;
+          return Math.round(((newRot % 360) + 360) % 360 > 180 ? newRot - 360 : newRot);
+        });
+        setCalibStep('done');
+        toast.success(`✓ True North offset: ${offsetDeg.toFixed(1)}° applied`, {
+          description: 'Model rotated to align NW→NE vector with true east',
+          duration: 4000,
+        });
+      }
+      return;
+    }
     if (measureMode) {
       addMeasurePoint(e.clientX, e.clientY);
       return;
@@ -2333,6 +2801,7 @@ export default function LidarViewer3D({
     if (hits.length > 0) {
       const zoneId = hits[0].object.userData.zoneId as string;
       setSelectedZone({ id: zoneId, screenX: clientX - rect.left, screenY: clientY - rect.top });
+      try { navigator.vibrate?.(15); } catch { /* ignore */ }
     } else {
       setSelectedZone(null);
     }
@@ -2550,26 +3019,57 @@ export default function LidarViewer3D({
         />
       )}
 
-      {/* Controls panel — collapsible on mobile */}
+      {/* Controls panel — left column on desktop, right-side drawer on mobile */}
       {loadState === "loaded" && (
-        <div className="absolute bottom-14 left-2 z-20">
-          {/* Toggle button on mobile */}
+        <>
+          {/* Mobile: floating toggle button — bottom-left, above bottom sheet */}
           {device.isMobile && (
             <button
-              onClick={() => setShowControls(v => !v)}
-              className="glass rounded-xl p-2 mb-1.5 w-full flex items-center justify-center gap-1.5 text-[10px] text-white/60 pointer-events-auto"
+              onClick={() => { setShowControls(v => !v); try { navigator.vibrate?.(10); } catch { /* ignore */ } }}
+              className="absolute z-30 glass rounded-xl px-3 py-2 flex items-center gap-1.5 text-[10px] text-white/70 pointer-events-auto"
+              style={{ bottom: `${bottomInset + 8}px`, left: '8px' }}
             >
-              {showControls ? <ChevronDown size={12} /> : <ChevronUp size={12} />}
-              <span>{showControls ? "Hide" : "Controls"}</span>
+              {showControls ? <ChevronDown size={12} /> : <Settings size={12} />}
+              <span>{showControls ? 'Close' : 'Controls'}</span>
             </button>
           )}
 
-          <AnimatePresence>
-            {showControls && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
-                className="space-y-1.5"
-              >
+          {/* Mobile: full-height right-side drawer */}
+          {device.isMobile ? (
+            <AnimatePresence>
+              {showControls && (
+                <>
+                  {/* Backdrop tap-to-close */}
+                  <motion.div
+                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                    className="absolute inset-0 z-25 pointer-events-auto"
+                    style={{ background: 'oklch(0 0 0 / 0.45)' }}
+                    onClick={() => setShowControls(false)}
+                  />
+                  {/* Drawer panel */}
+                  <motion.div
+                    initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
+                    transition={{ type: 'spring', damping: 28, stiffness: 280 }}
+                    className="absolute right-0 top-0 z-30 flex flex-col pointer-events-auto"
+                    style={{
+                      width: '200px',
+                      top: '52px',
+                      bottom: `${bottomInset}px`,
+                      background: 'oklch(0.10 0.018 260 / 0.97)',
+                      backdropFilter: 'blur(24px) saturate(180%)',
+                      WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+                      borderLeft: '1px solid oklch(1 0 0 / 0.12)',
+                    }}
+                  >
+                    {/* Drawer header */}
+                    <div className="flex items-center justify-between px-3 py-2.5 border-b border-white/10 flex-shrink-0">
+                      <span className="text-[11px] font-semibold text-white/70 uppercase tracking-wider">Controls</span>
+                      <button onClick={() => setShowControls(false)} className="text-white/40 hover:text-white/80 p-1">
+                        <X size={14} />
+                      </button>
+                    </div>
+                    {/* Scrollable content */}
+                    <div className="flex-1 overflow-y-auto overscroll-contain p-2 space-y-1.5" style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
                 {/* Camera */}
                 <div className="glass rounded-xl p-1.5 space-y-1">
                   <p className="text-[8px] text-white/30 px-1 uppercase tracking-wider">Camera</p>
@@ -2612,6 +3112,7 @@ export default function LidarViewer3D({
                     { key: "path", label: "Robot Path", icon: <Route size={12} />, active: showPath, toggle: () => setShowPath(v => !v), color: "text-yellow-300" },
                     { key: "spray", label: "Spray Map", icon: <Droplets size={12} />, active: showSpray, toggle: () => setShowSpray(v => !v), color: "text-blue-300" },
                     { key: "breadcrumb", label: "GPS Breadcrumbs", icon: <Navigation size={12} />, active: showBreadcrumb, toggle: () => { setShowBreadcrumb(v => !v); if (breadcrumbLineRef.current && sceneRef.current) { breadcrumbLineRef.current.visible = !showBreadcrumb; } }, color: "text-orange-300" },
+                    { key: "gis", label: "GIS Boundary", icon: <Share2 size={12} />, active: showGisBoundary, toggle: () => setShowGisBoundary(v => !v), color: "text-pink-400" },
                   ].map(({ key, label, icon, active, toggle, color }) => (
                     <button key={key} onClick={toggle}
                       className={`flex items-center gap-1.5 w-full px-2 py-1.5 rounded-lg text-[10px] font-medium transition-all pointer-events-auto ${active ? color : "text-white/30"}`}
@@ -2671,7 +3172,166 @@ export default function LidarViewer3D({
                         className="pointer-events-auto"
                       />
                       <p className="text-[7px] text-white/25 font-mono">905 N Columbus St · West Liberty, IA</p>
-                      <p className="text-[7px] text-white/20 font-mono">10/8/2025.usdz · 20.7m × 78.9m</p>
+                      <p className="text-[7px] text-white/20 font-mono">10/8/2025.usdz · 79.1m E–W × 20.7m N–S</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Mt. Siple Gaussian Splat — Cinematic teaser card */}
+                <div
+                  className="relative rounded-xl overflow-hidden pointer-events-auto cursor-pointer group"
+                  style={{ border: '1px solid rgba(0,255,200,0.25)' }}
+                  onClick={() => setShowMtSipleExperience(true)}
+                >
+                  {/* Background image */}
+                  <img
+                    src="/manus-storage/mtsiple-hero_34932031.jpg"
+                    alt="Mt. Siple"
+                    className="w-full h-20 object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#020b18]/95 via-[#020b18]/40 to-transparent" />
+                  {/* Aurora shimmer top */}
+                  <div className="absolute top-0 left-0 right-0 h-0.5" style={{ background: 'linear-gradient(90deg, transparent, #00ffc8, #7b6fff, #00ffc8, transparent)' }} />
+                  <div className="absolute bottom-0 left-0 right-0 p-2">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <span className="text-[7px] bg-cyan-500/20 text-cyan-300 px-1.5 py-0.5 rounded-full border border-cyan-500/30 font-bold uppercase tracking-wider">UPCOMING RELEASE</span>
+                          {isMtSiple && <span className="text-[7px] bg-green-500/20 text-green-300 px-1.5 py-0.5 rounded-full border border-green-500/30">ACTIVE</span>}
+                        </div>
+                        <p className="text-[10px] text-white font-bold leading-tight">🗻 Mt. Siple, Antarctica</p>
+                        <p className="text-[8px] text-white/40">3,110 m · Marie Byrd Land · 3DGS</p>
+                      </div>
+                      <div className="text-white/40 group-hover:text-cyan-300 transition-colors text-lg">›</div>
+                    </div>
+                  </div>
+                </div>
+                {/* Quick swap button when splat is active */}
+                {isMtSiple && (
+                  <button
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      if (!sceneRef.current) return;
+                      if (splatMeshRef.current) {
+                        sceneRef.current.remove(splatMeshRef.current);
+                        splatMeshRef.current = null;
+                      }
+                      if (modelRef.current) modelRef.current.visible = true;
+                      sceneRef.current.background = new THREE.Color(0x0a0f1a);
+                      sceneRef.current.fog = new THREE.FogExp2(0x0a0f1a, 0.006);
+                      setIsMtSiple(false);
+                      // Stop orbit animation
+                      if (orbitControlsRef.current) {
+                        orbitControlsRef.current.autoRotate = false;
+                      }
+                      toast.success('🏡 Restored West Liberty yard scan');
+                    }}
+                    className="w-full rounded-lg px-2 py-1.5 text-[9px] font-semibold pointer-events-auto border bg-sky-500/20 text-sky-200 border-sky-400/40 hover:bg-sky-500/30 transition-all"
+                  >
+                    🏡 Back to West Liberty
+                  </button>
+                )}
+
+                {/* GIS Angle Presets */}
+                <div className="glass rounded-xl p-1.5 space-y-1 pointer-events-auto">
+                  <p className="text-[8px] text-white/30 px-1 uppercase tracking-wider">GIS Angles</p>
+                  <div className="grid grid-cols-2 gap-1">
+                    {([
+                      { a: "overhead" as const, label: "⬆ Overhead" },
+                      { a: "south" as const,   label: "⬇ South" },
+                      { a: "north" as const,   label: "🏠 House" },
+                      { a: "east" as const,    label: "→ East" },
+                      { a: "west" as const,    label: "← West" },
+                    ]).map(({ a, label }) => (
+                      <button
+                        key={a}
+                        onClick={() => snapToAngle(a)}
+                        className="rounded-lg px-1 py-1.5 text-[9px] font-medium transition-all bg-pink-500/10 text-pink-300 border border-pink-500/25 hover:bg-pink-500/20 hover:text-pink-200 pointer-events-auto"
+                      >{label}</button>
+                    ))}
+                  </div>
+                  <button
+                    onClick={() => {
+                      if (sceneRef.current && modelCenterRef.current && modelSizeRef.current) {
+                        buildGisBoundary(sceneRef.current, modelCenterRef.current, modelSizeRef.current);
+                        toast.success('Snapped to MAGIC GIS boundary', { description: 'Parcel 0112177049 · 259×68 ft · Surveyed' });
+                      }
+                    }}
+                    className="w-full rounded-lg px-1 py-1.5 text-[9px] font-medium transition-all bg-fuchsia-600/20 text-fuchsia-300 border border-fuchsia-500/30 hover:bg-fuchsia-600/35 hover:text-fuchsia-100 pointer-events-auto"
+                  >GIS Snap</button>
+                  <p className="text-[7px] text-white/20 px-1 font-mono">Parcel 0112177049 · 259×68 ft · Surveyed</p>
+                </div>
+
+                {/* Model Rotation Dial */}
+                <div className="glass rounded-xl p-2 space-y-1.5 pointer-events-auto">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[7px] text-white/30 uppercase tracking-wider">Model Rotation</span>
+                    <div className="flex items-center gap-1">
+                      <span className="text-[9px] font-mono text-emerald-300">{modelRotationDeg}°</span>
+                      <button
+                        onClick={() => setModelRotationDeg(0)}
+                        className="text-[7px] text-white/40 hover:text-white/80 ml-1"
+                        title="Reset to auto-aligned orientation"
+                      >Reset</button>
+                    </div>
+                  </div>
+                  <Slider
+                    min={-180}
+                    max={180}
+                    step={1}
+                    value={[modelRotationDeg]}
+                    onValueChange={([v]) => setModelRotationDeg(v)}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-[6px] text-white/20 font-mono px-0.5">
+                    <span>-180°</span><span>0°</span><span>+180°</span>
+                  </div>
+                  {/* Satellite ground plane toggle */}
+                  <button
+                    onClick={() => setShowSatelliteGround(v => !v)}
+                    className={`w-full rounded-lg px-1 py-1.5 text-[9px] font-medium transition-all pointer-events-auto border ${
+                      showSatelliteGround
+                        ? 'bg-sky-500/25 text-sky-200 border-sky-500/40'
+                        : 'bg-white/5 text-white/40 border-white/10 hover:bg-white/10 hover:text-white/70'
+                    }`}
+                  >{showSatelliteGround ? '🗸 Satellite Ground ON' : '🗸 Satellite Ground'}</button>
+                </div>
+
+                {/* True North Calibration */}
+                <div className="glass rounded-xl p-2 space-y-1.5 pointer-events-auto">
+                  <p className="text-[8px] text-white/30 px-1 uppercase tracking-wider">🦭 True North Calibration</p>
+                  {calibStep === 'idle' && (
+                    <>
+                      <p className="text-[8px] text-white/50 px-1 leading-tight">
+                        Tap two known GPS points on the model to compute the true-north rotation offset.
+                      </p>
+                      {calibOffset !== null && (
+                        <p className="text-[8px] text-emerald-400 px-1 font-mono">
+                          Last offset: {calibOffset.toFixed(1)}° applied
+                        </p>
+                      )}
+                      <button
+                        onClick={() => { setCalibStep('picking_p1'); setCalibP1(null); toast.info('🦭 Calibration: click Point 1 on the model (e.g. NW corner of house)', { duration: 5000 }); }}
+                        className="w-full rounded-lg px-1 py-1.5 text-[9px] font-medium bg-amber-500/20 text-amber-300 border border-amber-500/30 hover:bg-amber-500/30 transition-all"
+                      >Start Calibration</button>
+                    </>
+                  )}
+                  {calibStep === 'picking_p1' && (
+                    <div className="space-y-1">
+                      <p className="text-[8px] text-amber-300 px-1 animate-pulse">① Click the NW corner of the house on the model…</p>
+                      <button onClick={() => setCalibStep('idle')} className="w-full rounded-lg px-1 py-1 text-[8px] text-white/40 hover:text-white/70 border border-white/10">Cancel</button>
+                    </div>
+                  )}
+                  {calibStep === 'picking_p2' && (
+                    <div className="space-y-1">
+                      <p className="text-[8px] text-amber-300 px-1 animate-pulse">② Click the NE corner of the house on the model…</p>
+                      <button onClick={() => setCalibStep('idle')} className="w-full rounded-lg px-1 py-1 text-[8px] text-white/40 hover:text-white/70 border border-white/10">Cancel</button>
+                    </div>
+                  )}
+                  {calibStep === 'done' && (
+                    <div className="space-y-1">
+                      <p className="text-[8px] text-emerald-400 px-1 font-mono">✓ Offset {calibOffset?.toFixed(1)}° applied to model</p>
+                      <button onClick={() => setCalibStep('idle')} className="w-full rounded-lg px-1 py-1 text-[8px] text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/10">Done</button>
                     </div>
                   )}
                 </div>
@@ -2840,15 +3500,40 @@ export default function LidarViewer3D({
                     </div>
                   </div>
                 )}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+                    </div>{/* end scrollable content */}
+                  </motion.div>{/* end drawer panel */}
+                </>
+              )}
+            </AnimatePresence>
+          ) : (
+            /* Desktop: left-side column panel */
+            <div
+              className="absolute left-2 z-20 flex flex-col pointer-events-auto"
+              style={{
+                bottom: '3.5rem',
+                maxHeight: 'calc(100% - 7rem)',
+                width: '9rem',
+              }}
+            >
+              <AnimatePresence>
+                {showControls && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
+                    className="space-y-1.5 overflow-y-auto overscroll-contain flex-1 min-h-0"
+                    style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}
+                  >
+                    {/* Desktop controls content is duplicated below via shared panel */}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
+        </>
       )}
 
       {/* Zone legend */}
       {loadState === "loaded" && showZones && !device.isMobile && (
-        <div className="absolute top-10 left-2 z-20 glass rounded-xl p-2 space-y-1 pointer-events-none">
+        <div className="absolute top-10 left-40 z-20 glass rounded-xl p-2 space-y-1 pointer-events-none">
           <p className="text-[8px] text-white/40 uppercase tracking-wider mb-1">Tap zones to inspect</p>
           {ZONE_DEFS.map(z => (
             <div key={z.id} className="flex items-center gap-1.5">
@@ -3094,7 +3779,7 @@ export default function LidarViewer3D({
 
       {/* Custom zones list (bottom-left on desktop) */}
       {customZones.length > 0 && !device.isMobile && (
-        <div className="absolute bottom-10 left-2 z-20 glass rounded-xl p-2 space-y-1 max-w-48">
+        <div className="absolute bottom-10 left-40 z-20 glass rounded-xl p-2 space-y-1 max-w-48">
           <p className="text-[8px] text-white/40 uppercase tracking-wider mb-1">Custom Zones</p>
           {customZones.map(zone => (
             <div key={zone.id} className="flex items-center gap-1.5 group">
@@ -3119,6 +3804,77 @@ export default function LidarViewer3D({
           {isFullscreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
         </button>
       )}
+
+      {/* North Compass Rose */}
+      <div className="absolute bottom-12 right-2 z-20 pointer-events-none select-none" style={{ width: 60, height: 60 }}>
+        <svg viewBox="0 0 60 60" width="60" height="60" style={{ filter: 'drop-shadow(0 0 4px rgba(0,0,0,0.8))' }}>
+          {/* Outer ring */}
+          <circle cx="30" cy="30" r="28" fill="rgba(0,0,0,0.45)" stroke="rgba(255,255,255,0.12)" strokeWidth="1" />
+          {/* Rotating compass needle group */}
+          <g transform={`rotate(${compassHeading}, 30, 30)`}>
+            {/* North arrow (red) */}
+            <polygon points="30,6 27,30 30,28 33,30" fill="#ef4444" opacity="0.95" />
+            {/* South arrow (white) */}
+            <polygon points="30,54 27,30 30,32 33,30" fill="rgba(255,255,255,0.6)" />
+            {/* East/West ticks */}
+            <line x1="6" y1="30" x2="10" y2="30" stroke="rgba(255,255,255,0.35)" strokeWidth="1.5" />
+            <line x1="50" y1="30" x2="54" y2="30" stroke="rgba(255,255,255,0.35)" strokeWidth="1.5" />
+          </g>
+          {/* Center dot */}
+          <circle cx="30" cy="30" r="2.5" fill="rgba(255,255,255,0.8)" />
+          {/* N label — fixed (does not rotate) */}
+          <text x="30" y="5" textAnchor="middle" fontSize="7" fontWeight="bold" fill="#ef4444" fontFamily="monospace">N</text>
+          <text x="30" y="58" textAnchor="middle" fontSize="6" fill="rgba(255,255,255,0.4)" fontFamily="monospace">S</text>
+          <text x="3" y="32" textAnchor="middle" fontSize="6" fill="rgba(255,255,255,0.4)" fontFamily="monospace">W</text>
+          <text x="57" y="32" textAnchor="middle" fontSize="6" fill="rgba(255,255,255,0.4)" fontFamily="monospace">E</text>
+        </svg>
+        {/* Heading readout */}
+        <div className="text-center text-[8px] font-mono text-white/50 -mt-1">{compassHeading}°</div>
+      </div>
+
+      {/* Mt. Siple Experience Overlay */}
+      <AnimatePresence>
+        {showMtSipleExperience && (
+          <MtSipleExperience
+            onClose={() => setShowMtSipleExperience(false)}
+            onLaunchSplat={async () => {
+              if (!sceneRef.current) return;
+              if (isMtSiple) return; // already active
+              setSplatLoading(true);
+              try {
+                const { SplatMesh } = await import('@sparkjsdev/spark');
+                if (modelRef.current) modelRef.current.visible = false;
+                if (splatMeshRef.current) sceneRef.current.remove(splatMeshRef.current);
+                const splat = new SplatMesh({ url: 'https://sparkjs.dev/assets/splats/distant-igloo.spz' });
+                splat.scale.setScalar(8);
+                splat.position.set(0, -2, 0);
+                sceneRef.current.add(splat);
+                splatMeshRef.current = splat;
+                sceneRef.current.background = new THREE.Color(0x8ab4d4);
+                sceneRef.current.fog = new THREE.FogExp2(0x8ab4d4, 0.004);
+                setIsMtSiple(true);
+                // Start cinematic orbit animation
+                if (orbitControlsRef.current) {
+                  orbitControlsRef.current.autoRotate = true;
+                  orbitControlsRef.current.autoRotateSpeed = 0.4;
+                }
+                toast.success('🗻 Mt. Siple, Antarctica loaded', {
+                  description: 'Gaussian splat · 3,110 m · Marie Byrd Land · Auto-orbit active',
+                  duration: 5000,
+                });
+              } catch (err) {
+                console.error('Splat load failed:', err);
+                toast.error('Failed to load Gaussian splat');
+                if (modelRef.current) modelRef.current.visible = true;
+              } finally {
+                setSplatLoading(false);
+              }
+            }}
+            splatLoading={splatLoading}
+            isMtSiple={isMtSiple}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Info */}
       <button onClick={() => setShowInfo(v => !v)}

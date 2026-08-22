@@ -1,0 +1,46 @@
+# Project TODO
+
+- [x] Inspect the existing project’s repository configuration and publishable files.
+- [x] Review the project file tree and version-control exclusions before publishing.
+- [x] Choose and verify an available distinct private repository name: DOGE-Spatial-Atlas.
+- [x] Create a new private GitHub repository for the DOGE Spatial Explorer project: JacksonJoshuab/DOGE-Spatial-Atlas.
+- [x] Push the current project source to the new repository and verify the remote.
+- [x] Clarify the requested project update and the approved target repository or branch for merging: retain separate repositories, with no merge target.
+- [x] Implement or synchronize the approved update and merge it after verification: no source merge is required under the approved separation strategy; no merge was performed.
+- [x] Compare both repositories’ histories, contents, and visibility to recommend a safe consolidation path.
+- [x] Communicate the recommended consolidation strategy and obtain approval before any repository merge.
+- [x] Record the approved decision to keep DOGE-Spatial-Atlas and DOGE-Spatial-Explorer separate.
+- [x] Verify both repositories remain separate and document that no merge or synchronization action is required: their `main` branches have separate histories and no merge was performed.
+- [ ] Define the required Meta, OpenAI, Apple, Microsoft, and NVIDIA capabilities and their approved integration scope.
+- [x] Inspect both repositories and identify a safe merge destination and boundary: apps/web-app is the public monorepo destination.
+- [x] Implement the server-side multi-vendor readiness layer with secure credential handling and test coverage.
+- [ ] Merge the approved repository changes, verify the resulting application, and document the outcome.
+- [ ] Validate configured access for Meta, OpenAI, Apple, Microsoft, and NVIDIA integrations after user-provided credentials and native configuration are available.
+- [ ] Merge DOGE-Spatial-Atlas into the public DOGE-Spatial-Explorer repository with a reversible, reviewed strategy.
+- [ ] Confirm and record the specific approved capability boundary for each requested vendor, including Microsoft.
+- [x] Resolve the current TypeScript validation error.
+- [x] Complete remaining automated coverage for the ecosystem UI flow and end-to-end provider surface using deterministic provider mocks and protected procedure tests.
+- [x] Add provider-dispatch tests for configured and unconfigured services, response parsing, and upstream failures.
+- [x] Add tRPC tests for ecosystem status, input validation, and provider error propagation.
+- [x] Run the complete test suite and confirm that all new provider and tRPC tests execute successfully.
+- [x] Add test coverage for the Apple association HTTP route and remaining ecosystem provider surface paths.
+- [x] Re-run the test suite to confirm the Apple association and NVIDIA success-path tests execute.
+- [x] Add rendering coverage for the Ecosystem page and a successful protected analysis procedure path.
+- [x] Fix and verify the discovered client rendering-test runtime issue.
+- [x] Add an interactive Ecosystem page test covering provider selection, prompt submission, and the rendered analysis result.
+- [x] Upgrade shared core components: accessible navigation, consistent loading/error states, and resilient provider-status presentation.
+- [x] Add Feature 1: Command-center provider health strip with readiness summaries.
+- [x] Add Feature 2: Spatial session manifest builder for device-safe handoff context.
+- [x] Add Feature 3: OpenAI and NVIDIA analysis diagnostics with measured latency and safe error states.
+- [x] Add Feature 4: AI mission-brief composer with structured operator prompts.
+- [x] Add Feature 5: Digital-twin live overlay board for operational markers.
+- [x] Add Feature 6: Apple Universal Link association inspector.
+- [x] Add Feature 7: Meta Horizon OS handoff console.
+- [x] Add Feature 8: Microsoft Entra rollout readiness checklist.
+- [x] Add Feature 9: Filterable ecosystem activity timeline with export-ready records.
+- [x] Add Feature 10: Auditable secure-configuration posture panel.
+- [ ] Merge the upgraded web application into the public monorepo at apps/web-app using a reviewed subtree strategy.
+- [x] Update interactive command-center test contracts after the core feature expansion.
+- [x] Add automated server coverage for command-center readiness, manifest safety, timeline filtering, and protected procedures.
+- [ ] Obtain explicit per-provider capability approval and configuration values before activating live vendor access.
+- [ ] Implement actual Meta, Apple, and Microsoft native or identity activation flows after the necessary vendor registrations are supplied.

@@ -229,7 +229,10 @@ Today is ${dateStr}. Generate the complete structured brief now.`;
         ],
       });
 
-      const briefContent = llmResult.choices?.[0]?.message?.content ?? "Brief generation failed — no content returned from LLM.";
+      const rawBriefContent = llmResult.choices?.[0]?.message?.content;
+      const briefContent = typeof rawBriefContent === "string"
+        ? rawBriefContent
+        : "Brief generation failed — no textual content returned from LLM.";
 
       // Push notification to owner
       const notifTitle = `🏗 AAC Daily Brief — ${today.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "America/Chicago" })}`;

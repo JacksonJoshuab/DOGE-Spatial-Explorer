@@ -1,4 +1,3 @@
-// documents.ts
 // DOGE Spatial Explorer — Document Management Routes
 //
 // REST API for creating, reading, updating, and deleting
@@ -7,10 +6,14 @@
 import { Router, Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 
-export const documentsRouter = Router();
+export const documentsRouter: Router = Router();
 
 // In-memory store (replace with database in production)
 const documents = new Map<string, any>();
+
+function getDocumentId(value: string | string[] | undefined): string | undefined {
+  return Array.isArray(value) ? value[0] : value;
+}
 
 // List all documents for the authenticated user
 documentsRouter.get('/', async (req: Request, res: Response) => {
@@ -31,11 +34,10 @@ documentsRouter.get('/', async (req: Request, res: Response) => {
 
 // Get a specific document
 documentsRouter.get('/:id', async (req: Request, res: Response) => {
-  const doc = documents.get(req.params.id);
-  if (!doc) {
-    return res.status(404).json({ error: 'Document not found' });
-  }
-  res.json(doc);
+  const id = getDocumentId(req.params.id);
+  const doc = id ? documents.get(id) : undefined;
+  if (!doc) return res.status(404).json({ error: 'Document not found' });
+  return res.json(doc);
 });
 
 // Create a new document
@@ -69,57 +71,51 @@ documentsRouter.post('/', async (req: Request, res: Response) => {
   };
 
   documents.set(doc.id, doc);
-  res.status(201).json(doc);
+  return res.status(201).json(doc);
 });
 
 // Update a document
 documentsRouter.put('/:id', async (req: Request, res: Response) => {
-  const doc = documents.get(req.params.id);
-  if (!doc) {
-    return res.status(404).json({ error: 'Document not found' });
-  }
+  const id = getDocumentId(req.params.id);
+  const doc = id ? documents.get(id) : undefined;
+  if (!doc) return res.status(404).json({ error: 'Document not found' });
 
   Object.assign(doc, req.body, {
     modifiedAt: new Date().toISOString(),
     version: doc.version + 1,
   });
 
-  documents.set(req.params.id, doc);
-  res.json(doc);
+  documents.set(id!, doc);
+  return res.json(doc);
 });
 
 // Delete a document
 documentsRouter.delete('/:id', async (req: Request, res: Response) => {
-  if (!documents.has(req.params.id)) {
-    return res.status(404).json({ error: 'Document not found' });
-  }
-  documents.delete(req.params.id);
-  res.status(204).send();
+  const id = getDocumentId(req.params.id);
+  if (!id || !documents.has(id)) return res.status(404).json({ error: 'Document not found' });
+  documents.delete(id);
+  return res.status(204).send();
 });
 
 // Push scene data from Blender or other clients
 documentsRouter.post('/:id/push', async (req: Request, res: Response) => {
-  const doc = documents.get(req.params.id);
-  if (!doc) {
-    return res.status(404).json({ error: 'Document not found' });
-  }
+  const id = getDocumentId(req.params.id);
+  const doc = id ? documents.get(id) : undefined;
+  if (!doc) return res.status(404).json({ error: 'Document not found' });
 
   // Merge incoming scene graph with existing document
-  if (req.body.graph) {
-    doc.rootNode = req.body.graph;
-  }
+  if (req.body.graph) doc.rootNode = req.body.graph;
   doc.modifiedAt = new Date().toISOString();
   doc.version += 1;
 
-  documents.set(req.params.id, doc);
-  res.json({ success: true, version: doc.version });
+  documents.set(id!, doc);
+  return res.json({ success: true, version: doc.version });
 });
 
 // Pull scene data for Blender or other clients
 documentsRouter.get('/:id/pull', async (req: Request, res: Response) => {
-  const doc = documents.get(req.params.id);
-  if (!doc) {
-    return res.status(404).json({ error: 'Document not found' });
-  }
-  res.json(doc);
+  const id = getDocumentId(req.params.id);
+  const doc = id ? documents.get(id) : undefined;
+  if (!doc) return res.status(404).json({ error: 'Document not found' });
+  return res.json(doc);
 });

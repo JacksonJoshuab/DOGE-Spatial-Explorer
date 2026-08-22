@@ -7,7 +7,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 
-export const assetsRouter = Router();
+export const assetsRouter: Router = Router();
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR || '/tmp/doge-spatial-assets';
 
@@ -71,7 +71,11 @@ assetsRouter.get('/document/:documentId', async (req: Request, res: Response) =>
 
 // Download an asset
 assetsRouter.get('/:filename', async (req: Request, res: Response) => {
-  const filePath = path.join(UPLOAD_DIR, req.params.filename);
+  const filename = Array.isArray(req.params.filename) ? req.params.filename[0] : req.params.filename;
+  if (!filename || path.basename(filename) !== filename) {
+    return res.status(400).json({ error: 'Invalid asset name' });
+  }
+  const filePath = path.join(UPLOAD_DIR, filename);
   if (!fs.existsSync(filePath)) {
     return res.status(404).json({ error: 'Asset not found' });
   }

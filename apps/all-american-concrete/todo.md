@@ -1,0 +1,23 @@
+# Project TODO
+
+- [x] Define database entities for job sites, pours, fleet equipment, crew assignments, material inventory, alerts, and daily brief records
+- [x] Apply the AAC operations database migration and add server-side data access helpers
+- [x] Create tRPC procedures for operational dashboard data management and Daily Operations Brief generation
+- [x] Seed a practical AAC operational dataset without fabricated customer reviews or testimonials
+- [x] Build the AAC-branded responsive dashboard with pours, crew, fleet, weather, alerts, and inventory readiness
+- [x] Build the Daily Operations Brief workspace with generate, review, and download capabilities
+- [x] Build the Fleet & Equipment workspace with status filters, assignment details, fuel, service, maintenance notes, and alerts
+- [x] Build management workspaces for job sites, schedules, workforce assignments, materials, and active alerts
+- [x] Implement production-ready navigation, accessibility, responsive behavior, and visual hierarchy
+- [x] Add and run Vitest coverage for operational procedures and brief generation
+- [x] Verify key pages in the live preview and complete the permanent hosting release checkpoint
+- [x] Add a dispatch timeline with pour progress, target completion windows, and at-risk schedule flags
+- [x] Add a weather risk indicator that converts West Liberty conditions into concrete placement guidance
+- [x] Add a fleet readiness score with fuel, maintenance, and alert deductions
+- [x] Add low-stock purchase order recommendations with supplier and reorder quantity guidance
+- [x] Add a crew capacity board with assignment load, standby coverage, and shift visibility
+- [x] Add alert acknowledgement, resolution, and audit trail support
+- [x] Add Daily Brief action items with owner, priority, due state, and completion tracking
+- [x] Add a printable shift handoff report for the 6 AM crew meeting
+- [x] Add dashboard search and quick command navigation for sites, fleet, materials, and alerts
+- [x] Add operational KPI trend cards for utilization, material exposure, and unresolved exception counts

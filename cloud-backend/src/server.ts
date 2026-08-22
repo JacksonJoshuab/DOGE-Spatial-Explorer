@@ -37,7 +37,7 @@ const logger = pino({
 
 // ── Express App ─────────────────────────────────────────────────────────
 
-const app = express();
+const app: express.Express = express();
 const server = createServer(app);
 
 // Security middleware

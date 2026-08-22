@@ -11,7 +11,7 @@
 
 import { Router, Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
-import { generateAiResponse, getAiProviderStatuses, type AiProviderId } from '../providers/ai.js';
+import { createAiStream, generateAiResponse, getAiProviderModels, getAiProviderPolicy, getAiProviderStatuses, type AiProviderId } from '../providers/ai.js';
 
 export const aiRouter: Router = Router();
 
@@ -20,14 +20,40 @@ aiRouter.get('/providers', (_req: Request, res: Response) => {
   res.json({ providers: getAiProviderStatuses() });
 });
 
+function parseProvider(value: string): AiProviderId | undefined {
+  return value === 'openai' || value === 'nvidia-nim' ? value : undefined;
+}
+
+aiRouter.get('/providers/:provider/policy', (req: Request, res: Response) => {
+  const provider = parseProvider(String(req.params.provider));
+  if (!provider) return res.status(404).json({ error: 'Unknown AI provider' });
+  try {
+    return res.json({ provider, policy: getAiProviderPolicy(provider) });
+  } catch (error) {
+    return res.status(503).json({ error: error instanceof Error ? error.message : 'Provider is unavailable' });
+  }
+});
+
+aiRouter.get('/providers/:provider/models', async (req: Request, res: Response) => {
+  const provider = parseProvider(String(req.params.provider));
+  if (!provider) return res.status(404).json({ error: 'Unknown AI provider' });
+  try {
+    return res.json(await getAiProviderModels(provider));
+  } catch (error) {
+    console.warn(`[AI] Model discovery failed: ${error instanceof Error ? error.message : 'unknown error'}`);
+    return res.status(503).json({ error: 'Model discovery is unavailable' });
+  }
+});
+
 // Unified text generation endpoint for OpenAI Responses and NVIDIA NIM.
 aiRouter.post('/generate', async (req: Request, res: Response) => {
-  const { provider, input, instructions, model, maxOutputTokens } = req.body as {
+  const { provider, input, instructions, model, maxOutputTokens, allowFallback } = req.body as {
     provider?: AiProviderId;
     input?: string;
     instructions?: string;
     model?: string;
     maxOutputTokens?: number;
+    allowFallback?: boolean;
   };
 
   if (!input || typeof input !== 'string' || input.trim().length > 32_000) {
@@ -40,16 +66,45 @@ aiRouter.post('/generate', async (req: Request, res: Response) => {
   try {
     const result = await generateAiResponse({
       provider,
-      input: input.trim(),
-      instructions: typeof instructions === 'string' ? instructions.slice(0, 16_000) : undefined,
-      model: typeof model === 'string' ? model.slice(0, 200) : undefined,
-      maxOutputTokens: typeof maxOutputTokens === 'number' ? Math.max(1, Math.min(maxOutputTokens, 8_192)) : undefined,
+      input,
+      instructions: typeof instructions === 'string' ? instructions : undefined,
+      model: typeof model === 'string' ? model : undefined,
+      maxOutputTokens,
+      allowFallback: allowFallback !== false,
     });
     return res.json(result);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'AI provider request failed';
     console.warn(`[AI] Generation failed: ${message}`);
-    return res.status(502).json({ error: 'AI provider request failed' });
+    const status = message.includes('must') || message.includes('permitted') || message.includes('characters') ? 400 : 502;
+    return res.status(status).json({ error: status === 400 ? message : 'AI provider request failed' });
+  }
+});
+
+// Streams the upstream OpenAI/NIM SSE response after applying the same server-side request policy.
+aiRouter.post('/generate/stream', async (req: Request, res: Response) => {
+  const { provider, input, instructions, model, maxOutputTokens } = req.body as {
+    provider?: AiProviderId; input?: string; instructions?: string; model?: string; maxOutputTokens?: number;
+  };
+  if (!provider || !parseProvider(provider) || !input || typeof input !== 'string') {
+    return res.status(400).json({ error: 'A configured provider and text input are required' });
+  }
+  try {
+    const stream = await createAiStream(provider, { provider, input, instructions, model, maxOutputTokens, allowFallback: false });
+    res.status(200).set({ 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache, no-transform', Connection: 'keep-alive', 'X-Accel-Buffering': 'no' });
+    res.write(`: provider=${stream.provider}; model=${stream.model}\n\n`);
+    const reader = stream.response.body!.getReader();
+    const decoder = new TextDecoder();
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      res.write(decoder.decode(value, { stream: true }));
+    }
+    res.end();
+  } catch (error) {
+    console.warn(`[AI] Stream generation failed: ${error instanceof Error ? error.message : 'unknown error'}`);
+    if (!res.headersSent) return res.status(503).json({ error: 'AI streaming is unavailable' });
+    return res.end('event: error\ndata: {"error":"AI stream interrupted"}\n\n');
   }
 });
 
@@ -186,6 +241,7 @@ aiRouter.post('/assistant', async (req: Request, res: Response) => {
       provider: result.provider,
       model: result.model,
       responseId: result.responseId,
+      attempts: result.attempts,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'AI provider request failed';

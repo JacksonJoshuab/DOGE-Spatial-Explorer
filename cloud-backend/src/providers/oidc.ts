@@ -17,6 +17,7 @@ export interface VerifyOidcTokenOptions {
   issuer: string | string[];
   audience: string;
   jwksUrl: string;
+  nonce?: string;
   fetchImpl?: FetchLike;
 }
 
@@ -87,6 +88,9 @@ function verifyWithJwk(options: VerifyOidcTokenOptions, jwk: Jwk): VerifiedIdent
   }) as JwtPayload;
 
   if (!claims.sub) throw new Error("Identity token is missing a subject claim");
+  if (options.nonce !== undefined && claims.nonce !== options.nonce) {
+    throw new Error("Identity token nonce does not match the sign-in request");
+  }
 
   return {
     subject: claims.sub,

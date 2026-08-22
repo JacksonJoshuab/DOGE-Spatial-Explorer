@@ -3,6 +3,7 @@
 
 import { Router, Request, Response } from 'express';
 import { getAiProviderStatuses } from '../providers/ai.js';
+import { getProviderReadiness, PROVIDER_CATALOG } from '../providers/catalog.js';
 
 export const healthRouter: Router = Router();
 
@@ -18,6 +19,7 @@ healthRouter.get('/', async (_req: Request, res: Response) => {
 
 // Configuration-only posture endpoint for operations dashboards. No credentials are exposed.
 healthRouter.get('/providers', (_req: Request, res: Response) => {
+  const readiness = getProviderReadiness();
   res.json({
     authentication: {
       apple: Boolean(process.env.APPLE_CLIENT_ID),
@@ -28,5 +30,14 @@ healthRouter.get('/providers', (_req: Request, res: Response) => {
     edge: {
       nvidiaJetson: Boolean(process.env.NVIDIA_JETSON_SHARED_SECRET),
     },
+    readiness,
+  });
+});
+
+// A configuration diagnostic for deployment automation. Secret values are never returned.
+healthRouter.get('/providers/configuration', (_req: Request, res: Response) => {
+  return res.json({
+    readiness: getProviderReadiness(),
+    catalog: PROVIDER_CATALOG.map(({ id, label, category, requiredVariables, optionalVariables, capabilities, documentationUrl }) => ({ id, label, category, requiredVariables, optionalVariables, capabilities, documentationUrl })),
   });
 });

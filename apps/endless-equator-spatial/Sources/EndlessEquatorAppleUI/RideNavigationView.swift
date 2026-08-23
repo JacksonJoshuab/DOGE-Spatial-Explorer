@@ -82,7 +82,6 @@ public struct RideNavigationView: View {
             }
         }
         .padding(18)
-        .glassEffect(.regular, in: .rect(cornerRadius: 24))
+        .endlessEquatorGlassCard(cornerRadius: 24)
     }
 }
-

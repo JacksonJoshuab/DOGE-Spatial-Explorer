@@ -1,4 +1,4 @@
-import CoreLocation
+@preconcurrency import CoreLocation
 import Foundation
 import Observation
 
@@ -33,17 +33,25 @@ public final class ExpeditionLocationService: NSObject, CLLocationManagerDelegat
         manager.stopUpdatingHeading()
     }
 
-    public func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-        authorizationStatus = manager.authorizationStatus
+    nonisolated public func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        let status = manager.authorizationStatus
+        Task { @MainActor [weak self] in
+            self?.authorizationStatus = status
+        }
     }
 
-    public func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+    nonisolated public func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.last else { return }
-        latestLocation = location
-        onLocation?(location)
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            latestLocation = location
+            onLocation?(location)
+        }
     }
 
-    public func locationManager(_ manager: CLLocationManager, didUpdateHeading newHeading: CLHeading) {
-        latestHeading = newHeading
+    nonisolated public func locationManager(_ manager: CLLocationManager, didUpdateHeading newHeading: CLHeading) {
+        Task { @MainActor [weak self] in
+            self?.latestHeading = newHeading
+        }
     }
 }

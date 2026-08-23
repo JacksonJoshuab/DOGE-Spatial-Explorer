@@ -1,0 +1,101 @@
+name: EndlessEquator
+options:
+  bundleIdPrefix: com.gonzosocialclub
+  deploymentTarget:
+    iOS: "27.0"
+    visionOS: "27.0"
+  createIntermediateGroups: true
+  generateEmptyDirectories: true
+  localPackagesGroup: Packages
+  minimumXcodeGenVersion: 2.46.0
+configs:
+  Debug: debug
+  Release: release
+settings:
+  base:
+    SWIFT_VERSION: 6.0
+    SWIFT_STRICT_CONCURRENCY: complete
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    ENABLE_MODULE_VERIFIER: YES
+    CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED: YES
+    GCC_TREAT_WARNINGS_AS_ERRORS: YES
+    SWIFT_TREAT_WARNINGS_AS_ERRORS: YES
+    ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS: YES
+    MARKETING_VERSION: 0.1.0
+    CURRENT_PROJECT_VERSION: 1
+packages:
+  EndlessEquatorSpatial:
+    path: .
+targets:
+  EndlessEquatorCompanion:
+    type: application
+    platform: iOS
+    deploymentTarget: "27.0"
+    sources:
+      - path: AppTemplates/iOS
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.gonzosocialclub.endlessequator.companion
+        PRODUCT_NAME: Endless Equator
+        INFOPLIST_FILE: Config/Info-iOS.plist
+        CODE_SIGN_ENTITLEMENTS: Config/EndlessEquator.entitlements
+        TARGETED_DEVICE_FAMILY: "1,2"
+        SUPPORTS_MACCATALYST: NO
+        CODE_SIGN_STYLE: Automatic
+    dependencies:
+      - package: EndlessEquatorSpatial
+        product: EndlessEquatorAppleUI
+  EndlessEquatorCompanionUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    deploymentTarget: "27.0"
+    sources:
+      - path: AppTests/iOSUITests
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.gonzosocialclub.endlessequator.companion.uitests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: EndlessEquatorCompanion
+        CODE_SIGN_STYLE: Automatic
+    dependencies:
+      - target: EndlessEquatorCompanion
+  EndlessEquatorVision:
+    type: application
+    platform: visionOS
+    deploymentTarget: "27.0"
+    sources:
+      - path: AppTemplates/visionOS
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.gonzosocialclub.endlessequator.vision
+        PRODUCT_NAME: Endless Equator Spatial
+        INFOPLIST_FILE: Config/Info-visionOS.plist
+        CODE_SIGN_ENTITLEMENTS: Config/EndlessEquator.entitlements
+        CODE_SIGN_STYLE: Automatic
+    dependencies:
+      - package: EndlessEquatorSpatial
+        product: EndlessEquatorAppleUI
+schemes:
+  EndlessEquatorCompanion:
+    build:
+      targets:
+        EndlessEquatorCompanion: all
+        EndlessEquatorCompanionUITests: [test]
+    test:
+      gatherCoverageData: true
+      targets:
+        - name: EndlessEquatorCompanionUITests
+          parallelizable: false
+          randomExecutionOrder: false
+    run:
+      config: Debug
+    archive:
+      config: Release
+  EndlessEquatorVision:
+    build:
+      targets:
+        EndlessEquatorVision: all
+    run:
+      config: Debug
+    archive:
+      config: Release

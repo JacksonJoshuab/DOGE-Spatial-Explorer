@@ -21,11 +21,12 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: '22' }
-      - name: Validate canonical JSON
+      - name: Validate canonical JSON and release schemas
         run: |
           node -e "for (const f of ['areas-01.json','areas-02.json','areas-03.json']) JSON.parse(require('fs').readFileSync('Sources/EndlessEquatorCore/Resources/'+f))"
           node -e "JSON.parse(require('fs').readFileSync('Sources/EndlessEquatorCore/Resources/route-plan.json'))"
           node -e "JSON.parse(require('fs').readFileSync('Sources/EndlessEquatorCore/Resources/route.geojson'))"
+          node -e "const s=JSON.parse(require('fs').readFileSync('Release/route-verification-manifest.schema.json')); if(s.type!=='object'||!s.required.includes('gpxSHA256')||!s.required.includes('signature')) process.exit(1)"
       - name: Check server syntax
         run: node --check Server/server.mjs
       - name: Smoke-test server
@@ -37,6 +38,19 @@ jobs:
           curl --fail http://localhost:8787/health
           curl --fail http://localhost:8787/api/areas >/dev/null
           curl --fail http://localhost:8787/api/route >/dev/null
+      - name: Build and smoke-test production container
+        run: |
+          set -euo pipefail
+          docker build -f Server/Dockerfile -t endless-equator-gateway:${{ github.sha }} .
+          container=$(docker run -d -p 127.0.0.1:8788:8787 endless-equator-gateway:${{ github.sha }})
+          trap 'docker rm -f "$container" >/dev/null 2>&1 || true' EXIT
+          for attempt in $(seq 1 20); do
+            if curl --fail --silent http://127.0.0.1:8788/health >/tmp/container-health.json; then break; fi
+            sleep 1
+          done
+          cat /tmp/container-health.json
+          curl --fail http://127.0.0.1:8788/api/areas >/dev/null
+          test "$(docker inspect -f '{{.Config.User}}' "$container")" = node
       - name: Verify no obvious committed secrets
         run: |
           python3 - <<'PY'
@@ -89,7 +103,7 @@ jobs:
         run: swift --version
       - name: Parse Swift source files
         run: |
-          find Sources AppTemplates Tests -name '*.swift' -print0 | while IFS= read -r -d '' file; do
+          find Sources AppTemplates AppTests Tests -name '*.swift' -print0 | while IFS= read -r -d '' file; do
             swiftc -frontend -parse "$file"
           done
       - name: Validate package manifest on Swift 6.4+

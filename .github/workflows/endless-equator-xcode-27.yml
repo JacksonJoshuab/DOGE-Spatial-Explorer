@@ -40,6 +40,7 @@ jobs:
       - name: Generate reproducible Xcode project
         run: |
           set -euo pipefail
+          mkdir -p Build
           xcodegen generate --spec project.yml
           xcodebuild -project EndlessEquator.xcodeproj -list
 

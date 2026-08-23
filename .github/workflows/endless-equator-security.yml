@@ -1,0 +1,98 @@
+name: Endless Equator Security
+
+on:
+  pull_request:
+    paths:
+      - 'apps/endless-equator-spatial/**'
+      - '.github/workflows/endless-equator-security.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'apps/endless-equator-spatial/**'
+      - '.github/workflows/endless-equator-security.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  gateway-boundary-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: apps/endless-equator-spatial
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: JavaScript syntax
+        run: |
+          node --check Server/server.mjs
+          node --check Web/app.js
+          node --check Verification/verify-operational-route.mjs
+          node --check Security/pentest-smoke.mjs
+      - name: Gateway abuse and fail-closed tests
+        run: node Security/pentest-smoke.mjs
+      - name: Build production container
+        run: docker build --file Server/Dockerfile --tag endless-equator-gateway:test .
+      - name: Run nonroot container and smoke test
+        run: |
+          docker run --detach --rm --name endless-equator-gateway-test --publish 8898:8787 endless-equator-gateway:test
+          trap 'docker stop endless-equator-gateway-test >/dev/null 2>&1 || true' EXIT
+          for attempt in $(seq 1 20); do
+            curl --fail --silent http://127.0.0.1:8898/health && break
+            sleep 1
+          done
+          test "$(docker inspect --format '{{.Config.User}}' endless-equator-gateway-test)" = node
+          curl --fail --silent http://127.0.0.1:8898/api/areas >/dev/null
+          curl --fail --silent http://127.0.0.1:8898/api/route >/dev/null
+
+  codeql-javascript:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+      - uses: github/codeql-action/analyze@v3
+        with:
+          category: /language:javascript-typescript
+
+  codeql-swift:
+    runs-on: macos-26
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: swift
+      - name: Select Xcode 27
+        run: |
+          candidate="$(find /Applications -maxdepth 1 -type d -name 'Xcode_27*.app' -print | sort -V | tail -1)"
+          test -n "$candidate"
+          sudo xcode-select --switch "$candidate/Contents/Developer"
+          xcodebuild -version
+      - name: Generate and build Apple targets for CodeQL
+        working-directory: apps/endless-equator-spatial
+        run: |
+          brew list xcodegen >/dev/null 2>&1 || brew install xcodegen
+          xcodegen generate --spec project.yml
+          xcodebuild \
+            -project EndlessEquator.xcodeproj \
+            -scheme EndlessEquatorCompanion \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO DEVELOPMENT_TEAM='' \
+            build
+          xcodebuild \
+            -project EndlessEquator.xcodeproj \
+            -scheme EndlessEquatorVision \
+            -destination 'generic/platform=visionOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO DEVELOPMENT_TEAM='' \
+            build
+      - uses: github/codeql-action/analyze@v3
+        with:
+          category: /language:swift

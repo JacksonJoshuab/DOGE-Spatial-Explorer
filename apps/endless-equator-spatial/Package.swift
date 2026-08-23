@@ -38,7 +38,7 @@ let package = Package(
         ),
         .target(
             name: "EndlessEquatorAppleUI",
-            dependencies: ["EndlessEquatorCore", "EndlessEquatorNVIDIA"],
+            dependencies: ["EndlessEquatorCore"],
             swiftSettings: [.swiftLanguageMode(.v6)]
         ),
         .testTarget(

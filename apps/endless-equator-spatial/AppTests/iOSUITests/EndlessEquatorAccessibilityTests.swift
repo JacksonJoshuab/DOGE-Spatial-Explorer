@@ -20,14 +20,7 @@ final class EndlessEquatorAccessibilityTests: XCTestCase {
             "The rider navigation surface did not finish launching."
         )
 
-        try app.performAccessibilityAudit(for: [
-            .action,
-            .contrast,
-            .dynamicType,
-            .hitRegion,
-            .sufficientElementDescription,
-            .textClipped
-        ])
+        try app.performAccessibilityAudit()
     }
 
     @MainActor

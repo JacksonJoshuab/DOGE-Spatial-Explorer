@@ -1,0 +1,76 @@
+{
+  "routeID": "endless-equator-verified-YYYYMMDD",
+  "routeVersion": "YYYY-MM-DD.local-guide-revision",
+  "gpxFileName": "endless-equator-verified-YYYYMMDD.gpx",
+  "gpxSHA256": "REPLACE_WITH_64_CHARACTER_SHA256",
+  "status": "planningOnly",
+  "verifiedBy": {
+    "name": "REPLACE",
+    "organization": "REPLACE",
+    "role": "Authorized local guide / route verifier",
+    "contactEvidenceRef": "PRIVATE-EVIDENCE-REPLACE"
+  },
+  "verifiedAt": "2026-09-01T12:00:00Z",
+  "accessCheckedAt": "2026-09-01T12:00:00Z",
+  "weatherCheckedAt": "2026-09-01T12:00:00Z",
+  "expiresAt": "2026-09-02T12:00:00Z",
+  "riderAcknowledgedAt": "2026-09-01T12:30:00Z",
+  "officialSources": [
+    {
+      "label": "Current state-road and closure check",
+      "authority": "REPLACE WITH ECUADOR AUTHORITY",
+      "url": null,
+      "checkedAt": "2026-09-01T12:00:00Z",
+      "evidenceRef": "PRIVATE-EVIDENCE-REPLACE"
+    }
+  ],
+  "permits": [
+    {
+      "permitType": "Protected-area access or filming determination",
+      "authority": "REPLACE",
+      "status": "pending",
+      "validFrom": null,
+      "validUntil": null,
+      "evidenceRef": "PRIVATE-EVIDENCE-REPLACE"
+    }
+  ],
+  "segments": [
+    {
+      "id": "PIFO-PAPALLACTA-01",
+      "from": "Pifo",
+      "to": "Papallacta",
+      "highwayRefs": ["E20"],
+      "status": "unknown",
+      "surface": "paved connector plus only separately verified secondary roads",
+      "accessBasis": "combined",
+      "conditions": [],
+      "checkedAt": "2026-09-01T12:00:00Z",
+      "evidenceRef": "PRIVATE-EVIDENCE-REPLACE",
+      "supportVehicleAccess": true,
+      "bailout": {
+        "available": true,
+        "description": "Remain on or return to the verified E20 support corridor.",
+        "coordinate": null
+      },
+      "protectedArea": {
+        "insideOrAdjacent": false,
+        "authority": null,
+        "permitEvidenceRef": null
+      },
+      "landownerPermission": {
+        "required": false,
+        "status": "notRequired",
+        "evidenceRef": null
+      },
+      "hazards": ["fog", "wet pavement", "landslide/closure risk"],
+      "notes": "Replace with exact GPX segment and current inspection record."
+    }
+  ],
+  "goNoGo": {
+    "decision": "NO_GO",
+    "decidedBy": "REPLACE",
+    "decidedAt": "2026-09-01T12:30:00Z",
+    "conditions": ["No operational authorization until every segment is open or explicitly accepted as conditional."],
+    "evidenceRef": "PRIVATE-EVIDENCE-REPLACE"
+  }
+}

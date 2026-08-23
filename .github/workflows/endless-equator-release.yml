@@ -1,0 +1,124 @@
+name: Endless Equator TestFlight Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_ref:
+        description: Immutable commit SHA to release
+        required: true
+      build_number:
+        description: Numeric App Store build number
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  signed-testflight:
+    runs-on: xcode-27
+    timeout-minutes: 75
+    environment: endless-equator-testflight
+    defaults:
+      run:
+        working-directory: apps/endless-equator-spatial
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.release_ref }}
+
+      - name: Require immutable SHA
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${{ inputs.release_ref }}"
+          [[ "${{ inputs.build_number }}" =~ ^[0-9]+$ ]]
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Materialize signing assets in an ephemeral keychain
+        env:
+          P12_B64: ${{ secrets.APPLE_DISTRIBUTION_P12_B64 }}
+          P12_PASSWORD: ${{ secrets.APPLE_DISTRIBUTION_P12_PASSWORD }}
+          IOS_PROFILE_B64: ${{ secrets.IOS_PROVISIONING_PROFILE_B64 }}
+          VISION_PROFILE_B64: ${{ secrets.VISIONOS_PROVISIONING_PROFILE_B64 }}
+          ASC_KEY_B64: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY_B64 }}
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          KEYCHAIN_PASSWORD: ${{ secrets.TEMP_KEYCHAIN_PASSWORD }}
+        run: |
+          set -euo pipefail
+          mkdir -p Build/signing "$HOME/Library/MobileDevice/Provisioning Profiles"
+          printf '%s' "$P12_B64" | base64 --decode > Build/signing/distribution.p12
+          printf '%s' "$IOS_PROFILE_B64" | base64 --decode > Build/signing/ios.mobileprovision
+          printf '%s' "$VISION_PROFILE_B64" | base64 --decode > Build/signing/vision.provisionprofile
+          printf '%s' "$ASC_KEY_B64" | base64 --decode > "Build/signing/AuthKey_${ASC_KEY_ID}.p8"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" Build/signing/release.keychain-db
+          security set-keychain-settings -lut 21600 Build/signing/release.keychain-db
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" Build/signing/release.keychain-db
+          security import Build/signing/distribution.p12 -k Build/signing/release.keychain-db -P "$P12_PASSWORD" -T /usr/bin/codesign -T /usr/bin/security
+          security list-keychains -d user -s Build/signing/release.keychain-db
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" Build/signing/release.keychain-db
+          IOS_UUID=$(security cms -D -i Build/signing/ios.mobileprovision | plutil -extract UUID raw -)
+          VISION_UUID=$(security cms -D -i Build/signing/vision.provisionprofile | plutil -extract UUID raw -)
+          cp Build/signing/ios.mobileprovision "$HOME/Library/MobileDevice/Provisioning Profiles/$IOS_UUID.mobileprovision"
+          cp Build/signing/vision.provisionprofile "$HOME/Library/MobileDevice/Provisioning Profiles/$VISION_UUID.provisionprofile"
+
+      - name: Generate project and release export options
+        env:
+          TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          IOS_PROFILE_NAME: ${{ secrets.IOS_PROFILE_NAME }}
+          VISION_PROFILE_NAME: ${{ secrets.VISIONOS_PROFILE_NAME }}
+        run: |
+          set -euo pipefail
+          xcodegen generate --spec project.yml
+          /usr/libexec/PlistBuddy -c "Add :teamID string $TEAM_ID" Release/ExportOptions-TestFlight.plist
+          /usr/libexec/PlistBuddy -c 'Add :provisioningProfiles dict' Release/ExportOptions-TestFlight.plist
+          /usr/libexec/PlistBuddy -c "Add :provisioningProfiles:com.gonzosocialclub.endlessequator.companion string $IOS_PROFILE_NAME" Release/ExportOptions-TestFlight.plist
+
+      - name: Archive and upload iOS/iPadOS companion
+        env:
+          TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          IOS_PROFILE_NAME: ${{ secrets.IOS_PROFILE_NAME }}
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: |
+          set -euo pipefail
+          xcodebuild -project EndlessEquator.xcodeproj -scheme EndlessEquatorCompanion -configuration Release -destination 'generic/platform=iOS' -archivePath Build/EndlessEquatorCompanion.xcarchive CURRENT_PROJECT_VERSION='${{ inputs.build_number }}' DEVELOPMENT_TEAM="$TEAM_ID" CODE_SIGN_STYLE=Manual PROVISIONING_PROFILE_SPECIFIER="$IOS_PROFILE_NAME" archive
+          codesign -d --entitlements :- Build/EndlessEquatorCompanion.xcarchive/Products/Applications/'Endless Equator.app' > Build/iOS-entitlements.plist
+          xcodebuild -exportArchive -archivePath Build/EndlessEquatorCompanion.xcarchive -exportPath Build/iOS-export -exportOptionsPlist Release/ExportOptions-TestFlight.plist -authenticationKeyPath "Build/signing/AuthKey_${ASC_KEY_ID}.p8" -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER_ID"
+
+      - name: Archive and upload visionOS app
+        env:
+          TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          VISION_PROFILE_NAME: ${{ secrets.VISIONOS_PROFILE_NAME }}
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: |
+          set -euo pipefail
+          cp Release/ExportOptions-TestFlight.plist Build/ExportOptions-visionOS.plist
+          /usr/libexec/PlistBuddy -c 'Delete :provisioningProfiles:com.gonzosocialclub.endlessequator.companion' Build/ExportOptions-visionOS.plist
+          /usr/libexec/PlistBuddy -c "Add :provisioningProfiles:com.gonzosocialclub.endlessequator.vision string $VISION_PROFILE_NAME" Build/ExportOptions-visionOS.plist
+          xcodebuild -project EndlessEquator.xcodeproj -scheme EndlessEquatorVision -configuration Release -destination 'generic/platform=visionOS' -archivePath Build/EndlessEquatorVision.xcarchive CURRENT_PROJECT_VERSION='${{ inputs.build_number }}' DEVELOPMENT_TEAM="$TEAM_ID" CODE_SIGN_STYLE=Manual PROVISIONING_PROFILE_SPECIFIER="$VISION_PROFILE_NAME" archive
+          codesign -d --entitlements :- Build/EndlessEquatorVision.xcarchive/Products/Applications/'Endless Equator Spatial.app' > Build/visionOS-entitlements.plist
+          xcodebuild -exportArchive -archivePath Build/EndlessEquatorVision.xcarchive -exportPath Build/visionOS-export -exportOptionsPlist Build/ExportOptions-visionOS.plist -authenticationKeyPath "Build/signing/AuthKey_${ASC_KEY_ID}.p8" -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER_ID"
+
+      - name: Hash release evidence
+        if: always()
+        run: |
+          find Build -type f \( -name '*.ipa' -o -name '*.plist' -o -name '*.xcarchive' \) -print0 | xargs -0 shasum -a 256 > Build/release-hashes.txt || true
+
+      - name: Upload nonsecret release evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Endless_Equator_TestFlight_Evidence_${{ inputs.build_number }}
+          path: |
+            apps/endless-equator-spatial/Build/release-hashes.txt
+            apps/endless-equator-spatial/Build/*-entitlements.plist
+          if-no-files-found: warn
+          retention-days: 90
+
+      - name: Destroy ephemeral signing material
+        if: always()
+        run: |
+          security delete-keychain Build/signing/release.keychain-db || true
+          rm -rf Build/signing "$HOME/Library/MobileDevice/Provisioning Profiles"/*.mobileprovision "$HOME/Library/MobileDevice/Provisioning Profiles"/*.provisionprofile

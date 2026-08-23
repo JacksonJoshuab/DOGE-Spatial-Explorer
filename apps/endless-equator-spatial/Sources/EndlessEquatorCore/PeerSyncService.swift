@@ -112,7 +112,9 @@ public final class PeerSyncService {
     }
 
     private static func normalizePairingCode(_ value: String) -> String {
-        String(value.uppercased().filter(\.isLetterOrNumber).prefix(64))
+        String(value.uppercased().filter { character in
+            character.isLetter || character.isNumber
+        }.prefix(64))
     }
 }
 
@@ -267,7 +269,9 @@ private final class PeerTransport: @unchecked Sendable {
             peers.append(NearbyExpeditionPeer(id: id, displayName: peerName))
         }
         endpoints = nextEndpoints
-        onDiscoveredPeers(peers.sorted { $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending })
+        onDiscoveredPeers(peers.sorted {
+            $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending
+        })
     }
 
     private func handleIncoming(_ connection: NWConnection) {
@@ -277,8 +281,7 @@ private final class PeerTransport: @unchecked Sendable {
         }
         pairingWindowOpen = false
         onPairingWindowConsumed()
-        let peer = peerDescriptor(for: connection.endpoint)
-        registerConnection(connection, peer: peer)
+        registerConnection(connection, peer: peerDescriptor(for: connection.endpoint))
     }
 
     private func registerConnection(_ connection: NWConnection, peer: NearbyExpeditionPeer) {
@@ -339,7 +342,7 @@ private final class PeerTransport: @unchecked Sendable {
     private func processFrames(on context: ConnectionContext) {
         while context.buffer.count >= 4 {
             let length = context.buffer.prefix(4).reduce(UInt32(0)) { ($0 << 8) | UInt32($1) }
-            guard length > 0, length <= Self.maximumFrameBytes else {
+            guard length > 0, length <= UInt32(Self.maximumFrameBytes) else {
                 onError(PeerSyncError.invalidFrame.localizedDescription)
                 context.connection.cancel()
                 return
@@ -350,16 +353,11 @@ private final class PeerTransport: @unchecked Sendable {
             context.buffer.removeSubrange(0..<fullLength)
             do {
                 let envelope = try Self.openFrame(encrypted, pairingCode: pairingCode)
-                switch envelope.kind {
-                case .hello:
-                    context.authenticated = true
-                    context.peer = NearbyExpeditionPeer(id: context.peer.id, displayName: envelope.displayName)
-                    publishConnectedPeers()
-                case .packet:
-                    context.authenticated = true
-                    context.peer = NearbyExpeditionPeer(id: context.peer.id, displayName: envelope.displayName)
-                    publishConnectedPeers()
-                    if let packet = envelope.packet { onPacket(packet) }
+                context.authenticated = true
+                context.peer = NearbyExpeditionPeer(id: context.peer.id, displayName: envelope.displayName)
+                publishConnectedPeers()
+                if envelope.kind == .packet, let packet = envelope.packet {
+                    onPacket(packet)
                 }
             } catch {
                 onError(PeerSyncError.invalidFrame.localizedDescription)

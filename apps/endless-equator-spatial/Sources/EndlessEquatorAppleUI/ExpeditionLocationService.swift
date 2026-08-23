@@ -7,7 +7,9 @@ import Observation
 public final class ExpeditionLocationService: NSObject, CLLocationManagerDelegate {
     public private(set) var authorizationStatus: CLAuthorizationStatus = .notDetermined
     public private(set) var latestLocation: CLLocation?
+#if !os(visionOS)
     public private(set) var latestHeading: CLHeading?
+#endif
     public var onLocation: ((CLLocation) -> Void)?
 
     private let manager = CLLocationManager()
@@ -18,19 +20,25 @@ public final class ExpeditionLocationService: NSObject, CLLocationManagerDelegat
         manager.activityType = .automotiveNavigation
         manager.desiredAccuracy = kCLLocationAccuracyBest
         manager.distanceFilter = 5
+#if !os(visionOS)
         manager.headingFilter = 5
+#endif
         manager.pausesLocationUpdatesAutomatically = false
     }
 
     public func requestAuthorizationAndStart() {
         manager.requestWhenInUseAuthorization()
         manager.startUpdatingLocation()
+#if !os(visionOS)
         manager.startUpdatingHeading()
+#endif
     }
 
     public func stop() {
         manager.stopUpdatingLocation()
+#if !os(visionOS)
         manager.stopUpdatingHeading()
+#endif
     }
 
     nonisolated public func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
@@ -49,9 +57,11 @@ public final class ExpeditionLocationService: NSObject, CLLocationManagerDelegat
         }
     }
 
+#if !os(visionOS)
     nonisolated public func locationManager(_ manager: CLLocationManager, didUpdateHeading newHeading: CLHeading) {
         Task { @MainActor [weak self] in
             self?.latestHeading = newHeading
         }
     }
+#endif
 }

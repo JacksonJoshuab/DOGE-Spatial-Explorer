@@ -26,11 +26,11 @@ public struct NavigationMapView: View {
     public var body: some View {
         Map(
             position: $camera,
+            interactionModes: [.pan, .zoom, .rotate],
             selection: Binding(
                 get: { selectedAreaID },
                 set: { if let id = $0 { onSelectArea(id) } }
-            ),
-            interactionModes: [.pan, .zoom, .rotate]
+            )
         ) {
             UserAnnotation()
             MapPolyline(coordinates: route.points.map { $0.coordinate.clCoordinate })

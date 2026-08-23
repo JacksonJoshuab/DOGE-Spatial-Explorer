@@ -1,4 +1,5 @@
 import EndlessEquatorCore
+import Foundation
 import SwiftUI
 
 public struct RideNavigationView: View {
@@ -41,7 +42,11 @@ public struct RideNavigationView: View {
             .sheet(isPresented: $showPairing) {
                 PeerPairingView(service: model.peerSync)
             }
-            .task { model.beginLocationUpdates() }
+            .task {
+                if !ProcessInfo.processInfo.arguments.contains("--ui-testing") {
+                    model.beginLocationUpdates()
+                }
+            }
             .alert("Expedition notice", isPresented: Binding(
                 get: { model.alertMessage != nil },
                 set: { if !$0 { model.alertMessage = nil } }

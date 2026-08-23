@@ -3,10 +3,12 @@ on:
   pull_request:
     paths:
       - 'apps/endless-equator-spatial/**'
+      - '.github/workflows/endless-equator-spatial.yml'
   push:
     branches: [main]
     paths:
       - 'apps/endless-equator-spatial/**'
+      - '.github/workflows/endless-equator-spatial.yml'
 permissions:
   contents: read
 jobs:
@@ -52,6 +54,30 @@ jobs:
               if any(pattern.search(text) for pattern in patterns): violations.append(str(path))
           if violations: raise SystemExit('Potential committed secrets: ' + ', '.join(violations))
           PY
+      - name: Write build manifest
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib, json
+          root=Path('.')
+          files=sorted(p for p in root.rglob('*') if p.is_file() and p.name != '.env')
+          manifest={
+            'artifact':'Endless Equator Spatial Navigator Source',
+            'commit':'${{ github.sha }}',
+            'files':len(files),
+            'sha256':{str(p):hashlib.sha256(p.read_bytes()).hexdigest() for p in files},
+          }
+          Path('BUILD_MANIFEST.json').write_text(json.dumps(manifest,indent=2)+'\n')
+          PY
+      - name: Upload verified source package
+        uses: actions/upload-artifact@v4
+        with:
+          name: Endless_Equator_Spatial_Navigator_Source
+          path: |
+            apps/endless-equator-spatial
+            .github/workflows/endless-equator-spatial.yml
+          if-no-files-found: error
+          retention-days: 30
   apple-source-syntax:
     runs-on: macos-latest
     defaults:

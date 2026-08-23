@@ -4,35 +4,79 @@ import SwiftUI
 public struct PeerPairingView: View {
     @Bindable private var service: PeerSyncService
     @Environment(\.dismiss) private var dismiss
+    @State private var editableCode = ""
 
-    public init(service: PeerSyncService) { self.service = service }
+    public init(service: PeerSyncService) {
+        self.service = service
+    }
 
     public var body: some View {
         NavigationStack {
             List {
-                Section("Incoming invitations") {
-                    Toggle("Accept the next encrypted invitation", isOn: Binding(
+                Section("Shared pairing code") {
+                    TextField("16–64 letters or numbers", text: $editableCode)
+                        .textInputAutocapitalization(.characters)
+                        .autocorrectionDisabled()
+                        .fontDesign(.monospaced)
+                        .onSubmit { service.setPairingCode(editableCode) }
+                    HStack {
+                        Button("Apply code") {
+                            service.setPairingCode(editableCode)
+                            editableCode = service.pairingCode
+                        }
+                        Button("Generate new code") {
+                            service.generateNewPairingCode()
+                            editableCode = service.pairingCode
+                        }
+                    }
+                    Text("Enter the same code on both devices and compare it in person. Changing the code disconnects existing peers.")
+                        .font(.caption)
+                }
+
+                Section("Incoming connections") {
+                    Toggle("Accept the next authenticated connection", isOn: Binding(
                         get: { service.pairingWindowOpen },
                         set: { service.setPairingWindow(open: $0) }
                     ))
-                    Text("The window closes after one accepted invitation. Confirm the peer name in person.")
+                    Text("The window closes after one incoming connection. The peer appears as connected only after a message is authenticated with the shared code.")
                         .font(.caption)
                 }
+
                 Section("Nearby expedition devices") {
                     if service.discoveredPeers.isEmpty {
                         ContentUnavailableView("No peers found", systemImage: "antenna.radiowaves.left.and.right")
                     }
-                    ForEach(service.discoveredPeers, id: \.displayName) { peer in
-                        Button("Invite \(peer.displayName)") { service.invite(peer) }
+                    ForEach(service.discoveredPeers) { peer in
+                        Button("Connect to \(peer.displayName)") {
+                            service.setPairingCode(editableCode)
+                            service.connect(peer)
+                        }
                     }
                 }
-                Section("Connected") {
-                    ForEach(service.connectedPeers, id: \.displayName) { peer in Text(peer.displayName) }
+
+                Section("Authenticated peers") {
+                    if service.connectedPeers.isEmpty {
+                        Text("No authenticated peers")
+                            .foregroundStyle(.secondary)
+                    }
+                    ForEach(service.connectedPeers) { peer in
+                        Label(peer.displayName, systemImage: "checkmark.shield.fill")
+                    }
+                }
+
+                if let error = service.lastError {
+                    Section("Connection notice") {
+                        Label(error, systemImage: "exclamationmark.triangle")
+                            .foregroundStyle(.orange)
+                    }
                 }
             }
             .navigationTitle("Encrypted nearby pairing")
             .toolbar { Button("Done") { dismiss() } }
-            .task { service.start() }
+            .task {
+                editableCode = service.pairingCode
+                service.start()
+            }
         }
     }
 }

@@ -19,7 +19,7 @@ public struct StationarySpatialRouteView: View {
                 Text("STATIONARY BRIEFING — NOT A RIDING HUD")
                     .font(.headline)
                     .padding()
-                    .glassEffect(.regular, in: .capsule)
+                    .endlessEquatorGlassCapsule()
             }
         } else {
             ContentUnavailableView(

@@ -53,6 +53,7 @@ jobs:
             -scheme EndlessEquatorCompanion
 
       - name: Build iPhone and iPad companion
+        id: ios_build
         run: |
           set -o pipefail
           xcodebuild \
@@ -66,6 +67,7 @@ jobs:
             build-for-testing | tee Build/iOS-build.log | xcbeautify
 
       - name: Run iPhone accessibility and launch tests
+        if: always() && steps.ios_build.outcome == 'success'
         run: |
           set -o pipefail
           xcodebuild \
@@ -80,6 +82,7 @@ jobs:
             test-without-building | tee Build/iPhone-tests.log | xcbeautify
 
       - name: Build iPad support console
+        if: always()
         run: |
           set -o pipefail
           xcodebuild \
@@ -93,6 +96,7 @@ jobs:
             build | tee Build/iPad-build.log | xcbeautify
 
       - name: Build Vision Pro stationary route room
+        if: always()
         run: |
           set -o pipefail
           xcodebuild \
@@ -106,6 +110,7 @@ jobs:
             build | tee Build/visionOS-build.log | xcbeautify
 
       - name: Run static analyzer
+        if: always()
         run: |
           set -o pipefail
           xcodebuild \
@@ -119,6 +124,7 @@ jobs:
             analyze | tee Build/analyze.log | xcbeautify
 
       - name: Create unsigned release archives
+        if: always()
         run: |
           set -o pipefail
           xcodebuild \

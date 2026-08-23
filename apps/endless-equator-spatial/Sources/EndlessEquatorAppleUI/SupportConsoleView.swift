@@ -50,7 +50,7 @@ public struct SupportConsoleView: View {
                             }
                         }
                         .padding()
-                        .glassEffect(.regular, in: .rect(cornerRadius: 20))
+                        .endlessEquatorGlassCard(cornerRadius: 20)
                         .padding()
                     }
             } else {

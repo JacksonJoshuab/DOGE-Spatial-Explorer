@@ -11,8 +11,8 @@ permissions:
   contents: read
 
 concurrency:
-  group: endless-equator-xcode-27-${{ github.ref }}
-  cancel-in-progress: true
+  group: endless-equator-xcode-27-${{ github.event.pull_request.head.sha || github.sha }}
+  cancel-in-progress: false
 
 jobs:
   xcode-27-build:
@@ -68,6 +68,7 @@ jobs:
 
       - name: Run iPhone accessibility and launch tests
         if: always() && steps.ios_build.outcome == 'success'
+        timeout-minutes: 8
         run: |
           set -o pipefail
           xcodebuild \
@@ -77,6 +78,9 @@ jobs:
             -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=27.0' \
             -derivedDataPath Build/DerivedData-iOS \
             -resultBundlePath Build/iPhone-Accessibility.xcresult \
+            -test-timeouts-enabled YES \
+            -default-test-execution-time-allowance 120 \
+            -maximum-test-execution-time-allowance 180 \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             test-without-building | tee Build/iPhone-tests.log | xcbeautify

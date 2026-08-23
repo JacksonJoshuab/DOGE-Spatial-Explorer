@@ -1,126 +1,23 @@
-name: Endless Equator Xcode 27
+name: Endless Equator Signed Archives
 
 on:
-  pull_request:
-    paths:
-      - 'apps/endless-equator-spatial/**'
-      - '.github/workflows/endless-equator-xcode27.yml'
-  push:
-    branches: [main]
-    paths:
-      - 'apps/endless-equator-spatial/**'
-      - '.github/workflows/endless-equator-xcode27.yml'
   workflow_dispatch:
     inputs:
-      signed_archive:
-        description: 'Run the signed archive job on the protected self-hosted Apple builder'
-        required: false
-        type: boolean
-        default: false
+      confirm_release:
+        description: 'Type SIGN to authorize protected Apple archive creation'
+        required: true
+        type: string
 
 permissions:
   contents: read
 
-env:
-  APPLE_TEAM_ID: ''
-  ENDLESS_EQUATOR_IOS_BUNDLE_ID: com.gonzosocialclub.endlessequator
-  ENDLESS_EQUATOR_VISION_BUNDLE_ID: com.gonzosocialclub.endlessequator.spatial
-
 jobs:
-  xcode27-unsigned-build:
-    name: Xcode 27 unsigned iOS iPadOS visionOS build
-    runs-on: macos-26
-    timeout-minutes: 45
-    defaults:
-      run:
-        working-directory: apps/endless-equator-spatial
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Select Xcode 27
-        shell: bash
-        run: |
-          set -euo pipefail
-          candidate="$(find /Applications -maxdepth 1 -type d -name 'Xcode_27*.app' -print | sort -V | tail -1)"
-          if [[ -z "$candidate" ]]; then
-            echo 'Xcode 27 is not installed on this runner.' >&2
-            ls -1 /Applications | grep '^Xcode' || true
-            exit 1
-          fi
-          sudo xcode-select --switch "$candidate/Contents/Developer"
-          xcodebuild -version | tee /tmp/xcode-version.txt
-          grep -Eq '^Xcode 27([. ]|$)' /tmp/xcode-version.txt
-          xcrun swift --version
-
-      - name: Install XcodeGen
-        run: |
-          brew list xcodegen >/dev/null 2>&1 || brew install xcodegen
-          xcodegen --version
-
-      - name: Generate project
-        run: |
-          xcodegen generate --spec project.yml
-          test -d EndlessEquator.xcodeproj
-          xcodebuild -project EndlessEquator.xcodeproj -list
-
-      - name: Resolve package dependencies
-        run: |
-          xcodebuild \
-            -resolvePackageDependencies \
-            -project EndlessEquator.xcodeproj \
-            -scheme EndlessEquatorCompanion
-
-      - name: Build iPhone and iPad companion
-        run: |
-          set -o pipefail
-          xcodebuild \
-            -project EndlessEquator.xcodeproj \
-            -scheme EndlessEquatorCompanion \
-            -configuration Debug \
-            -destination 'generic/platform=iOS Simulator' \
-            CODE_SIGNING_ALLOWED=NO \
-            CODE_SIGNING_REQUIRED=NO \
-            DEVELOPMENT_TEAM='' \
-            clean build | tee /tmp/endless-equator-ios-build.log
-
-      - name: Build Apple Vision Pro app
-        run: |
-          set -o pipefail
-          xcodebuild \
-            -project EndlessEquator.xcodeproj \
-            -scheme EndlessEquatorVision \
-            -configuration Debug \
-            -destination 'generic/platform=visionOS Simulator' \
-            CODE_SIGNING_ALLOWED=NO \
-            CODE_SIGNING_REQUIRED=NO \
-            DEVELOPMENT_TEAM='' \
-            clean build | tee /tmp/endless-equator-vision-build.log
-
-      - name: Validate privacy manifest and entitlements
-        run: |
-          plutil -lint Config/Info-iOS.plist
-          plutil -lint Config/Info-visionOS.plist
-          plutil -lint Config/EndlessEquator.entitlements
-          plutil -lint Config/PrivacyInfo.xcprivacy
-          /usr/libexec/PlistBuddy -c 'Print :com.apple.developer.weatherkit' Config/EndlessEquator.entitlements | grep -q true
-
-      - name: Upload build logs
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: endless-equator-xcode27-build-logs
-          path: /tmp/endless-equator-*-build.log
-          if-no-files-found: ignore
-          retention-days: 14
-
   signed-archives:
-    name: Protected signed archives
-    if: github.event_name == 'workflow_dispatch' && inputs.signed_archive
+    name: Protected signed iOS iPadOS visionOS archives
+    if: inputs.confirm_release == 'SIGN'
     runs-on: [self-hosted, macOS, xcode27, endless-equator-signing]
     timeout-minutes: 60
     environment: apple-production
-    permissions:
-      contents: read
     defaults:
       run:
         working-directory: apps/endless-equator-spatial
@@ -130,6 +27,7 @@ jobs:
       ENDLESS_EQUATOR_VISION_BUNDLE_ID: ${{ vars.ENDLESS_EQUATOR_VISION_BUNDLE_ID }}
     steps:
       - uses: actions/checkout@v4
+
       - name: Require protected signing inputs
         run: |
           set -euo pipefail
@@ -137,14 +35,19 @@ jobs:
           test -n "$ENDLESS_EQUATOR_IOS_BUNDLE_ID"
           test -n "$ENDLESS_EQUATOR_VISION_BUNDLE_ID"
           security find-identity -v -p codesigning
-      - name: Select Xcode 27 and generate project
+
+      - name: Verify Xcode 27 and generate project
         run: |
-          candidate="$(find /Applications -maxdepth 1 -type d -name 'Xcode_27*.app' -print | sort -V | tail -1)"
-          test -n "$candidate"
-          sudo xcode-select --switch "$candidate/Contents/Developer"
+          set -euo pipefail
+          xcodebuild -version | tee /tmp/xcode-version.txt
+          grep -Eq '^Xcode 27([. ]|$)' /tmp/xcode-version.txt
+          swift --version
+          brew list xcodegen >/dev/null 2>&1 || brew install xcodegen
           xcodegen generate --spec project.yml
+
       - name: Archive iOS and iPadOS app
         run: |
+          set -o pipefail
           xcodebuild \
             -project EndlessEquator.xcodeproj \
             -scheme EndlessEquatorCompanion \
@@ -153,9 +56,11 @@ jobs:
             -archivePath "$RUNNER_TEMP/EndlessEquatorCompanion.xcarchive" \
             DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
             PRODUCT_BUNDLE_IDENTIFIER="$ENDLESS_EQUATOR_IOS_BUNDLE_ID" \
-            clean archive
+            clean archive | tee "$RUNNER_TEMP/endless-equator-signed-ios.log"
+
       - name: Archive visionOS app
         run: |
+          set -o pipefail
           xcodebuild \
             -project EndlessEquator.xcodeproj \
             -scheme EndlessEquatorVision \
@@ -164,16 +69,34 @@ jobs:
             -archivePath "$RUNNER_TEMP/EndlessEquatorVision.xcarchive" \
             DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
             PRODUCT_BUNDLE_IDENTIFIER="$ENDLESS_EQUATOR_VISION_BUNDLE_ID" \
-            clean archive
-      - name: Verify signed archives
+            clean archive | tee "$RUNNER_TEMP/endless-equator-signed-vision.log"
+
+      - name: Verify signatures and WeatherKit entitlements
         run: |
-          codesign --verify --deep --strict --verbose=2 "$RUNNER_TEMP/EndlessEquatorCompanion.xcarchive/Products/Applications/Endless Equator.app"
-          codesign --verify --deep --strict --verbose=2 "$RUNNER_TEMP/EndlessEquatorVision.xcarchive/Products/Applications/Endless Equator Spatial.app"
-      - name: Upload protected archives
+          set -euo pipefail
+          IOS_APP="$RUNNER_TEMP/EndlessEquatorCompanion.xcarchive/Products/Applications/Endless Equator.app"
+          VISION_APP="$RUNNER_TEMP/EndlessEquatorVision.xcarchive/Products/Applications/Endless Equator Spatial.app"
+
+          for app in "$IOS_APP" "$VISION_APP"; do
+            test -d "$app"
+            codesign --verify --deep --strict --verbose=2 "$app"
+            codesign -d --entitlements :- "$app" > "$RUNNER_TEMP/$(basename "$app" | tr ' ' '_').entitlements.plist" 2>/dev/null
+            /usr/libexec/PlistBuddy -c 'Print :com.apple.developer.weatherkit' "$RUNNER_TEMP/$(basename "$app" | tr ' ' '_').entitlements.plist" | grep -q true
+
+            profile="$app/embedded.mobileprovision"
+            test -f "$profile"
+            security cms -D -i "$profile" > "$RUNNER_TEMP/$(basename "$app" | tr ' ' '_').profile.plist"
+            /usr/libexec/PlistBuddy -c 'Print :Entitlements:com.apple.developer.weatherkit' "$RUNNER_TEMP/$(basename "$app" | tr ' ' '_').profile.plist" | grep -q true
+          done
+
+      - name: Upload protected release evidence
         uses: actions/upload-artifact@v4
         with:
           name: endless-equator-signed-archives
           path: |
             ${{ runner.temp }}/EndlessEquatorCompanion.xcarchive
             ${{ runner.temp }}/EndlessEquatorVision.xcarchive
+            ${{ runner.temp }}/endless-equator-signed-*.log
+            ${{ runner.temp }}/*.entitlements.plist
+            ${{ runner.temp }}/*.profile.plist
           retention-days: 7

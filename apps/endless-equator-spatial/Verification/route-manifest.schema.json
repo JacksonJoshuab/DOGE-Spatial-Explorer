@@ -1,0 +1,164 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://endlessequator.example/schemas/route-manifest.schema.json",
+  "title": "Endless Equator operational route manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "routeID",
+    "routeVersion",
+    "gpxFileName",
+    "gpxSHA256",
+    "status",
+    "verifiedBy",
+    "verifiedAt",
+    "accessCheckedAt",
+    "weatherCheckedAt",
+    "expiresAt",
+    "riderAcknowledgedAt",
+    "segments",
+    "goNoGo"
+  ],
+  "properties": {
+    "routeID": { "type": "string", "minLength": 3 },
+    "routeVersion": { "type": "string", "minLength": 1 },
+    "gpxFileName": { "type": "string", "pattern": "\\.gpx$" },
+    "gpxSHA256": { "type": "string", "pattern": "^[a-fA-F0-9]{64}$" },
+    "status": { "enum": ["planningOnly", "operationalCandidate", "suspended", "retired"] },
+    "verifiedBy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "organization", "role", "contactEvidenceRef"],
+      "properties": {
+        "name": { "type": "string", "minLength": 2 },
+        "organization": { "type": "string", "minLength": 2 },
+        "role": { "type": "string", "minLength": 2 },
+        "contactEvidenceRef": { "type": "string", "minLength": 3 }
+      }
+    },
+    "verifiedAt": { "type": "string", "format": "date-time" },
+    "accessCheckedAt": { "type": "string", "format": "date-time" },
+    "weatherCheckedAt": { "type": "string", "format": "date-time" },
+    "expiresAt": { "type": "string", "format": "date-time" },
+    "riderAcknowledgedAt": { "type": "string", "format": "date-time" },
+    "officialSources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["label", "authority", "checkedAt", "evidenceRef"],
+        "properties": {
+          "label": { "type": "string" },
+          "authority": { "type": "string" },
+          "url": { "type": ["string", "null"], "format": "uri" },
+          "checkedAt": { "type": "string", "format": "date-time" },
+          "evidenceRef": { "type": "string", "minLength": 3 }
+        }
+      }
+    },
+    "permits": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["permitType", "authority", "status", "evidenceRef"],
+        "properties": {
+          "permitType": { "type": "string" },
+          "authority": { "type": "string" },
+          "status": { "enum": ["approved", "notRequired", "pending", "denied"] },
+          "validFrom": { "type": ["string", "null"], "format": "date-time" },
+          "validUntil": { "type": ["string", "null"], "format": "date-time" },
+          "evidenceRef": { "type": "string", "minLength": 3 }
+        }
+      }
+    },
+    "segments": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "from",
+          "to",
+          "status",
+          "surface",
+          "accessBasis",
+          "checkedAt",
+          "evidenceRef",
+          "supportVehicleAccess",
+          "bailout",
+          "protectedArea",
+          "landownerPermission",
+          "hazards"
+        ],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "from": { "type": "string", "minLength": 1 },
+          "to": { "type": "string", "minLength": 1 },
+          "highwayRefs": { "type": "array", "items": { "type": "string" } },
+          "status": { "enum": ["open", "conditional", "closed", "unknown"] },
+          "surface": { "type": "string", "minLength": 1 },
+          "accessBasis": { "enum": ["officialNotice", "authorizedLocalGuide", "siteInspection", "landownerPermission", "combined"] },
+          "conditions": { "type": "array", "items": { "type": "string" } },
+          "checkedAt": { "type": "string", "format": "date-time" },
+          "evidenceRef": { "type": "string", "minLength": 3 },
+          "supportVehicleAccess": { "type": "boolean" },
+          "bailout": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["available", "description"],
+            "properties": {
+              "available": { "type": "boolean" },
+              "description": { "type": "string" },
+              "coordinate": {
+                "type": ["object", "null"],
+                "additionalProperties": false,
+                "required": ["latitude", "longitude"],
+                "properties": {
+                  "latitude": { "type": "number", "minimum": -90, "maximum": 90 },
+                  "longitude": { "type": "number", "minimum": -180, "maximum": 180 }
+                }
+              }
+            }
+          },
+          "protectedArea": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["insideOrAdjacent", "authority", "permitEvidenceRef"],
+            "properties": {
+              "insideOrAdjacent": { "type": "boolean" },
+              "authority": { "type": ["string", "null"] },
+              "permitEvidenceRef": { "type": ["string", "null"] }
+            }
+          },
+          "landownerPermission": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["required", "status", "evidenceRef"],
+            "properties": {
+              "required": { "type": "boolean" },
+              "status": { "enum": ["approved", "notRequired", "pending", "denied", "unknown"] },
+              "evidenceRef": { "type": ["string", "null"] }
+            }
+          },
+          "hazards": { "type": "array", "items": { "type": "string" } },
+          "notes": { "type": "string" }
+        }
+      }
+    },
+    "goNoGo": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["decision", "decidedBy", "decidedAt", "evidenceRef"],
+      "properties": {
+        "decision": { "enum": ["GO", "NO_GO", "CONDITIONAL_GO"] },
+        "decidedBy": { "type": "string", "minLength": 2 },
+        "decidedAt": { "type": "string", "format": "date-time" },
+        "conditions": { "type": "array", "items": { "type": "string" } },
+        "evidenceRef": { "type": "string", "minLength": 3 }
+      }
+    }
+  }
+}

@@ -23,8 +23,10 @@ public final class ExpeditionModel {
     public var stationaryOverrideAcknowledged = false
 
     @ObservationIgnored private var lastSyncAt = Date.distantPast
+    @ObservationIgnored private let suppressLiveServices: Bool
 
     public init(webBaseURL: URL? = nil) throws {
+        suppressLiveServices = ProcessInfo.processInfo.arguments.contains("--ui-testing")
         let configuredURL: URL = {
             if let webBaseURL { return webBaseURL }
             if let value = Bundle.main.object(forInfoDictionaryKey: "EndlessEquatorServerURL") as? String,
@@ -80,6 +82,7 @@ public final class ExpeditionModel {
     }
 
     public func beginLocationUpdates() {
+        guard !suppressLiveServices else { return }
         peerSync.start()
         locationService.requestAuthorizationAndStart()
     }

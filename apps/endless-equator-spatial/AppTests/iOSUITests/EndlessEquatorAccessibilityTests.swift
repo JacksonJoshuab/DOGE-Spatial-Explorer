@@ -9,6 +9,7 @@ final class EndlessEquatorAccessibilityTests: XCTestCase {
     func testRiderLaunchAndAccessibilityAudit() throws {
         let app = XCUIApplication()
         app.launchArguments += [
+            "--ui-testing",
             "-AppleLanguages", "(en)",
             "-AppleLocale", "en_US",
             "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"
@@ -27,6 +28,7 @@ final class EndlessEquatorAccessibilityTests: XCTestCase {
     func testExtraExtraExtraLargeTextDoesNotBlockTheSafetyCard() throws {
         let app = XCUIApplication()
         app.launchArguments += [
+            "--ui-testing",
             "-AppleLanguages", "(en)",
             "-AppleLocale", "en_US",
             "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityExtraExtraExtraLarge"

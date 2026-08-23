@@ -39,11 +39,22 @@ public struct AreaSection: Codable, Hashable, Sendable, Identifiable {
     public let id: String
     public let title: String
     public let body: String
+
+    public init(id: String, title: String, body: String) {
+        self.id = id
+        self.title = title
+        self.body = body
+    }
 }
 
 public struct SeasonalWeather: Codable, Hashable, Sendable {
     public let september: String
     public let october: String
+
+    public init(september: String, october: String) {
+        self.september = september
+        self.october = october
+    }
 }
 
 public struct AreaOfInterest: Codable, Hashable, Sendable, Identifiable {
@@ -62,12 +73,52 @@ public struct AreaOfInterest: Codable, Hashable, Sendable, Identifiable {
     public let verificationNote: String
     public let seasonalWeather: SeasonalWeather
     public let sections: [AreaSection]
+
+    public init(
+        id: String,
+        slug: String,
+        name: String,
+        category: AreaCategory,
+        coordinate: GeoCoordinate,
+        altitudeMeters: Int?,
+        highwayRefs: [String],
+        summary: String,
+        safetyNotes: [String],
+        filmingNotes: [String],
+        tags: [String],
+        verificationState: VerificationState,
+        verificationNote: String,
+        seasonalWeather: SeasonalWeather,
+        sections: [AreaSection]
+    ) {
+        self.id = id
+        self.slug = slug
+        self.name = name
+        self.category = category
+        self.coordinate = coordinate
+        self.altitudeMeters = altitudeMeters
+        self.highwayRefs = highwayRefs
+        self.summary = summary
+        self.safetyNotes = safetyNotes
+        self.filmingNotes = filmingNotes
+        self.tags = tags
+        self.verificationState = verificationState
+        self.verificationNote = verificationNote
+        self.seasonalWeather = seasonalWeather
+        self.sections = sections
+    }
 }
 
 public struct RoutePoint: Codable, Hashable, Sendable, Identifiable {
     public let id: String
     public let coordinate: GeoCoordinate
     public let elevationMeters: Double?
+
+    public init(id: String, coordinate: GeoCoordinate, elevationMeters: Double?) {
+        self.id = id
+        self.coordinate = coordinate
+        self.elevationMeters = elevationMeters
+    }
 }
 
 public enum ManeuverKind: String, Codable, Sendable {
@@ -90,6 +141,24 @@ public struct RouteManeuver: Codable, Hashable, Sendable, Identifiable {
     public let roadReference: String?
     public let kind: ManeuverKind
     public let areaID: String?
+
+    public init(
+        id: String,
+        sequence: Int,
+        coordinate: GeoCoordinate,
+        instruction: String,
+        roadReference: String?,
+        kind: ManeuverKind,
+        areaID: String?
+    ) {
+        self.id = id
+        self.sequence = sequence
+        self.coordinate = coordinate
+        self.instruction = instruction
+        self.roadReference = roadReference
+        self.kind = kind
+        self.areaID = areaID
+    }
 }
 
 public struct RouteVerification: Codable, Hashable, Sendable {
@@ -100,6 +169,24 @@ public struct RouteVerification: Codable, Hashable, Sendable {
     public let weatherCheckedAt: Date?
     public let riderAcknowledged: Bool
     public let note: String
+
+    public init(
+        state: VerificationState,
+        verifiedBy: String?,
+        verifiedAt: Date?,
+        accessCheckedAt: Date?,
+        weatherCheckedAt: Date?,
+        riderAcknowledged: Bool,
+        note: String
+    ) {
+        self.state = state
+        self.verifiedBy = verifiedBy
+        self.verifiedAt = verifiedAt
+        self.accessCheckedAt = accessCheckedAt
+        self.weatherCheckedAt = weatherCheckedAt
+        self.riderAcknowledged = riderAcknowledged
+        self.note = note
+    }
 
     public var permitsOperationalGuidance: Bool {
         state == .verified &&
@@ -117,6 +204,24 @@ public struct RoutePlan: Codable, Hashable, Sendable, Identifiable {
     public let maneuvers: [RouteManeuver]
     public let verification: RouteVerification
     public let optionalCoastExtensionAreaIDs: [String]
+
+    public init(
+        id: String,
+        name: String,
+        version: String,
+        points: [RoutePoint],
+        maneuvers: [RouteManeuver],
+        verification: RouteVerification,
+        optionalCoastExtensionAreaIDs: [String]
+    ) {
+        self.id = id
+        self.name = name
+        self.version = version
+        self.points = points
+        self.maneuvers = maneuvers
+        self.verification = verification
+        self.optionalCoastExtensionAreaIDs = optionalCoastExtensionAreaIDs
+    }
 }
 
 public enum NavigationMode: String, Codable, Sendable {
@@ -132,6 +237,24 @@ public struct NavigationSnapshot: Codable, Hashable, Sendable {
     public let isOffRoute: Bool
     public let currentSpeedMetersPerSecond: Double?
     public let lastLocationAt: Date?
+
+    public init(
+        mode: NavigationMode,
+        activeManeuverIndex: Int,
+        distanceToManeuverMeters: Double?,
+        remainingRouteMeters: Double?,
+        isOffRoute: Bool,
+        currentSpeedMetersPerSecond: Double?,
+        lastLocationAt: Date?
+    ) {
+        self.mode = mode
+        self.activeManeuverIndex = activeManeuverIndex
+        self.distanceToManeuverMeters = distanceToManeuverMeters
+        self.remainingRouteMeters = remainingRouteMeters
+        self.isOffRoute = isOffRoute
+        self.currentSpeedMetersPerSecond = currentSpeedMetersPerSecond
+        self.lastLocationAt = lastLocationAt
+    }
 }
 
 public enum MotionSafetyState: String, Codable, Sendable {
@@ -150,6 +273,22 @@ public struct GuideRequest: Codable, Hashable, Sendable {
     public let weatherSummary: String?
     public let coarseContext: String?
     public let question: String
+
+    public init(
+        areaID: String,
+        locale: String,
+        currentManeuver: String?,
+        weatherSummary: String?,
+        coarseContext: String?,
+        question: String
+    ) {
+        self.areaID = areaID
+        self.locale = locale
+        self.currentManeuver = currentManeuver
+        self.weatherSummary = weatherSummary
+        self.coarseContext = coarseContext
+        self.question = question
+    }
 }
 
 public struct GuideResponse: Codable, Hashable, Sendable {
@@ -159,6 +298,22 @@ public struct GuideResponse: Codable, Hashable, Sendable {
     public let warnings: [String]
     public let questionsToVerify: [String]
     public let sourceLabels: [String]
+
+    public init(
+        spokenLine: String,
+        shortCard: String,
+        facts: [String],
+        warnings: [String],
+        questionsToVerify: [String],
+        sourceLabels: [String]
+    ) {
+        self.spokenLine = spokenLine
+        self.shortCard = shortCard
+        self.facts = facts
+        self.warnings = warnings
+        self.questionsToVerify = questionsToVerify
+        self.sourceLabels = sourceLabels
+    }
 }
 
 public struct WeatherSummary: Codable, Hashable, Sendable {
@@ -168,6 +323,22 @@ public struct WeatherSummary: Codable, Hashable, Sendable {
     public let precipitationChance: Double
     public let windKPH: Double
     public let observedAt: Date
+
+    public init(
+        temperatureCelsius: Double,
+        apparentTemperatureCelsius: Double,
+        condition: String,
+        precipitationChance: Double,
+        windKPH: Double,
+        observedAt: Date
+    ) {
+        self.temperatureCelsius = temperatureCelsius
+        self.apparentTemperatureCelsius = apparentTemperatureCelsius
+        self.condition = condition
+        self.precipitationChance = precipitationChance
+        self.windKPH = windKPH
+        self.observedAt = observedAt
+    }
 }
 
 public struct NavigationSyncPacket: Codable, Hashable, Sendable {
@@ -181,4 +352,28 @@ public struct NavigationSyncPacket: Codable, Hashable, Sendable {
     public let selectedAreaID: String?
     public let weather: WeatherSummary?
     public let generatedAt: Date
+
+    public init(
+        routeID: String,
+        maneuverIndex: Int,
+        maneuverInstruction: String?,
+        roadReference: String?,
+        activeManeuverCoordinate: GeoCoordinate?,
+        speedMetersPerSecond: Double?,
+        motionSafetyState: MotionSafetyState,
+        selectedAreaID: String?,
+        weather: WeatherSummary?,
+        generatedAt: Date
+    ) {
+        self.routeID = routeID
+        self.maneuverIndex = maneuverIndex
+        self.maneuverInstruction = maneuverInstruction
+        self.roadReference = roadReference
+        self.activeManeuverCoordinate = activeManeuverCoordinate
+        self.speedMetersPerSecond = speedMetersPerSecond
+        self.motionSafetyState = motionSafetyState
+        self.selectedAreaID = selectedAreaID
+        self.weather = weather
+        self.generatedAt = generatedAt
+    }
 }

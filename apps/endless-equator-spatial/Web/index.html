@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#09100f">
+  <meta name="description" content="Endless Equator Ecuador expedition operations and area guide">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="stylesheet" href="/styles.css">
+  <title>Endless Equator Spatial Navigator</title>
+</head>
+<body>
+  <header>
+    <div><strong>ENDLESS EQUATOR</strong><span> Ecuador spatial navigator</span></div>
+    <div id="network" role="status">local-first</div>
+  </header>
+  <main>
+    <aside>
+      <label for="search">Areas of interest</label>
+      <input id="search" type="search" placeholder="Volcano, surf, Rotary, E30…">
+      <nav id="area-list" aria-label="Areas of interest"></nav>
+    </aside>
+    <section id="workspace">
+      <div id="map" aria-label="Interactive route map">
+        <svg id="fallback-map" viewBox="0 0 900 520" role="img" aria-label="Offline Ecuador route schematic"></svg>
+      </div>
+      <article id="area-detail" aria-live="polite"></article>
+    </section>
+  </main>
+  <footer>Planning data is not trail authorization. Stop safely before interacting.</footer>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

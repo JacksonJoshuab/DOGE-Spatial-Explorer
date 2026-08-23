@@ -1,0 +1,35 @@
+openapi: 3.1.0
+info:
+  title: Endless Equator Jetson Edge Contract
+  version: 0.1.0
+paths:
+  /v1/hazards:
+    post:
+      summary: Analyze one explicitly selected frame on the local Jetson node
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [areaID, capturedAt, imageJPEG]
+              properties:
+                areaID: { type: string }
+                capturedAt: { type: string, format: date-time }
+                imageJPEG: { type: string, contentEncoding: base64 }
+                operatorNote: { type: [string, "null"] }
+      responses:
+        "200":
+          description: Advisory result; never a route command
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [labels, confidence, advisory, modelVersion]
+                properties:
+                  labels: { type: array, items: { type: string } }
+                  confidence: { type: number, minimum: 0, maximum: 1 }
+                  advisory: { type: string }
+                  modelVersion: { type: string }

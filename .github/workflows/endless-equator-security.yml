@@ -55,10 +55,10 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
-      - uses: github/codeql-action/init@v3
+      - uses: github/codeql-action/init@v4
         with:
           languages: javascript-typescript
-      - uses: github/codeql-action/analyze@v3
+      - uses: github/codeql-action/analyze@v4
         with:
           category: /language:javascript-typescript
 
@@ -67,7 +67,14 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
-      - uses: github/codeql-action/init@v3
+      - name: Install XcodeGen before CodeQL tracing
+        run: |
+          set -euo pipefail
+          if ! arch -arm64 brew list xcodegen >/dev/null 2>&1; then
+            arch -arm64 brew install xcodegen
+          fi
+          arch -arm64 xcodegen --version
+      - uses: github/codeql-action/init@v4
         with:
           languages: swift
       - name: Verify Xcode 27
@@ -79,7 +86,7 @@ jobs:
       - name: Generate and build Apple targets for CodeQL
         working-directory: apps/endless-equator-spatial
         run: |
-          brew list xcodegen >/dev/null 2>&1 || brew install xcodegen
+          set -euo pipefail
           xcodegen generate --spec project.yml
           xcodebuild \
             -project EndlessEquator.xcodeproj \
@@ -93,6 +100,6 @@ jobs:
             -destination 'generic/platform=visionOS Simulator' \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO DEVELOPMENT_TEAM='' \
             build
-      - uses: github/codeql-action/analyze@v3
+      - uses: github/codeql-action/analyze@v4
         with:
           category: /language:swift

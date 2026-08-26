@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" role="img" aria-labelledby="title desc">
+  <title id="title">Spatial cognition neural portrait</title>
+  <desc id="desc">An original luminous human profile with a connected neural network and orbiting cognitive symbols.</desc>
+  <defs>
+    <radialGradient id="space" cx="68%" cy="42%" r="72%"><stop stop-color="#17285d"/><stop offset=".42" stop-color="#07172f"/><stop offset="1" stop-color="#030816"/></radialGradient>
+    <linearGradient id="edge" x1=".15" y1=".1" x2=".9" y2=".92"><stop stop-color="#46e7ff"/><stop offset=".52" stop-color="#7776ff"/><stop offset="1" stop-color="#ff4fc7"/></linearGradient>
+    <radialGradient id="brain" cx="45%" cy="42%" r="60%"><stop stop-color="#79f5ff" stop-opacity=".92"/><stop offset=".44" stop-color="#577dff" stop-opacity=".7"/><stop offset="1" stop-color="#fb4fd0" stop-opacity=".24"/></radialGradient>
+    <filter id="glow"><feGaussianBlur stdDeviation="10" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <filter id="soft"><feGaussianBlur stdDeviation="28"/></filter>
+    <clipPath id="head"><path d="M952 175c-162 4-273 103-279 260-4 110 51 190 115 243 34 28 55 68 57 113l4 89h255l-6-110c-2-31 10-61 33-83 56-53 94-129 96-221 4-172-112-295-275-291z"/></clipPath>
+  </defs>
+  <rect width="1600" height="1000" rx="72" fill="url(#space)"/>
+  <g opacity=".6" filter="url(#soft)"><circle cx="264" cy="236" r="90" fill="#20dfff"/><circle cx="1370" cy="220" r="110" fill="#9b4cff"/><circle cx="1335" cy="820" r="130" fill="#ff3fb7"/></g>
+  <g fill="#d8f8ff" opacity=".72"><circle cx="91" cy="118" r="3"/><circle cx="224" cy="695" r="5"/><circle cx="384" cy="164" r="4"/><circle cx="520" cy="780" r="3"/><circle cx="1420" cy="568" r="5"/><circle cx="1510" cy="180" r="3"/><circle cx="1280" cy="890" r="4"/></g>
+  <g fill="none" stroke="url(#edge)" opacity=".65" filter="url(#glow)"><ellipse cx="952" cy="467" rx="480" ry="220" stroke-width="4" transform="rotate(-9 952 467)"/><ellipse cx="952" cy="467" rx="395" ry="310" stroke-width="3" transform="rotate(17 952 467)"/><path d="M474 372c149-109 340-153 558-112 184 35 326 133 424 290" stroke-width="3"/></g>
+  <path d="M952 175c-162 4-273 103-279 260-4 110 51 190 115 243 34 28 55 68 57 113l4 89h255l-6-110c-2-31 10-61 33-83 56-53 94-129 96-221 4-172-112-295-275-291z" fill="#08152f" stroke="url(#edge)" stroke-width="7" filter="url(#glow)"/>
+  <g clip-path="url(#head)">
+    <ellipse cx="940" cy="390" rx="220" ry="183" fill="url(#brain)" opacity=".86"/>
+    <g stroke="#9defff" stroke-width="3" opacity=".72" fill="none">
+      <path d="M751 381c48-75 98-103 161-102 78 1 132 44 182 116M776 452c62-53 124-73 188-55 60 17 99 55 127 112M827 258c3 94 37 178 110 250M1024 259c-15 77-56 147-126 211M792 337c111 15 211 74 285 174M793 503c89-24 183-10 281 42"/>
+    </g>
+    <g fill="#e4feff" filter="url(#glow)"><circle cx="824" cy="310" r="10"/><circle cx="910" cy="280" r="9"/><circle cx="1009" cy="318" r="11"/><circle cx="1083" cy="403" r="9"/><circle cx="1048" cy="498" r="12"/><circle cx="946" cy="525" r="10"/><circle cx="846" cy="478" r="11"/><circle cx="790" cy="400" r="8"/><circle cx="927" cy="397" r="13"/></g>
+  </g>
+  <path d="M1221 456c48 12 80 33 98 64-33 13-62 9-87-13" fill="none" stroke="#76eaff" stroke-width="6" stroke-linecap="round"/>
+  <g filter="url(#glow)">
+    <g transform="translate(418 272) rotate(-12)"><rect x="-35" y="-35" width="70" height="70" rx="16" fill="#121d45" stroke="#57e9ff" stroke-width="5"/><circle r="12" fill="#ff58c7"/></g>
+    <g transform="translate(1341 355) rotate(18)"><path d="M0-40 38-12 24 34-24 34-38-12z" fill="#111d43" stroke="#ae70ff" stroke-width="5"/><circle r="9" fill="#5ee9ff"/></g>
+    <g transform="translate(522 690)"><path d="M-44-15h29v-29h30v29h29v30H15v29h-30V15h-29z" fill="#141d44" stroke="#ff5bc9" stroke-width="5"/></g>
+  </g>
+  <g transform="translate(108 742)">
+    <rect width="650" height="150" rx="48" fill="#071326" fill-opacity=".86" stroke="#7eeeff" stroke-opacity=".28"/>
+    <circle cx="80" cy="75" r="42" fill="#0b2145" stroke="url(#edge)" stroke-width="4"/>
+    <path d="M60 77h10l8-27 12 52 10-37 8 12h14" fill="none" stroke="url(#edge)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="145" y="66" fill="#f7fbff" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="34" font-weight="700">Measure what matters.</text>
+    <text x="145" y="108" fill="#aebed8" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="24">Focus · Memory · Cognitive wellness</text>
+  </g>
+</svg>

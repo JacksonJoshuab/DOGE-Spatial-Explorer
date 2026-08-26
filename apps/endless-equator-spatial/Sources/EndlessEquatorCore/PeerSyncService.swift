@@ -200,23 +200,31 @@ private final class PeerTransport: @unchecked Sendable {
     }
 
     private func startOnQueue() {
-        guard listener == nil, browser == nil else { return }
-        do {
-            let parameters = makeParameters()
-            let newListener = try NWListener(using: parameters)
-            newListener.service = NWListener.Service(name: displayName, type: Self.serviceType)
-            newListener.stateUpdateHandler = { [weak self] state in self?.handleListenerState(state) }
-            newListener.newConnectionHandler = { [weak self] connection in self?.handleIncoming(connection) }
-            listener = newListener
-            newListener.start(queue: queue)
+        if listener == nil {
+            do {
+                let newListener = try NWListener(using: makeParameters())
+                newListener.service = NWListener.Service(name: displayName, type: Self.serviceType)
+                newListener.stateUpdateHandler = { [weak self] state in self?.handleListenerState(state) }
+                newListener.newConnectionHandler = { [weak self] connection in self?.handleIncoming(connection) }
+                listener = newListener
+                newListener.start(queue: queue)
+            } catch {
+                listener = nil
+                onError(error.localizedDescription)
+            }
+        }
 
-            let newBrowser = NWBrowser(for: .bonjour(type: Self.serviceType, domain: nil), using: makeParameters())
+        if browser == nil {
+            let newBrowser = NWBrowser(
+                for: .bonjour(type: Self.serviceType, domain: nil),
+                using: makeParameters()
+            )
             newBrowser.stateUpdateHandler = { [weak self] state in self?.handleBrowserState(state) }
-            newBrowser.browseResultsChangedHandler = { [weak self] results, _ in self?.handleBrowseResults(results) }
+            newBrowser.browseResultsChangedHandler = { [weak self] results, _ in
+                self?.handleBrowseResults(results)
+            }
             browser = newBrowser
             newBrowser.start(queue: queue)
-        } catch {
-            onError(error.localizedDescription)
         }
     }
 
@@ -368,7 +376,9 @@ private final class PeerTransport: @unchecked Sendable {
     }
 
     private func remove(_ context: ConnectionContext) {
-        connections.removeValue(forKey: context.peer.id)
+        let id = context.peer.id
+        guard connections[id] === context else { return }
+        connections.removeValue(forKey: id)
         publishConnectedPeers()
     }
 

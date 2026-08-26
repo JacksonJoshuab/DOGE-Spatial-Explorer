@@ -84,7 +84,7 @@ import Testing
             verification: planningVerification()
         )
         Issue.record("An invalid coordinate was accepted")
-    } catch GPXImportError.invalidCoordinate {
+    } catch GPXImportError.invalidCoordinate(_, _) {
         // Expected.
     } catch {
         Issue.record("Unexpected error: \(error)")

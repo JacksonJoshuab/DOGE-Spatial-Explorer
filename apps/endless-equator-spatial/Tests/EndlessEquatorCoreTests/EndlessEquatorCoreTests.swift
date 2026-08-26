@@ -50,6 +50,47 @@ import Testing
     #expect(route.verification.permitsOperationalGuidance)
 }
 
+@Test func gpxImporterRejectsMultipleTrackSegments() {
+    let xml = """
+    <gpx version="1.1"><trk>
+      <trkseg><trkpt lat="0" lon="0"/><trkpt lat="0" lon="0.001"/></trkseg>
+      <trkseg><trkpt lat="0" lon="0.010"/><trkpt lat="0" lon="0.011"/></trkseg>
+    </trk></gpx>
+    """.data(using: .utf8)!
+    do {
+        _ = try GPXImporter().importRoute(
+            data: xml,
+            name: "Discontinuous",
+            verification: planningVerification()
+        )
+        Issue.record("A multi-segment GPX was accepted")
+    } catch GPXImportError.multipleTrackSegments {
+        // Expected.
+    } catch {
+        Issue.record("Unexpected error: \(error)")
+    }
+}
+
+@Test func gpxImporterRejectsNonFiniteOrOutOfRangeCoordinates() {
+    let xml = """
+    <gpx version="1.1"><trk><trkseg>
+      <trkpt lat="91" lon="0"/><trkpt lat="0" lon="0.001"/>
+    </trkseg></trk></gpx>
+    """.data(using: .utf8)!
+    do {
+        _ = try GPXImporter().importRoute(
+            data: xml,
+            name: "Invalid",
+            verification: planningVerification()
+        )
+        Issue.record("An invalid coordinate was accepted")
+    } catch GPXImportError.invalidCoordinate {
+        // Expected.
+    } catch {
+        Issue.record("Unexpected error: \(error)")
+    }
+}
+
 @MainActor
 @Test func navigationAdvancesPastMissedManeuverRadius() throws {
     let coordinates = [0.0, 0.001, 0.002, 0.003].map {
@@ -92,4 +133,16 @@ import Testing
 
     #expect(engine.snapshot.activeManeuverIndex == 2)
     #expect(engine.snapshot.isOffRoute == false)
+}
+
+private func planningVerification() -> RouteVerification {
+    RouteVerification(
+        state: .planningOnly,
+        verifiedBy: nil,
+        verifiedAt: nil,
+        accessCheckedAt: nil,
+        weatherCheckedAt: nil,
+        riderAcknowledged: false,
+        note: "Test planning route"
+    )
 }

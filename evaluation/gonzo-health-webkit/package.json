@@ -1,0 +1,17 @@
+{
+  "name": "gonzo-health-webkit-evaluation-runtime",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Playwright WebKit runtime for the Gonzo Health deployment evaluation skill.",
+  "scripts": {
+    "install:webkit": "playwright install --with-deps webkit",
+    "evaluate:live": "node ../../scripts/evaluate-gonzo-health-webkit.mjs --url https://jacksonjoshuab.github.io/DOGE-Spatial-Explorer/gonzo-health-spatial-cognition/ --browser webkit --require-live --json ../../evaluation-output/live-report.json --markdown ../../evaluation-output/live-report.md --screenshots ../../evaluation-output/live-screenshots"
+  },
+  "dependencies": {
+    "playwright": "latest"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

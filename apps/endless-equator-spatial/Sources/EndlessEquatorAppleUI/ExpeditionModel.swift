@@ -2,6 +2,9 @@ import CoreLocation
 import EndlessEquatorCore
 import Foundation
 import Observation
+#if os(iOS)
+import UIKit
+#endif
 
 @MainActor
 @Observable
@@ -50,7 +53,7 @@ public final class ExpeditionModel {
         locationService = ExpeditionLocationService()
         voiceGuidance = VoiceGuidanceService()
         weatherService = AreaWeatherService()
-        peerSync = PeerSyncService(displayName: "Expedition device")
+        peerSync = PeerSyncService(displayName: Self.peerDisplayName())
         turnHaptics = TurnHapticsService()
         guideGateway = GuideGateway(baseURL: configuredURL)
         self.webBaseURL = configuredURL
@@ -59,12 +62,20 @@ public final class ExpeditionModel {
         locationService.onLocation = { [weak self] location in
             guard let self else { return }
             let priorIndex = self.routeEngine.snapshot.activeManeuverIndex
+            let wasOffRoute = self.routeEngine.snapshot.isOffRoute
             self.routeEngine.ingest(
                 location: location,
                 stationaryOverrideAcknowledged: self.stationaryOverrideAcknowledged
             )
             let currentIndex = self.routeEngine.snapshot.activeManeuverIndex
-            if self.routeEngine.isRunning, currentIndex != priorIndex,
+
+            if self.routeEngine.isRunning,
+               !wasOffRoute,
+               self.routeEngine.snapshot.isOffRoute {
+                self.turnHaptics.offRouteWarning()
+            }
+            if self.routeEngine.isRunning,
+               currentIndex != priorIndex,
                let instruction = self.routeEngine.activeManeuver?.instruction {
                 self.turnHaptics.turnAdvanced()
                 self.voiceGuidance.speak(instruction, localeIdentifier: "en-US")
@@ -85,8 +96,18 @@ public final class ExpeditionModel {
         return lastGuideResponse
     }
 
+    public var syncedPacket: NavigationSyncPacket? {
+        guard let packet = peerSync.latestPacket,
+              packet.routeID == routeEngine.plan.id else {
+            return nil
+        }
+        let age = Date().timeIntervalSince(packet.generatedAt)
+        guard age >= -5, age <= 10 else { return nil }
+        return packet
+    }
+
     public var syncedManeuverInstruction: String? {
-        peerSync.latestPacket?.maneuverInstruction
+        syncedPacket?.maneuverInstruction
     }
 
     public func beginLocationUpdates() {
@@ -182,5 +203,26 @@ public final class ExpeditionModel {
             weather: latestWeather,
             generatedAt: generatedAt
         )
+    }
+
+    private static func peerDisplayName() -> String {
+        let defaults = UserDefaults.standard
+        let key = "EndlessEquatorPeerSuffix"
+        let suffix: String
+        if let stored = defaults.string(forKey: key), stored.count == 6 {
+            suffix = stored
+        } else {
+            suffix = String(UUID().uuidString.replacingOccurrences(of: "-", with: "").prefix(6)).uppercased()
+            defaults.set(suffix, forKey: key)
+        }
+
+        #if os(visionOS)
+        let role = "Vision"
+        #elseif os(iOS)
+        let role = UIDevice.current.userInterfaceIdiom == .pad ? "Support" : "Rider"
+        #else
+        let role = "Device"
+        #endif
+        return "EQ-\(role)-\(suffix)"
     }
 }

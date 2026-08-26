@@ -23,6 +23,13 @@ settings:
     ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS: YES
     MARKETING_VERSION: 0.1.0
     CURRENT_PROJECT_VERSION: 1
+    ENDLESS_EQUATOR_IOS_BUNDLE_ID: com.gonzosocialclub.endlessequator
+    ENDLESS_EQUATOR_VISION_BUNDLE_ID: com.gonzosocialclub.endlessequator.spatial
+  configs:
+    Debug:
+      ENDLESS_EQUATOR_SERVER_URL: http://localhost:8787
+    Release:
+      ENDLESS_EQUATOR_SERVER_URL: https://gateway-not-configured.invalid
 packages:
   EndlessEquatorSpatial:
     path: .
@@ -35,7 +42,7 @@ targets:
       - path: AppTemplates/iOS
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.gonzosocialclub.endlessequator.companion
+        PRODUCT_BUNDLE_IDENTIFIER: $(ENDLESS_EQUATOR_IOS_BUNDLE_ID)
         PRODUCT_NAME: Endless Equator
         INFOPLIST_FILE: Config/Info-iOS.plist
         CODE_SIGN_ENTITLEMENTS: Config/EndlessEquator.entitlements
@@ -53,7 +60,7 @@ targets:
       - path: AppTests/iOSUITests
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.gonzosocialclub.endlessequator.companion.uitests
+        PRODUCT_BUNDLE_IDENTIFIER: $(ENDLESS_EQUATOR_IOS_BUNDLE_ID).uitests
         GENERATE_INFOPLIST_FILE: YES
         TEST_TARGET_NAME: EndlessEquatorCompanion
         CODE_SIGN_STYLE: Automatic
@@ -67,7 +74,7 @@ targets:
       - path: AppTemplates/visionOS
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.gonzosocialclub.endlessequator.vision
+        PRODUCT_BUNDLE_IDENTIFIER: $(ENDLESS_EQUATOR_VISION_BUNDLE_ID)
         PRODUCT_NAME: Endless Equator Spatial
         INFOPLIST_FILE: Config/Info-visionOS.plist
         CODE_SIGN_ENTITLEMENTS: Config/EndlessEquator.entitlements

@@ -1,0 +1,100 @@
+{
+  "product": "Endless Equator Spatial Navigator",
+  "releaseCandidate": "RC1",
+  "sourceCommit": "0000000000000000000000000000000000000000",
+  "decision": "NO_GO",
+  "generatedAt": "2026-08-26T00:00:00Z",
+  "expiresAt": null,
+  "notes": "Template only. Replace every placeholder through the approved private evidence workflow. Do not place certificates, provisioning profiles, API keys, participant releases, passport data, payment data, health data, or unredacted private contracts in Git.",
+  "gates": [
+    {
+      "id": "A",
+      "name": "Source and reproducible build",
+      "mandatoryFor": ["INTERNAL_TESTFLIGHT", "CONTROLLED_REHEARSAL", "OPERATIONAL_GO", "CONDITIONAL_GO"],
+      "status": "IN_PROGRESS",
+      "owner": { "name": "REPLACE", "role": "Engineering release lead", "organization": "REPLACE", "contactEvidenceRef": "PRIVATE-REF-REPLACE" },
+      "checkedAt": "2026-08-26T00:00:00Z",
+      "expiresAt": null,
+      "blockers": ["Attach green post-merge Xcode 27, spatial, gateway, JavaScript CodeQL, and Swift CodeQL evidence."],
+      "evidence": []
+    },
+    {
+      "id": "B",
+      "name": "Apple identity, WeatherKit, signing, and TestFlight",
+      "mandatoryFor": ["INTERNAL_TESTFLIGHT", "CONTROLLED_REHEARSAL", "OPERATIONAL_GO", "CONDITIONAL_GO"],
+      "status": "BLOCKED",
+      "owner": { "name": "REPLACE", "role": "Apple Developer account holder or admin", "organization": "REPLACE", "contactEvidenceRef": "PRIVATE-REF-REPLACE" },
+      "checkedAt": "2026-08-26T00:00:00Z",
+      "expiresAt": null,
+      "blockers": ["Final App IDs, Team ID, WeatherKit capability, profiles, signing host, signed archives, and TestFlight records are not evidenced."],
+      "evidence": []
+    },
+    {
+      "id": "C",
+      "name": "Physical Apple-device qualification",
+      "mandatoryFor": ["CONTROLLED_REHEARSAL", "OPERATIONAL_GO", "CONDITIONAL_GO"],
+      "status": "NOT_STARTED",
+      "owner": { "name": "REPLACE", "role": "Apple-platform QA lead", "organization": "REPLACE", "contactEvidenceRef": "PRIVATE-REF-REPLACE" },
+      "checkedAt": "2026-08-26T00:00:00Z",
+      "expiresAt": null,
+      "blockers": ["Signed physical iPhone, iPad, Vision Pro, Bluetooth/intercom, network, thermal, battery, offline, and accessibility testing is outstanding."],
+      "evidence": []
+    },
+    {
+      "id": "D",
+      "name": "Production HTTPS gateway",
+      "mandatoryFor": ["CONTROLLED_REHEARSAL", "OPERATIONAL_GO", "CONDITIONAL_GO"],
+      "status": "BLOCKED",
+      "owner": { "name": "REPLACE", "role": "Platform operations owner", "organization": "REPLACE", "contactEvidenceRef": "PRIVATE-REF-REPLACE" },
+      "checkedAt": "2026-08-26T00:00:00Z",
+      "expiresAt": null,
+      "blockers": ["Azure, OIDC, Key Vault, DNS, production origins, monitoring, and rollback evidence are not supplied."],
+      "evidence": []
+    },
+    {
+      "id": "E",
+      "name": "Current Ecuador GPX, access, permissions, and go/no-go",
+      "mandatoryFor": ["OPERATIONAL_GO", "CONDITIONAL_GO"],
+      "status": "BLOCKED",
+      "owner": { "name": "REPLACE", "role": "Ecuador route and expedition operations lead", "organization": "REPLACE", "contactEvidenceRef": "PRIVATE-REF-REPLACE" },
+      "checkedAt": "2026-08-26T00:00:00Z",
+      "expiresAt": null,
+      "blockers": ["Exact current GPX, named verifier, segment evidence, protected/private access, support bailouts, fresh weather/access checks, and signed go/no-go are not supplied."],
+      "evidence": []
+    },
+    {
+      "id": "F",
+      "name": "Privacy, accessibility, and App Store review",
+      "mandatoryFor": ["INTERNAL_TESTFLIGHT", "CONTROLLED_REHEARSAL", "OPERATIONAL_GO", "CONDITIONAL_GO"],
+      "status": "IN_PROGRESS",
+      "owner": { "name": "REPLACE", "role": "Privacy and accessibility review lead", "organization": "REPLACE", "contactEvidenceRef": "PRIVATE-REF-REPLACE" },
+      "checkedAt": "2026-08-26T00:00:00Z",
+      "expiresAt": null,
+      "blockers": ["Final signed-binary data-flow, SDK, privacy-manifest, policy, VoiceOver, Dynamic Type, contrast, motion, input, caption, and visionOS evidence is outstanding."],
+      "evidence": []
+    },
+    {
+      "id": "G",
+      "name": "Independent penetration and operational acceptance",
+      "mandatoryFor": ["CONTROLLED_REHEARSAL", "OPERATIONAL_GO", "CONDITIONAL_GO"],
+      "status": "NOT_STARTED",
+      "owner": { "name": "REPLACE", "role": "Independent security and OAT lead", "organization": "REPLACE", "contactEvidenceRef": "PRIVATE-REF-REPLACE" },
+      "checkedAt": "2026-08-26T00:00:00Z",
+      "expiresAt": null,
+      "blockers": ["Independent assessment, remediation retest, failure drills, field rehearsal, and signed acceptance are outstanding."],
+      "evidence": []
+    },
+    {
+      "id": "H",
+      "name": "Written Ecuador provider and partner confirmations",
+      "mandatoryFor": ["OPERATIONAL_GO", "CONDITIONAL_GO"],
+      "status": "BLOCKED",
+      "owner": { "name": "REPLACE", "role": "Producer and partner-confirmation lead", "organization": "REPLACE", "contactEvidenceRef": "PRIVATE-REF-REPLACE" },
+      "checkedAt": "2026-08-26T00:00:00Z",
+      "expiresAt": null,
+      "blockers": ["Guide, fleet, hotels, Rotary/community hosts, authorities, medical, recovery, fixer, surf, and immersive-production dependencies are not confirmed in writing."],
+      "evidence": []
+    }
+  ],
+  "approvals": []
+}

@@ -1,9 +1,15 @@
 {
   "status": "ok",
-  "product": "Gonzo | Health Spatial Cognition Lab",
-  "deployment": "public-webkit",
-  "version": "2.1.0-webkit",
-  "measurementContract": "2.0.0",
-  "offlineCore": true,
-  "diagnostic": false
+  "app": "Gonzo | Health — Spatial Cognition Lab",
+  "deployment": "github-pages",
+  "release": "gsc-webkit/2.1.0",
+  "brandVersion": "gonzo-health-webkit-brand/1.0.0",
+  "assessmentSchema": "gsc-session/3.0",
+  "offlineCapable": true,
+  "localFirst": true,
+  "diagnostic": false,
+  "generationPacks": 7,
+  "batteryResponseCounts": [36, 132, 252],
+  "sharedAnchors": 12,
+  "updatedAt": "2026-08-26T00:00:00Z"
 }

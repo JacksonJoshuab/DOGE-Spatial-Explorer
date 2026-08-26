@@ -9,8 +9,8 @@
   "scope": "./",
   "display": "standalone",
   "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
-  "background_color": "#030816",
-  "theme_color": "#07101f",
+  "background_color": "#eef8ff",
+  "theme_color": "#eef8ff",
   "orientation": "any",
   "categories": ["health", "education", "games", "productivity"],
   "icons": [

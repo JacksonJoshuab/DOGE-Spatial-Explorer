@@ -84,6 +84,7 @@ public final class PeerSyncService {
 
     public func setPairingCode(_ value: String) {
         let normalized = Self.normalizePairingCode(value)
+        guard normalized != pairingCode else { return }
         pairingCode = normalized
         connectedPeers = []
         transport.setPairingCode(normalized)
@@ -162,12 +163,20 @@ private final class PeerTransport: @unchecked Sendable {
     }
 
     func setPairingWindow(open: Bool) {
-        queue.async { [weak self] in self?.pairingWindowOpen = open }
+        queue.async { [weak self] in
+            guard let self else { return }
+            pairingWindowOpen = open
+            if !open {
+                for context in connections.values where context.isIncoming && !context.authenticated {
+                    context.connection.cancel()
+                }
+            }
+        }
     }
 
     func setPairingCode(_ code: String) {
         queue.async { [weak self] in
-            guard let self else { return }
+            guard let self, code != pairingCode else { return }
             pairingCode = code
             connections.values.forEach { $0.connection.cancel() }
             connections = [:]
@@ -182,7 +191,11 @@ private final class PeerTransport: @unchecked Sendable {
                 self?.onError(PeerSyncError.peerUnavailable.localizedDescription)
                 return
             }
-            registerConnection(NWConnection(to: endpoint, using: makeParameters()), peer: peer)
+            registerConnection(
+                NWConnection(to: endpoint, using: makeParameters()),
+                peer: peer,
+                isIncoming: false
+            )
         }
     }
 
@@ -287,14 +300,24 @@ private final class PeerTransport: @unchecked Sendable {
             connection.cancel()
             return
         }
-        pairingWindowOpen = false
-        onPairingWindowConsumed()
-        registerConnection(connection, peer: peerDescriptor(for: connection.endpoint))
+        registerConnection(
+            connection,
+            peer: peerDescriptor(for: connection.endpoint),
+            isIncoming: true
+        )
     }
 
-    private func registerConnection(_ connection: NWConnection, peer: NearbyExpeditionPeer) {
+    private func registerConnection(
+        _ connection: NWConnection,
+        peer: NearbyExpeditionPeer,
+        isIncoming: Bool
+    ) {
         connections[peer.id]?.connection.cancel()
-        let context = ConnectionContext(peer: peer, connection: connection)
+        let context = ConnectionContext(
+            peer: peer,
+            connection: connection,
+            isIncoming: isIncoming
+        )
         connections[peer.id] = context
         connection.stateUpdateHandler = { [weak self, weak context] state in
             guard let self, let context else { return }
@@ -361,6 +384,18 @@ private final class PeerTransport: @unchecked Sendable {
             context.buffer.removeSubrange(0..<fullLength)
             do {
                 let envelope = try Self.openFrame(encrypted, pairingCode: pairingCode)
+                if !context.authenticated, context.isIncoming {
+                    guard pairingWindowOpen else {
+                        context.connection.cancel()
+                        return
+                    }
+                    pairingWindowOpen = false
+                    onPairingWindowConsumed()
+                    for other in connections.values
+                    where other !== context && other.isIncoming && !other.authenticated {
+                        other.connection.cancel()
+                    }
+                }
                 context.authenticated = true
                 context.peer = NearbyExpeditionPeer(id: context.peer.id, displayName: envelope.displayName)
                 publishConnectedPeers()
@@ -424,12 +459,14 @@ private final class PeerTransport: @unchecked Sendable {
 private final class ConnectionContext: @unchecked Sendable {
     var peer: NearbyExpeditionPeer
     let connection: NWConnection
+    let isIncoming: Bool
     var buffer = Data()
     var authenticated = false
 
-    init(peer: NearbyExpeditionPeer, connection: NWConnection) {
+    init(peer: NearbyExpeditionPeer, connection: NWConnection, isIncoming: Bool) {
         self.peer = peer
         self.connection = connection
+        self.isIncoming = isIncoming
     }
 }
 

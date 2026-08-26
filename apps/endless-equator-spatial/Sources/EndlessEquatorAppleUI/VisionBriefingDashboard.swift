@@ -22,9 +22,19 @@ public struct VisionBriefingDashboard: View {
                 if let area = model.selectedArea {
                     AreaDetailView(area: area, webBaseURL: model.webBaseURL)
                 }
-                if let instruction = model.syncedManeuverInstruction {
-                    GroupBox("Synced rider maneuver") {
-                        Text(instruction).font(.title3.bold())
+                TimelineView(.periodic(from: .now, by: 5)) { _ in
+                    if let instruction = model.syncedManeuverInstruction {
+                        GroupBox("Fresh synced rider maneuver") {
+                            Text(instruction).font(.title3.bold())
+                        }
+                    } else if model.peerSync.latestPacket != nil {
+                        GroupBox("Synced rider state unavailable") {
+                            Label(
+                                "The latest packet is stale or belongs to a different route. No maneuver is displayed.",
+                                systemImage: "clock.badge.exclamationmark"
+                            )
+                            .foregroundStyle(.orange)
+                        }
                     }
                 }
                 Toggle("I am seated or standing still in a safe briefing area", isOn: $model.stationaryOverrideAcknowledged)
@@ -35,12 +45,13 @@ public struct VisionBriefingDashboard: View {
                     Button(immersiveOpen ? "Close route room" : "Open stationary route room") {
                         Task {
                             if immersiveOpen {
-                                await dismissImmersiveSpace(); immersiveOpen = false
+                                await dismissImmersiveSpace()
+                                immersiveOpen = false
                             } else if model.routeEngine.motionSafetyState.permitsSpatialRouteRoom {
                                 let result = await openImmersiveSpace(id: "endless-equator-route")
                                 immersiveOpen = result == .opened
                             } else {
-                                model.alertMessage = "The mixed-reality route room is locked until the device reports a safe stationary state."
+                                model.alertMessage = "The mixed-reality route room is locked until the device reports a safe, fresh stationary state."
                             }
                         }
                     }
@@ -53,6 +64,14 @@ public struct VisionBriefingDashboard: View {
         }
         .task { model.beginLocationUpdates() }
         .sheet(isPresented: $showPairing) { PeerPairingView(service: model.peerSync) }
+        .alert("Spatial briefing notice", isPresented: Binding(
+            get: { model.alertMessage != nil },
+            set: { if !$0 { model.alertMessage = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(model.alertMessage ?? "")
+        }
     }
 }
 #endif

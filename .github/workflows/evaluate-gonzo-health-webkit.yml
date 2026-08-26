@@ -1,0 +1,178 @@
+name: Evaluate Gonzo Health WebKit
+
+on:
+  push:
+    branches:
+      - feature/gonzo-health-webkit-evaluation-skill
+      - main
+    paths:
+      - "skills/gonzo-health-webkit-evaluator/**"
+      - "scripts/evaluate-gonzo-health-webkit.mjs"
+      - "evaluation/gonzo-health-webkit/**"
+      - ".github/workflows/evaluate-gonzo-health-webkit.yml"
+  workflow_dispatch:
+    inputs:
+      source_ref:
+        description: Source ref containing the WebKit release candidate
+        required: true
+        default: feature/gonzo-health-brand-refresh
+        type: string
+      target_url:
+        description: Public URL for the optional live evaluation
+        required: true
+        default: https://jacksonjoshuab.github.io/DOGE-Spatial-Explorer/gonzo-health-spatial-cognition/
+        type: string
+      evaluate_live:
+        description: Also evaluate the public deployment
+        required: true
+        default: true
+        type: boolean
+  schedule:
+    - cron: "23 13 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gonzo-health-webkit-evaluation-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DEFAULT_SOURCE_REF: feature/gonzo-health-brand-refresh
+  DEFAULT_PUBLIC_URL: https://jacksonjoshuab.github.io/DOGE-Spatial-Explorer/gonzo-health-spatial-cognition/
+
+jobs:
+  candidate-webkit:
+    name: Release candidate — Playwright WebKit
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out evaluator skill
+        uses: actions/checkout@v4
+        with:
+          path: evaluator-repo
+
+      - name: Check out WebKit release candidate
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_ref || env.DEFAULT_SOURCE_REF }}
+          path: site-source
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install evaluator and WebKit runtime
+        working-directory: evaluator-repo/evaluation/gonzo-health-webkit
+        run: |
+          npm install --no-package-lock --no-audit --no-fund
+          npx playwright install --with-deps webkit
+
+      - name: Start local release-candidate server
+        run: |
+          python3 -m http.server 4173 \
+            --bind 127.0.0.1 \
+            --directory "$GITHUB_WORKSPACE/site-source/gonzo-health-spatial-cognition" \
+            > "$RUNNER_TEMP/gonzo-health-http.log" 2>&1 &
+          echo $! > "$RUNNER_TEMP/gonzo-health-http.pid"
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:4173/healthcheck.json >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat "$RUNNER_TEMP/gonzo-health-http.log"
+          exit 1
+
+      - name: Evaluate release candidate
+        working-directory: evaluator-repo
+        run: |
+          node scripts/evaluate-gonzo-health-webkit.mjs \
+            --site-dir "$GITHUB_WORKSPACE/site-source/gonzo-health-spatial-cognition" \
+            --url http://127.0.0.1:4173/ \
+            --browser webkit \
+            --json "$GITHUB_WORKSPACE/evaluation-output/candidate-report.json" \
+            --markdown "$GITHUB_WORKSPACE/evaluation-output/candidate-report.md" \
+            --screenshots "$GITHUB_WORKSPACE/evaluation-output/candidate-screenshots"
+
+      - name: Publish candidate summary
+        if: always()
+        run: |
+          if [[ -f "$GITHUB_WORKSPACE/evaluation-output/candidate-report.md" ]]; then
+            cat "$GITHUB_WORKSPACE/evaluation-output/candidate-report.md" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Candidate evaluator did not produce a report." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload candidate evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gonzo-health-webkit-candidate-evidence
+          path: |
+            evaluation-output/**
+            ${{ runner.temp }}/gonzo-health-http.log
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Stop local server
+        if: always()
+        run: |
+          if [[ -f "$RUNNER_TEMP/gonzo-health-http.pid" ]]; then
+            kill "$(cat "$RUNNER_TEMP/gonzo-health-http.pid")" 2>/dev/null || true
+          fi
+
+  live-webkit:
+    name: Public deployment — Playwright WebKit
+    needs: candidate-webkit
+    if: github.event_name == 'schedule' || github.ref_name == 'main' || (github.event_name == 'workflow_dispatch' && inputs.evaluate_live)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Check out evaluator skill
+        uses: actions/checkout@v4
+        with:
+          path: evaluator-repo
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install evaluator and WebKit runtime
+        working-directory: evaluator-repo/evaluation/gonzo-health-webkit
+        run: |
+          npm install --no-package-lock --no-audit --no-fund
+          npx playwright install --with-deps webkit
+
+      - name: Evaluate public deployment
+        working-directory: evaluator-repo
+        env:
+          TARGET_URL: ${{ inputs.target_url || env.DEFAULT_PUBLIC_URL }}
+        run: |
+          node scripts/evaluate-gonzo-health-webkit.mjs \
+            --url "$TARGET_URL" \
+            --browser webkit \
+            --require-live \
+            --json "$GITHUB_WORKSPACE/evaluation-output/live-report.json" \
+            --markdown "$GITHUB_WORKSPACE/evaluation-output/live-report.md" \
+            --screenshots "$GITHUB_WORKSPACE/evaluation-output/live-screenshots"
+
+      - name: Publish live summary
+        if: always()
+        run: |
+          if [[ -f "$GITHUB_WORKSPACE/evaluation-output/live-report.md" ]]; then
+            cat "$GITHUB_WORKSPACE/evaluation-output/live-report.md" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Live evaluator did not produce a report." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload live evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gonzo-health-webkit-live-evidence
+          path: evaluation-output/**
+          if-no-files-found: warn
+          retention-days: 30

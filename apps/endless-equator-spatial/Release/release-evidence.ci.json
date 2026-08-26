@@ -1,0 +1,100 @@
+{
+  "product": "Endless Equator Spatial Navigator",
+  "releaseCandidate": "RC1",
+  "sourceCommit": "0000000000000000000000000000000000000000",
+  "decision": "NO_GO",
+  "generatedAt": "2026-08-26T00:00:00Z",
+  "expiresAt": null,
+  "notes": "CI fixture proving the initial state remains fail-closed. It is not release evidence.",
+  "gates": [
+    {
+      "id": "A",
+      "name": "Source and reproducible build",
+      "mandatoryFor": ["INTERNAL_TESTFLIGHT", "CONTROLLED_REHEARSAL", "OPERATIONAL_GO", "CONDITIONAL_GO"],
+      "status": "IN_PROGRESS",
+      "owner": { "name": "Unassigned engineering owner", "role": "Engineering release lead", "organization": "Gonzo Social Club candidate publishing organization", "contactEvidenceRef": "CI-FIXTURE-NOT-EVIDENCE" },
+      "checkedAt": "2026-08-26T00:00:00Z",
+      "expiresAt": null,
+      "blockers": ["Post-merge green build and security evidence is not attached to this CI fixture."],
+      "evidence": []
+    },
+    {
+      "id": "B",
+      "name": "Apple identity WeatherKit signing and TestFlight",
+      "mandatoryFor": ["INTERNAL_TESTFLIGHT", "CONTROLLED_REHEARSAL", "OPERATIONAL_GO", "CONDITIONAL_GO"],
+      "status": "BLOCKED",
+      "owner": { "name": "Unassigned Apple owner", "role": "Apple Developer account holder or admin", "organization": "Candidate publishing organization", "contactEvidenceRef": "CI-FIXTURE-NOT-EVIDENCE" },
+      "checkedAt": "2026-08-26T00:00:00Z",
+      "expiresAt": null,
+      "blockers": ["No registered App IDs signed profiles archives or TestFlight records exist in this fixture."],
+      "evidence": []
+    },
+    {
+      "id": "C",
+      "name": "Physical Apple device qualification",
+      "mandatoryFor": ["CONTROLLED_REHEARSAL", "OPERATIONAL_GO", "CONDITIONAL_GO"],
+      "status": "NOT_STARTED",
+      "owner": { "name": "Unassigned quality owner", "role": "Apple platform QA lead", "organization": "Candidate testing organization", "contactEvidenceRef": "CI-FIXTURE-NOT-EVIDENCE" },
+      "checkedAt": "2026-08-26T00:00:00Z",
+      "expiresAt": null,
+      "blockers": ["Physical qualification has not been executed in this fixture."],
+      "evidence": []
+    },
+    {
+      "id": "D",
+      "name": "Production HTTPS gateway",
+      "mandatoryFor": ["CONTROLLED_REHEARSAL", "OPERATIONAL_GO", "CONDITIONAL_GO"],
+      "status": "BLOCKED",
+      "owner": { "name": "Unassigned platform owner", "role": "Platform operations owner", "organization": "Candidate operations organization", "contactEvidenceRef": "CI-FIXTURE-NOT-EVIDENCE" },
+      "checkedAt": "2026-08-26T00:00:00Z",
+      "expiresAt": null,
+      "blockers": ["No production deployment evidence exists in this fixture."],
+      "evidence": []
+    },
+    {
+      "id": "E",
+      "name": "Current Ecuador route authorization",
+      "mandatoryFor": ["OPERATIONAL_GO", "CONDITIONAL_GO"],
+      "status": "BLOCKED",
+      "owner": { "name": "Unassigned expedition owner", "role": "Ecuador route and expedition operations lead", "organization": "Candidate Ecuador operating organization", "contactEvidenceRef": "CI-FIXTURE-NOT-EVIDENCE" },
+      "checkedAt": "2026-08-26T00:00:00Z",
+      "expiresAt": null,
+      "blockers": ["No exact verified Ecuador GPX access package or go-no-go record exists in this fixture."],
+      "evidence": []
+    },
+    {
+      "id": "F",
+      "name": "Privacy accessibility and App Store review",
+      "mandatoryFor": ["INTERNAL_TESTFLIGHT", "CONTROLLED_REHEARSAL", "OPERATIONAL_GO", "CONDITIONAL_GO"],
+      "status": "IN_PROGRESS",
+      "owner": { "name": "Unassigned review owner", "role": "Privacy and accessibility review lead", "organization": "Candidate review organization", "contactEvidenceRef": "CI-FIXTURE-NOT-EVIDENCE" },
+      "checkedAt": "2026-08-26T00:00:00Z",
+      "expiresAt": null,
+      "blockers": ["Final signed binary review is absent from this fixture."],
+      "evidence": []
+    },
+    {
+      "id": "G",
+      "name": "Independent penetration and operational acceptance",
+      "mandatoryFor": ["CONTROLLED_REHEARSAL", "OPERATIONAL_GO", "CONDITIONAL_GO"],
+      "status": "NOT_STARTED",
+      "owner": { "name": "Unassigned assurance owner", "role": "Independent security and OAT lead", "organization": "Candidate independent assessor", "contactEvidenceRef": "CI-FIXTURE-NOT-EVIDENCE" },
+      "checkedAt": "2026-08-26T00:00:00Z",
+      "expiresAt": null,
+      "blockers": ["No independent assessment or field acceptance evidence exists in this fixture."],
+      "evidence": []
+    },
+    {
+      "id": "H",
+      "name": "Written Ecuador provider and partner confirmations",
+      "mandatoryFor": ["OPERATIONAL_GO", "CONDITIONAL_GO"],
+      "status": "BLOCKED",
+      "owner": { "name": "Unassigned producer", "role": "Producer and partner confirmation lead", "organization": "Candidate production organization", "contactEvidenceRef": "CI-FIXTURE-NOT-EVIDENCE" },
+      "checkedAt": "2026-08-26T00:00:00Z",
+      "expiresAt": null,
+      "blockers": ["No current written provider or partner confirmations exist in this fixture."],
+      "evidence": []
+    }
+  ],
+  "approvals": []
+}

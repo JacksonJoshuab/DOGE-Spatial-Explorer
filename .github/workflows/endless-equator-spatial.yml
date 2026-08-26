@@ -11,6 +11,9 @@ on:
       - '.github/workflows/endless-equator-spatial.yml'
 permissions:
   contents: read
+concurrency:
+  group: endless-equator-spatial-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 jobs:
   server-and-data:
     runs-on: ubuntu-latest

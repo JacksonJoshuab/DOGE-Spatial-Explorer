@@ -32,6 +32,56 @@ import Testing
     #expect(route.verification.permitsOperationalGuidance == false)
 }
 
+@Test func verificationRequiresFreshAccessWeatherAndExplicitExpiry() {
+    let now = Date(timeIntervalSince1970: 2_000_000_000)
+    let fresh = RouteVerification(
+        state: .verified,
+        verifiedBy: "Authorized verifier",
+        verifiedAt: now.addingTimeInterval(-60),
+        accessCheckedAt: now.addingTimeInterval(-60),
+        weatherCheckedAt: now.addingTimeInterval(-60),
+        riderAcknowledged: true,
+        note: "Fresh",
+        expiresAt: now.addingTimeInterval(3_600)
+    )
+    #expect(fresh.permitsOperationalGuidance(at: now))
+
+    let staleAccess = RouteVerification(
+        state: .verified,
+        verifiedBy: "Authorized verifier",
+        verifiedAt: now.addingTimeInterval(-60),
+        accessCheckedAt: now.addingTimeInterval(-(73 * 60 * 60)),
+        weatherCheckedAt: now.addingTimeInterval(-60),
+        riderAcknowledged: true,
+        note: "Stale access",
+        expiresAt: now.addingTimeInterval(3_600)
+    )
+    #expect(staleAccess.permitsOperationalGuidance(at: now) == false)
+
+    let staleWeather = RouteVerification(
+        state: .verified,
+        verifiedBy: "Authorized verifier",
+        verifiedAt: now.addingTimeInterval(-60),
+        accessCheckedAt: now.addingTimeInterval(-60),
+        weatherCheckedAt: now.addingTimeInterval(-(25 * 60 * 60)),
+        riderAcknowledged: true,
+        note: "Stale weather",
+        expiresAt: now.addingTimeInterval(3_600)
+    )
+    #expect(staleWeather.permitsOperationalGuidance(at: now) == false)
+
+    let noExpiry = RouteVerification(
+        state: .verified,
+        verifiedBy: "Authorized verifier",
+        verifiedAt: now.addingTimeInterval(-60),
+        accessCheckedAt: now.addingTimeInterval(-60),
+        weatherCheckedAt: now.addingTimeInterval(-60),
+        riderAcknowledged: true,
+        note: "No expiry"
+    )
+    #expect(noExpiry.permitsOperationalGuidance(at: now) == false)
+}
+
 @Test func gpxImporterBuildsRoute() throws {
     let xml = """
     <gpx version="1.1"><trk><trkseg>
@@ -40,10 +90,16 @@ import Testing
       <trkpt lat="-0.240" lon="-78.320"><ele>2600</ele></trkpt>
     </trkseg></trk></gpx>
     """.data(using: .utf8)!
+    let now = Date()
     let verification = RouteVerification(
-        state: .verified, verifiedBy: "Local guide", verifiedAt: .now,
-        accessCheckedAt: .now, weatherCheckedAt: .now,
-        riderAcknowledged: true, note: "Test"
+        state: .verified,
+        verifiedBy: "Local guide",
+        verifiedAt: now,
+        accessCheckedAt: now,
+        weatherCheckedAt: now,
+        riderAcknowledged: true,
+        note: "Test",
+        expiresAt: now.addingTimeInterval(3_600)
     )
     let route = try GPXImporter().importRoute(data: xml, name: "Test", verification: verification)
     #expect(route.points.count == 3)
@@ -96,6 +152,7 @@ import Testing
     let coordinates = [0.0, 0.001, 0.002, 0.003].map {
         GeoCoordinate(latitude: 0, longitude: $0)
     }
+    let now = Date()
     let route = RoutePlan(
         id: "progress-test",
         name: "Progress test",
@@ -112,9 +169,14 @@ import Testing
             )
         },
         verification: RouteVerification(
-            state: .verified, verifiedBy: "Test verifier", verifiedAt: .now,
-            accessCheckedAt: .now, weatherCheckedAt: .now,
-            riderAcknowledged: true, note: "Test only"
+            state: .verified,
+            verifiedBy: "Test verifier",
+            verifiedAt: now,
+            accessCheckedAt: now,
+            weatherCheckedAt: now,
+            riderAcknowledged: true,
+            note: "Test only",
+            expiresAt: now.addingTimeInterval(3_600)
         ),
         optionalCoastExtensionAreaIDs: []
     )

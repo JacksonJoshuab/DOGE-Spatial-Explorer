@@ -68,13 +68,18 @@ public final class RouteEngine {
     }
 
     public func ingest(location: CLLocation, stationaryOverrideAcknowledged: Bool = false) {
-        let locationAge = max(0, Date().timeIntervalSince(location.timestamp))
+        let locationAge = Date().timeIntervalSince(location.timestamp)
         motionSafetyState = MotionSafetyGate.evaluate(
             speedMetersPerSecond: location.speed >= 0 ? location.speed : nil,
             horizontalAccuracyMeters: location.horizontalAccuracy,
             locationAgeSeconds: locationAge,
             stationaryOverrideAcknowledged: stationaryOverrideAcknowledged
         )
+
+        let verificationIsCurrent = plan.verification.permitsOperationalGuidance
+        if isRunning, !verificationIsCurrent {
+            stop()
+        }
 
         guard !plan.maneuvers.isEmpty else { return }
         let here = GeoCoordinate(latitude: location.coordinate.latitude, longitude: location.coordinate.longitude)
@@ -101,7 +106,7 @@ public final class RouteEngine {
         let offRouteDistance = projection?.distanceMeters ?? .infinity
 
         snapshot = NavigationSnapshot(
-            mode: plan.verification.permitsOperationalGuidance ? .operational : .planningPreview,
+            mode: verificationIsCurrent ? .operational : .planningPreview,
             activeManeuverIndex: nextIndex,
             distanceToManeuverMeters: nextDistance,
             remainingRouteMeters: remaining,
@@ -133,6 +138,6 @@ public enum RouteEngineError: LocalizedError {
     case routeNotOperational
 
     public var errorDescription: String? {
-        "Operational guidance is locked until a signed route bundle, access, weather and rider acknowledgement are verified."
+        "Operational guidance is locked until a signed route bundle, access, weather, explicit expiry and rider acknowledgement are verified."
     }
 }

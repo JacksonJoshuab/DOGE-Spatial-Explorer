@@ -1,0 +1,77 @@
+name: Endless Equator Provider Evidence
+
+on:
+  pull_request:
+    paths:
+      - 'apps/endless-equator-spatial/Release/Partners/**'
+      - '.github/workflows/endless-equator-provider-evidence.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'apps/endless-equator-spatial/Release/Partners/**'
+      - '.github/workflows/endless-equator-provider-evidence.yml'
+  workflow_dispatch:
+    inputs:
+      ledger_path:
+        description: 'Repository-relative provider confirmation ledger'
+        required: false
+        default: 'apps/endless-equator-spatial/Release/Partners/provider-confirmations.ci.json'
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: endless-equator-provider-evidence-${{ github.event.pull_request.head.sha || github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  validate-provider-evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Select provider ledger
+        id: ledger
+        shell: bash
+        env:
+          DISPATCH_PATH: ${{ inputs.ledger_path }}
+        run: |
+          set -euo pipefail
+          path="${DISPATCH_PATH:-apps/endless-equator-spatial/Release/Partners/provider-confirmations.ci.json}"
+          case "$path" in
+            apps/endless-equator-spatial/Release/Partners/*.json) ;;
+            *) echo 'Provider ledger must remain under Release/Partners and end in .json' >&2; exit 1 ;;
+          esac
+          test -f "$path"
+          echo "path=$path" >> "$GITHUB_OUTPUT"
+
+      - name: Syntax-check schema and tooling
+        run: |
+          node --check apps/endless-equator-spatial/Release/Partners/verify-provider-confirmations.mjs
+          node --check apps/endless-equator-spatial/Release/Partners/test-provider-confirmations.mjs
+          node -e "JSON.parse(require('fs').readFileSync('apps/endless-equator-spatial/Release/Partners/provider-confirmations.schema.json'))"
+          node -e "JSON.parse(require('fs').readFileSync('apps/endless-equator-spatial/Release/Partners/provider-confirmations.ci.json'))"
+
+      - name: Run provider-decision negative tests
+        run: node apps/endless-equator-spatial/Release/Partners/test-provider-confirmations.mjs
+
+      - name: Validate selected provider ledger
+        env:
+          LEDGER_PATH: ${{ steps.ledger.outputs.path }}
+        run: |
+          mkdir -p /tmp/endless-equator-provider
+          node apps/endless-equator-spatial/Release/Partners/verify-provider-confirmations.mjs "$LEDGER_PATH" | tee /tmp/endless-equator-provider/validation.json
+
+      - name: Upload nonsecret validation result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Endless_Equator_Provider_Evidence_Validation
+          path: /tmp/endless-equator-provider/validation.json
+          if-no-files-found: ignore
+          retention-days: 30

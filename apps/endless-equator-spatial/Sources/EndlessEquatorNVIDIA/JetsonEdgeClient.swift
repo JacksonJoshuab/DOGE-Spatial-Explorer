@@ -32,7 +32,9 @@ public actor JetsonEdgeClient {
         var request = URLRequest(url: baseURL.appending(path: "v1/hazards"))
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try JSONEncoder().encode(requestValue)
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        request.httpBody = try encoder.encode(requestValue)
         let (data, response) = try await session.data(for: request)
         guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
             throw JetsonEdgeError.invalidResponse

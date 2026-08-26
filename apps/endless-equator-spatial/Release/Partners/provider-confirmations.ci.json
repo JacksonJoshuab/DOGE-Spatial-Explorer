@@ -1,0 +1,33 @@
+{
+  "expeditionID": "ENDLESS-EQUATOR-RC1-CI-FIXTURE",
+  "dateWindow": { "start": "2026-09-10", "end": "2026-09-24" },
+  "generatedAt": "2026-08-26T00:00:00Z",
+  "decision": "NO_GO",
+  "records": [
+    {
+      "id": "GUIDE-001",
+      "category": "LOCAL_GUIDE",
+      "area": "Ecuador route",
+      "requiredForOperation": true,
+      "candidateName": "Candidate not yet selected",
+      "legalEntity": null,
+      "status": "RESEARCH",
+      "requestedScope": ["Exact GPX inspection", "Lead and sweep guide", "Access and bailout verification"],
+      "confirmedScope": [],
+      "contactEvidenceRef": null,
+      "writtenConfirmationEvidence": null,
+      "confirmedAt": null,
+      "validFrom": null,
+      "validUntil": null,
+      "insurance": { "required": true, "status": "PENDING", "evidenceRef": null, "limitsSummary": null },
+      "permits": [],
+      "commercialTerms": { "currency": null, "quotedTotal": null, "taxesIncluded": null, "deposit": null, "paymentScheduleEvidenceRef": null },
+      "cancellation": "Not negotiated",
+      "emergencyContactEvidenceRef": null,
+      "backupRecordID": null,
+      "restrictions": [],
+      "owner": "Unassigned producer",
+      "checkedAt": "2026-08-26T00:00:00Z"
+    }
+  ]
+}

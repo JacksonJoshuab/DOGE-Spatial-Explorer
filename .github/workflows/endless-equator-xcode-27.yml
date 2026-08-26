@@ -11,8 +11,8 @@ permissions:
   contents: read
 
 concurrency:
-  group: endless-equator-xcode-27-${{ github.event.pull_request.head.sha || github.sha }}
-  cancel-in-progress: false
+  group: endless-equator-xcode-27-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   xcode-27-build:
@@ -52,7 +52,7 @@ jobs:
             -project EndlessEquator.xcodeproj \
             -scheme EndlessEquatorCompanion
 
-      - name: Build iPhone and iPad companion plus UI test bundle
+      - name: Build iPhone and iPad companion plus test bundles
         id: ios_build
         run: |
           set -euo pipefail
@@ -65,6 +65,26 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             build-for-testing | tee Build/iOS-build.log | xcbeautify
+
+      - name: Run Core route and GPX safety tests
+        if: always() && steps.ios_build.outcome == 'success'
+        timeout-minutes: 8
+        run: |
+          set -euo pipefail
+          xcodebuild \
+            -project EndlessEquator.xcodeproj \
+            -scheme EndlessEquatorCompanion \
+            -configuration Debug \
+            -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=27.0' \
+            -derivedDataPath Build/DerivedData-iOS \
+            -resultBundlePath Build/CoreTests.xcresult \
+            -only-testing:EndlessEquatorCoreUnitTests \
+            -test-timeouts-enabled YES \
+            -default-test-execution-time-allowance 60 \
+            -maximum-test-execution-time-allowance 120 \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            test-without-building | tee Build/CoreTests.log | xcbeautify
 
       - name: Boot iPhone simulator and launch built app
         if: always() && steps.ios_build.outcome == 'success'

@@ -55,7 +55,7 @@ jobs:
       - name: Build iPhone and iPad companion plus UI test bundle
         id: ios_build
         run: |
-          set -o pipefail
+          set -euo pipefail
           xcodebuild \
             -project EndlessEquator.xcodeproj \
             -scheme EndlessEquatorCompanion \
@@ -88,7 +88,7 @@ jobs:
       - name: Build iPad support console
         if: always()
         run: |
-          set -o pipefail
+          set -euo pipefail
           xcodebuild \
             -project EndlessEquator.xcodeproj \
             -scheme EndlessEquatorCompanion \
@@ -102,7 +102,7 @@ jobs:
       - name: Build Vision Pro stationary route room
         if: always()
         run: |
-          set -o pipefail
+          set -euo pipefail
           xcodebuild \
             -project EndlessEquator.xcodeproj \
             -scheme EndlessEquatorVision \
@@ -116,7 +116,7 @@ jobs:
       - name: Run static analyzer
         if: always()
         run: |
-          set -o pipefail
+          set -euo pipefail
           xcodebuild \
             -project EndlessEquator.xcodeproj \
             -scheme EndlessEquatorCompanion \
@@ -130,7 +130,7 @@ jobs:
       - name: Create unsigned release archives
         if: always()
         run: |
-          set -o pipefail
+          set -euo pipefail
           xcodebuild \
             -project EndlessEquator.xcodeproj \
             -scheme EndlessEquatorCompanion \

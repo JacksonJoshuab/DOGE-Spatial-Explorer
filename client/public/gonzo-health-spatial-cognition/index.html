@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en" data-contrast="normal" data-text="normal" data-motion="full" data-shapes="on">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover">
+  <meta name="theme-color" content="#07101f">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="Gonzo | Health Spatial Cognition Lab: an offline-capable, non-diagnostic cognitive wellness and research prototype.">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Gonzo Cognition">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; media-src 'self' blob:; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; upgrade-insecure-requests">
+  <title>Gonzo | Health — Spatial Cognition Lab</title>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" type="image/svg+xml" href="./icon.svg">
+  <style>
+    :root{color-scheme:dark;background:#050a14;color:#f8fbff;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif}
+    *{box-sizing:border-box}body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:max(24px,env(safe-area-inset-top)) max(18px,env(safe-area-inset-right)) max(24px,env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left));background:radial-gradient(circle at 18% 12%,rgba(75,134,255,.25),transparent 34%),radial-gradient(circle at 82% 18%,rgba(181,104,255,.2),transparent 36%),#050a14}
+    #boot{display:grid;justify-items:center;gap:16px;text-align:center}.mark{width:72px;height:72px;border-radius:24px;display:grid;place-items:center;color:#07121e;font-weight:950;background:linear-gradient(135deg,#6fe7ff,#ad7cff,#ff86c8);box-shadow:0 22px 70px rgba(93,200,255,.25)}#boot p{max-width:32rem;color:#aab8ce;line-height:1.6}.spinner{width:38px;height:38px;border-radius:50%;border:3px solid rgba(255,255,255,.14);border-top-color:#6fe7ff;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+  </style>
+</head>
+<body>
+  <noscript>This prototype requires JavaScript to run the timed activity and preserve local evidence.</noscript>
+  <div id="boot"><div class="mark">G|H</div><div class="spinner" aria-hidden="true"></div><strong>Opening Spatial Cognition Lab</strong><p>Loading the private-by-default WebKit assessment shell…</p></div>
+  <div id="app" hidden></div>
+  <button class="storyboard-fab glass" data-action="storyboard" title="Open the complete screen-by-screen stimulus storyboard" aria-label="Open stimulus storyboard" hidden>36</button>
+  <script type="module" src="./boot.mjs"></script>
+</body>
+</html>

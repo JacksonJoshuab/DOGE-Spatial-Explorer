@@ -1,0 +1,9 @@
+{
+  "status": "ok",
+  "product": "Gonzo | Health Spatial Cognition Lab",
+  "deployment": "public-webkit",
+  "version": "2.1.0-webkit",
+  "measurementContract": "2.0.0",
+  "offlineCore": true,
+  "diagnostic": false
+}

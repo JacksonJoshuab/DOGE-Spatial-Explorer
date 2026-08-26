@@ -1,58 +1,30 @@
 {
   "id": "./",
-  "name": "Gonzo Health Spatial Cognition Lab",
+  "name": "Gonzo | Health — Spatial Cognition Lab",
   "short_name": "Gonzo Cognition",
-  "description": "Offline-capable Stroop, memory, visual-search, and cognitive-flexibility wellness prototype with shared anchor trials.",
-  "start_url": "./",
+  "description": "A private-by-default, intergenerational Stroop, memory, and cognitive-flexibility prototype.",
+  "lang": "en-US",
+  "dir": "ltr",
+  "start_url": "./?battery=daily",
   "scope": "./",
   "display": "standalone",
-  "display_override": [
-    "window-controls-overlay",
-    "standalone",
-    "minimal-ui"
-  ],
-  "background_color": "#050a14",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "background_color": "#030816",
   "theme_color": "#07101f",
   "orientation": "any",
-  "lang": "en-US",
-  "categories": [
-    "health",
-    "education",
-    "games",
-    "productivity"
-  ],
+  "categories": ["health", "education", "games", "productivity"],
   "icons": [
-    {
-      "src": "./icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
-    }
+    { "src": "./brand-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable monochrome" },
+    { "src": "./icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ],
+  "screenshots": [
+    { "src": "./brand-hero.svg", "sizes": "1600x1000", "type": "image/svg+xml", "form_factor": "wide", "label": "Gonzo Health neural cognition experience" },
+    { "src": "./generation-media.svg", "sizes": "1400x240", "type": "image/svg+xml", "form_factor": "wide", "label": "Seven generation nostalgia media packs" }
   ],
   "shortcuts": [
-    {
-      "name": "Start Daily Check",
-      "short_name": "Daily Check",
-      "url": "./?battery=daily",
-      "icons": [
-        {
-          "src": "./icon.svg",
-          "sizes": "any",
-          "type": "image/svg+xml"
-        }
-      ]
-    },
-    {
-      "name": "Open Sample Results",
-      "short_name": "Sample Results",
-      "url": "./?results=sample",
-      "icons": [
-        {
-          "src": "./icon.svg",
-          "sizes": "any",
-          "type": "image/svg+xml"
-        }
-      ]
-    }
-  ]
+    { "name": "Start Daily Check", "short_name": "Daily Check", "description": "Open the 180-second Daily Check", "url": "./?battery=daily", "icons": [{ "src": "./brand-icon.svg", "sizes": "any", "type": "image/svg+xml" }] },
+    { "name": "Open Standard Combine", "short_name": "Standard", "description": "Open the 15-minute Standard Combine", "url": "./?battery=standard", "icons": [{ "src": "./brand-icon.svg", "sizes": "any", "type": "image/svg+xml" }] },
+    { "name": "View Session History", "short_name": "History", "description": "Open locally saved session history", "url": "./?view=history", "icons": [{ "src": "./brand-icon.svg", "sizes": "any", "type": "image/svg+xml" }] }
+  ],
+  "prefer_related_applications": false
 }

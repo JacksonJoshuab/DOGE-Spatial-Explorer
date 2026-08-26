@@ -101,6 +101,7 @@ public struct RideNavigationView: View {
                 Button(model.routeEngine.isRunning ? "Stop guidance" : "Start verified guidance") {
                     if model.routeEngine.isRunning {
                         model.routeEngine.stop()
+                        model.voiceGuidance.stop()
                     } else {
                         do { try model.routeEngine.start() }
                         catch { model.alertMessage = error.localizedDescription }

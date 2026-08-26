@@ -1,4 +1,5 @@
-const CACHE = "gsc-spatial-cognition-brand-v4";
+const CACHE_PREFIX = "gsc-spatial-cognition-";
+const CACHE = `${CACHE_PREFIX}brand-v5`;
 const CORE = [
   "./", "./index.html", "./boot.mjs", "./brand-refresh.mjs", "./brand-refresh.css", "./light-theme.css",
   "./manifest.webmanifest", "./brand-icon.svg", "./icon.svg", "./brand-hero.svg",
@@ -19,8 +20,49 @@ const PAYLOAD = [
   "payload/g10/040.txt", "payload/g10/041.txt", "payload/g10/042.txt", "payload/g10/043.txt",
   "payload/g11/044.txt", "payload/g11/045.txt", "payload/g11/046.txt", "payload/g11/047.txt"
 ];
-self.addEventListener("install",event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll([...CORE,...PAYLOAD])).then(()=>self.skipWaiting())));
-self.addEventListener("activate",event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim())));
-async function networkFirst(request,fallback){const cache=await caches.open(CACHE);try{const response=await fetch(request,{cache:"no-store"});if(response.ok)cache.put(request,response.clone());return response}catch{return(await cache.match(request))||(await cache.match(fallback));}}
-async function cacheFirst(request){const cache=await caches.open(CACHE);const cached=await cache.match(request);if(cached)return cached;const response=await fetch(request);if(response.ok&&new URL(request.url).origin===self.location.origin)cache.put(request,response.clone());return response;}
-self.addEventListener("fetch",event=>{if(event.request.method!=="GET")return;const url=new URL(event.request.url);if(url.origin!==self.location.origin)return;if(url.pathname.endsWith("/healthcheck.json")){event.respondWith(networkFirst(event.request,"./healthcheck.json"));return;}if(event.request.mode==="navigate"){event.respondWith(networkFirst(event.request,"./offline.html"));return;}event.respondWith(cacheFirst(event.request));});
+self.addEventListener("install", event => event.waitUntil(
+  caches.open(CACHE).then(cache => cache.addAll([...CORE, ...PAYLOAD])).then(() => self.skipWaiting())
+));
+self.addEventListener("activate", event => event.waitUntil(
+  caches.keys()
+    .then(keys => Promise.all(keys.filter(key => key.startsWith(CACHE_PREFIX) && key !== CACHE).map(key => caches.delete(key))))
+    .then(() => self.clients.claim())
+));
+async function networkFirst(request, fallbacks = []) {
+  const cache = await caches.open(CACHE);
+  try {
+    const response = await fetch(request, { cache: "no-store" });
+    if (response.ok) cache.put(request, response.clone());
+    return response;
+  } catch {
+    const exact = await cache.match(request);
+    if (exact) return exact;
+    for (const fallback of fallbacks) {
+      const cached = await cache.match(fallback);
+      if (cached) return cached;
+    }
+    throw new Error("No cached response available");
+  }
+}
+async function cacheFirst(request) {
+  const cache = await caches.open(CACHE);
+  const cached = await cache.match(request);
+  if (cached) return cached;
+  const response = await fetch(request);
+  if (response.ok && new URL(request.url).origin === self.location.origin) cache.put(request, response.clone());
+  return response;
+}
+self.addEventListener("fetch", event => {
+  if (event.request.method !== "GET") return;
+  const url = new URL(event.request.url);
+  if (url.origin !== self.location.origin) return;
+  if (url.pathname.endsWith("/healthcheck.json")) {
+    event.respondWith(networkFirst(event.request, ["./healthcheck.json"]));
+    return;
+  }
+  if (event.request.mode === "navigate") {
+    event.respondWith(networkFirst(event.request, ["./index.html", "./", "./offline.html"]));
+    return;
+  }
+  event.respondWith(cacheFirst(event.request));
+});

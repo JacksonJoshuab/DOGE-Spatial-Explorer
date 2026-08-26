@@ -1,0 +1,136 @@
+name: Endless Equator Gate A Evidence
+
+on:
+  pull_request:
+    paths:
+      - 'apps/endless-equator-spatial/Release/collect-gate-a-evidence.mjs'
+      - 'apps/endless-equator-spatial/Release/verify-release-evidence.mjs'
+      - 'apps/endless-equator-spatial/Release/test-release-evidence.mjs'
+      - '.github/workflows/endless-equator-gate-a-evidence.yml'
+  workflow_dispatch:
+    inputs:
+      source_commit:
+        description: 'Exact 40-character main-branch commit to evidence'
+        required: true
+        type: string
+      release_candidate:
+        description: 'Release candidate label recorded in the output'
+        required: true
+        default: 'RC1'
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: endless-equator-gate-a-${{ inputs.source_commit || github.event.pull_request.head.sha || github.sha }}
+  cancel-in-progress: false
+
+jobs:
+  validate-collector:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: apps/endless-equator-spatial
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax-check collector and validators
+        run: |
+          node --check Release/collect-gate-a-evidence.mjs
+          node --check Release/verify-release-evidence.mjs
+          node --check Release/test-release-evidence.mjs
+      - name: Prove release decision escalation remains fail-closed
+        run: node Release/test-release-evidence.mjs
+
+  collect-exact-commit:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Validate immutable source input
+        shell: bash
+        env:
+          SOURCE_COMMIT: ${{ inputs.source_commit }}
+          RELEASE_CANDIDATE: ${{ inputs.release_candidate }}
+        run: |
+          set -euo pipefail
+          [[ "$SOURCE_COMMIT" =~ ^[a-fA-F0-9]{40}$ ]] || { echo 'source_commit must be a full 40-character commit' >&2; exit 1; }
+          [[ "$RELEASE_CANDIDATE" =~ ^RC[0-9]+$ ]] || { echo 'release_candidate must match RC<number>' >&2; exit 1; }
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_commit }}
+          fetch-depth: 1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Confirm checkout matches immutable source input
+        shell: bash
+        env:
+          SOURCE_COMMIT: ${{ inputs.source_commit }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$SOURCE_COMMIT"
+          git show --no-patch --format=fuller HEAD
+
+      - name: Collect exact-commit workflow run logs metadata and artifact hashes
+        id: collect
+        working-directory: apps/endless-equator-spatial
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          REQUIRED_GATE_A_WORKFLOWS: |-
+            Endless Equator Spatial
+            Endless Equator Security
+            Endless Equator Main Xcode 27
+          MAX_GATE_A_ARTIFACT_BYTES: '300000000'
+        run: |
+          set -o pipefail
+          mkdir -p Build/RC1
+          node Release/collect-gate-a-evidence.mjs \
+            '${{ inputs.source_commit }}' \
+            Build/RC1/release-evidence.gate-a.json | tee Build/RC1/gate-a-collector-summary.json
+
+      - name: Apply release-candidate label and validate evidence index
+        if: success()
+        working-directory: apps/endless-equator-spatial
+        env:
+          RELEASE_CANDIDATE: ${{ inputs.release_candidate }}
+          SOURCE_COMMIT: ${{ inputs.source_commit }}
+        run: |
+          set -euo pipefail
+          node - <<'NODE'
+          const fs = require('fs');
+          const path = 'Build/RC1/release-evidence.gate-a.json';
+          const value = JSON.parse(fs.readFileSync(path));
+          value.releaseCandidate = process.env.RELEASE_CANDIDATE;
+          fs.writeFileSync(path, JSON.stringify(value, null, 2) + '\n');
+          NODE
+          node Release/verify-release-evidence.mjs \
+            Build/RC1/release-evidence.gate-a.json \
+            "$SOURCE_COMMIT" | tee Build/RC1/release-evidence-validation.json
+
+      - name: Hash complete Gate A package
+        if: always()
+        working-directory: apps/endless-equator-spatial
+        run: |
+          mkdir -p Build/RC1
+          find Build/RC1 -type f -print0 | sort -z | xargs -0 shasum -a 256 > Build/RC1/SHA256SUMS.txt || true
+          cat Build/RC1/SHA256SUMS.txt || true
+
+      - name: Upload Gate A evidence package
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Endless_Equator_Gate_A_Evidence_${{ inputs.release_candidate }}_${{ inputs.source_commit }}
+          path: apps/endless-equator-spatial/Build/RC1
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 6

@@ -169,6 +169,7 @@ public struct RouteVerification: Codable, Hashable, Sendable {
     public let weatherCheckedAt: Date?
     public let riderAcknowledged: Bool
     public let note: String
+    public let expiresAt: Date?
 
     public init(
         state: VerificationState,
@@ -177,7 +178,8 @@ public struct RouteVerification: Codable, Hashable, Sendable {
         accessCheckedAt: Date?,
         weatherCheckedAt: Date?,
         riderAcknowledged: Bool,
-        note: String
+        note: String,
+        expiresAt: Date? = nil
     ) {
         self.state = state
         self.verifiedBy = verifiedBy
@@ -186,13 +188,35 @@ public struct RouteVerification: Codable, Hashable, Sendable {
         self.weatherCheckedAt = weatherCheckedAt
         self.riderAcknowledged = riderAcknowledged
         self.note = note
+        self.expiresAt = expiresAt
     }
 
     public var permitsOperationalGuidance: Bool {
-        state == .verified &&
-        !(verifiedBy?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true) &&
-        verifiedAt != nil && accessCheckedAt != nil && weatherCheckedAt != nil &&
-        riderAcknowledged
+        permitsOperationalGuidance(at: .now)
+    }
+
+    public func permitsOperationalGuidance(at now: Date) -> Bool {
+        guard state == .verified,
+              !(verifiedBy?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true),
+              let verifiedAt,
+              let accessCheckedAt,
+              let weatherCheckedAt,
+              let expiresAt,
+              riderAcknowledged else {
+            return false
+        }
+
+        let futureTolerance: TimeInterval = 5 * 60
+        let accessAge = now.timeIntervalSince(accessCheckedAt)
+        let weatherAge = now.timeIntervalSince(weatherCheckedAt)
+        let verificationLead = verifiedAt.timeIntervalSince(now)
+        let expiryLead = expiresAt.timeIntervalSince(now)
+
+        return verificationLead <= futureTolerance &&
+            accessAge >= -futureTolerance && accessAge <= 72 * 60 * 60 &&
+            weatherAge >= -futureTolerance && weatherAge <= 24 * 60 * 60 &&
+            expiryLead > 0 &&
+            expiresAt >= verifiedAt
     }
 }
 

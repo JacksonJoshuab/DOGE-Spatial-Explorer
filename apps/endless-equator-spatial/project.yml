@@ -40,6 +40,8 @@ targets:
     deploymentTarget: "27.0"
     sources:
       - path: AppTemplates/iOS
+      - path: Config/PrivacyInfo.xcprivacy
+        buildPhase: resources
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: $(ENDLESS_EQUATOR_IOS_BUNDLE_ID)
@@ -86,6 +88,8 @@ targets:
     deploymentTarget: "27.0"
     sources:
       - path: AppTemplates/visionOS
+      - path: Config/PrivacyInfo.xcprivacy
+        buildPhase: resources
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: $(ENDLESS_EQUATOR_VISION_BUNDLE_ID)

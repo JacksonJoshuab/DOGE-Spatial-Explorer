@@ -1,0 +1,58 @@
+{
+  "id": "./",
+  "name": "Gonzo Health Spatial Cognition Lab",
+  "short_name": "Gonzo Cognition",
+  "description": "Offline-capable Stroop, memory, visual-search, and cognitive-flexibility wellness prototype with shared anchor trials.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": [
+    "window-controls-overlay",
+    "standalone",
+    "minimal-ui"
+  ],
+  "background_color": "#050a14",
+  "theme_color": "#07101f",
+  "orientation": "any",
+  "lang": "en-US",
+  "categories": [
+    "health",
+    "education",
+    "games",
+    "productivity"
+  ],
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Start Daily Check",
+      "short_name": "Daily Check",
+      "url": "./?battery=daily",
+      "icons": [
+        {
+          "src": "./icon.svg",
+          "sizes": "any",
+          "type": "image/svg+xml"
+        }
+      ]
+    },
+    {
+      "name": "Open Sample Results",
+      "short_name": "Sample Results",
+      "url": "./?results=sample",
+      "icons": [
+        {
+          "src": "./icon.svg",
+          "sizes": "any",
+          "type": "image/svg+xml"
+        }
+      ]
+    }
+  ]
+}

@@ -17,13 +17,25 @@ public struct SupportConsoleView: View {
                     Label(model.routeEngine.plan.verification.state.rawValue, systemImage: "checkmark.shield")
                 }
                 Section("Rider sync") {
-                    if let packet = model.peerSync.latestPacket {
-                        TimelineView(.periodic(from: .now, by: 5)) { context in
+                    TimelineView(.periodic(from: .now, by: 5)) { context in
+                        if let packet = model.syncedPacket {
                             RiderPacketSummary(packet: packet, now: context.date)
+                        } else if let packet = model.peerSync.latestPacket {
+                            VStack(alignment: .leading, spacing: 5) {
+                                Label(
+                                    packet.routeID == model.routeEngine.plan.id
+                                        ? "Rider data stale"
+                                        : "Rider is using a different route",
+                                    systemImage: "clock.badge.exclamationmark"
+                                )
+                                .foregroundStyle(.orange)
+                                Text("No maneuver is displayed until a fresh packet matches this support console's route.")
+                                    .font(.caption2)
+                            }
+                        } else {
+                            Label("No rider packet received", systemImage: "antenna.radiowaves.left.and.right.slash")
+                                .foregroundStyle(.secondary)
                         }
-                    } else {
-                        Label("No rider packet received", systemImage: "antenna.radiowaves.left.and.right.slash")
-                            .foregroundStyle(.secondary)
                     }
                 }
                 Section("Areas of interest") {
@@ -106,15 +118,10 @@ private struct RiderPacketSummary: View {
         max(0, now.timeIntervalSince(packet.generatedAt))
     }
 
-    private var isStale: Bool { ageSeconds > 10 }
-
     var body: some View {
         VStack(alignment: .leading, spacing: 5) {
-            Label(
-                isStale ? "Rider data stale" : "Rider data current",
-                systemImage: isStale ? "clock.badge.exclamationmark" : "checkmark.circle"
-            )
-            .foregroundStyle(isStale ? .orange : .green)
+            Label("Rider data current", systemImage: "checkmark.circle")
+                .foregroundStyle(.green)
             if let instruction = packet.maneuverInstruction {
                 Text(instruction).font(.caption.bold())
             }

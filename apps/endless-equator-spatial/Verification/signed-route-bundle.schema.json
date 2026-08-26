@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://endlessequator.example/schemas/signed-route-bundle.schema.json",
+  "title": "Endless Equator signed operational route bundle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "formatVersion",
+    "keyID",
+    "manifestJSON",
+    "gpx",
+    "signature",
+    "createdAt"
+  ],
+  "properties": {
+    "formatVersion": { "const": "1.0" },
+    "keyID": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "manifestJSON": { "type": "string", "contentEncoding": "base64" },
+    "gpx": { "type": "string", "contentEncoding": "base64" },
+    "signature": {
+      "type": "string",
+      "contentEncoding": "base64",
+      "contentMediaType": "application/octet-stream"
+    },
+    "createdAt": { "type": "string", "format": "date-time" }
+  }
+}

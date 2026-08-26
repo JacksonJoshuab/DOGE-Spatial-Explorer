@@ -52,6 +52,20 @@ targets:
     dependencies:
       - package: EndlessEquatorSpatial
         product: EndlessEquatorAppleUI
+  EndlessEquatorCoreUnitTests:
+    type: bundle.unit-testing
+    platform: iOS
+    deploymentTarget: "27.0"
+    sources:
+      - path: Tests/EndlessEquatorCoreTests
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(ENDLESS_EQUATOR_IOS_BUNDLE_ID).coretests
+        GENERATE_INFOPLIST_FILE: YES
+        CODE_SIGN_STYLE: Automatic
+    dependencies:
+      - package: EndlessEquatorSpatial
+        product: EndlessEquatorCore
   EndlessEquatorCompanionUITests:
     type: bundle.ui-testing
     platform: iOS
@@ -87,10 +101,14 @@ schemes:
     build:
       targets:
         EndlessEquatorCompanion: all
+        EndlessEquatorCoreUnitTests: [test]
         EndlessEquatorCompanionUITests: [test]
     test:
       gatherCoverageData: true
       targets:
+        - name: EndlessEquatorCoreUnitTests
+          parallelizable: false
+          randomExecutionOrder: false
         - name: EndlessEquatorCompanionUITests
           parallelizable: false
           randomExecutionOrder: false

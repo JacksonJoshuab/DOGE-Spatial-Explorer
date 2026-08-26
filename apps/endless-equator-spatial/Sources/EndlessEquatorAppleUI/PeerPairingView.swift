@@ -29,7 +29,7 @@ public struct PeerPairingView: View {
                             editableCode = service.pairingCode
                         }
                     }
-                    Text("Enter the same code on both devices and compare it in person. Changing the code disconnects existing peers.")
+                    Text("Enter the same code on both devices and compare it in person. Existing peers disconnect only when the normalized code actually changes.")
                         .font(.caption)
                 }
 
@@ -38,7 +38,7 @@ public struct PeerPairingView: View {
                         get: { service.pairingWindowOpen },
                         set: { service.setPairingWindow(open: $0) }
                     ))
-                    Text("The window closes after one incoming connection. The peer appears as connected only after a message is authenticated with the shared code.")
+                    Text("The window closes only after one incoming peer proves knowledge of the shared code. Unauthenticated sockets cannot consume it.")
                         .font(.caption)
                 }
 

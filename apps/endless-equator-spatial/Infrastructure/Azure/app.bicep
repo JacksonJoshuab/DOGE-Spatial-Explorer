@@ -125,6 +125,10 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
               value: '8787'
             }
             {
+              name: 'TRUST_PROXY'
+              value: 'true'
+            }
+            {
               name: 'OPENAI_API_KEY'
               secretRef: 'openai-api-key'
             }

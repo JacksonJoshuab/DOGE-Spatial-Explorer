@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Gonzo Health spatial cognition mark</title>
+  <desc id="desc">A luminous G-shaped neural orbit in cyan, violet, and magenta.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#07172d"/><stop offset=".55" stop-color="#091027"/><stop offset="1" stop-color="#190b2b"/></linearGradient>
+    <linearGradient id="neon" x1=".05" y1=".15" x2=".95" y2=".85"><stop stop-color="#50e8ff"/><stop offset=".48" stop-color="#7284ff"/><stop offset="1" stop-color="#ff4fc8"/></linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="12" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect x="18" y="18" width="476" height="476" rx="128" fill="url(#bg)" stroke="#89efff" stroke-opacity=".24" stroke-width="4"/>
+  <circle cx="256" cy="256" r="168" fill="none" stroke="url(#neon)" stroke-width="26" stroke-linecap="round" stroke-dasharray="790 265" transform="rotate(-30 256 256)" filter="url(#glow)"/>
+  <path d="M337 188c-22-28-52-42-90-42-64 0-111 47-111 111 0 65 48 112 113 112 42 0 75-17 97-49v-76h-102v43h54v17c-12 13-28 20-48 20-39 0-67-28-67-67 0-38 28-66 66-66 23 0 43 9 58 27z" fill="url(#neon)" filter="url(#glow)"/>
+  <circle cx="361" cy="151" r="14" fill="#55eaff"/><circle cx="389" cy="221" r="10" fill="#9d72ff"/><circle cx="349" cy="366" r="12" fill="#ff59ca"/>
+  <path d="M361 151c31 15 44 37 28 70M389 221c16 61 3 108-40 145" fill="none" stroke="url(#neon)" stroke-width="5" stroke-linecap="round" opacity=".75"/>
+</svg>

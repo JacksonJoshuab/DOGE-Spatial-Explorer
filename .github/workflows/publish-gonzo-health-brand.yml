@@ -1,0 +1,109 @@
+name: Publish Verified Gonzo Health Brand
+
+on:
+  push:
+    branches:
+      - feature/gonzo-health-brand-refresh
+    paths:
+      - "gonzo-health-spatial-cognition/**"
+      - ".github/workflows/publish-gonzo-health-brand.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-gonzo-health-brand
+  cancel-in-progress: false
+
+jobs:
+  verify-and-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Check out branded Pages candidate
+        uses: actions/checkout@v4
+        with:
+          ref: feature/gonzo-health-brand-refresh
+          fetch-depth: 0
+          path: site-source
+
+      - name: Check out evaluation skill
+        uses: actions/checkout@v4
+        with:
+          ref: feature/gonzo-health-webkit-evaluation-skill
+          path: evaluator-repo
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Playwright WebKit
+        working-directory: evaluator-repo/evaluation/gonzo-health-webkit
+        run: |
+          npm install --no-package-lock --no-audit --no-fund
+          npx playwright install --with-deps webkit
+
+      - name: Start branded release-candidate server
+        run: |
+          python3 -m http.server 4173 \
+            --bind 127.0.0.1 \
+            --directory "$GITHUB_WORKSPACE/site-source/gonzo-health-spatial-cognition" \
+            > "$RUNNER_TEMP/gonzo-health-publish-http.log" 2>&1 &
+          echo $! > "$RUNNER_TEMP/gonzo-health-publish-http.pid"
+          for attempt in {1..30}; do
+            curl --fail --silent http://127.0.0.1:4173/healthcheck.json >/dev/null && exit 0
+            sleep 1
+          done
+          cat "$RUNNER_TEMP/gonzo-health-publish-http.log"
+          exit 1
+
+      - name: Run fail-closed WebKit evaluation
+        working-directory: evaluator-repo
+        run: |
+          node scripts/evaluate-gonzo-health-webkit.mjs \
+            --site-dir "$GITHUB_WORKSPACE/site-source/gonzo-health-spatial-cognition" \
+            --url http://127.0.0.1:4173/ \
+            --browser webkit \
+            --json "$GITHUB_WORKSPACE/publish-evidence/report.json" \
+            --markdown "$GITHUB_WORKSPACE/publish-evidence/report.md" \
+            --screenshots "$GITHUB_WORKSPACE/publish-evidence/screenshots"
+
+      - name: Verify exact promotion threshold
+        run: |
+          jq -e '.status == "PASS" and .score == 100 and (.criticalFailures|length) == 0 and (.browser.criticalErrors|length) == 0' publish-evidence/report.json >/dev/null
+
+      - name: Fast-forward verified commit to gh-pages
+        working-directory: site-source
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin gh-pages
+          git merge-base --is-ancestor origin/gh-pages HEAD
+          git push origin HEAD:gh-pages
+
+      - name: Publish evidence summary
+        if: always()
+        run: |
+          if [[ -f publish-evidence/report.md ]]; then
+            cat publish-evidence/report.md >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload publication evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gonzo-health-brand-publication-evidence
+          path: |
+            publish-evidence/**
+            ${{ runner.temp }}/gonzo-health-publish-http.log
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Stop local server
+        if: always()
+        run: |
+          if [[ -f "$RUNNER_TEMP/gonzo-health-publish-http.pid" ]]; then
+            kill "$(cat "$RUNNER_TEMP/gonzo-health-publish-http.pid")" 2>/dev/null || true
+          fi

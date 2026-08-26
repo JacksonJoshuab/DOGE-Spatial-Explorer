@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 240" role="img" aria-labelledby="title desc">
+  <title id="title">Seven generation nostalgia objects</title>
+  <desc id="desc">Original neon illustrations of a radio, rotary telephone, television, cassette player, translucent computer, handheld console, and spatial tablet.</desc>
+  <defs>
+    <linearGradient id="cyan" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#50e9ff"/><stop offset="1" stop-color="#6677ff"/></linearGradient>
+    <linearGradient id="pink" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#7e76ff"/><stop offset="1" stop-color="#ff50c8"/></linearGradient>
+    <linearGradient id="amber" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ffd36a"/><stop offset="1" stop-color="#d77a2c"/></linearGradient>
+    <filter id="g"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect width="1400" height="240" fill="#050a16"/>
+  <g opacity=".28" fill="#142958"><rect x="8" y="8" width="184" height="224" rx="28"/><rect x="208" y="8" width="184" height="224" rx="28"/><rect x="408" y="8" width="184" height="224" rx="28"/><rect x="608" y="8" width="184" height="224" rx="28"/><rect x="808" y="8" width="184" height="224" rx="28"/><rect x="1008" y="8" width="184" height="224" rx="28"/><rect x="1208" y="8" width="184" height="224" rx="28"/></g>
+  <g transform="translate(26 48)" filter="url(#g)">
+    <rect x="12" y="22" width="148" height="116" rx="18" fill="#21170d" stroke="url(#amber)" stroke-width="5"/><rect x="31" y="45" width="92" height="62" rx="8" fill="#100d0a" stroke="#e8b756" stroke-width="3"/><path d="M43 59h68M43 71h68M43 83h68M43 95h68" stroke="#c28c3e" stroke-width="3" opacity=".7"/><circle cx="142" cy="63" r="10" fill="#ffd36a"/><circle cx="142" cy="94" r="10" fill="#d27e36"/><path d="M22 20c30-28 91-32 130-5" fill="none" stroke="#ffdc7c" stroke-width="4"/>
+  </g>
+  <g transform="translate(220 35)" filter="url(#g)">
+    <path d="M31 75c8-41 28-58 69-58s61 17 69 58l-27 18c-11-20-24-28-42-28s-31 8-42 28z" fill="#13151e" stroke="url(#cyan)" stroke-width="5"/><rect x="45" y="79" width="110" height="92" rx="28" fill="#0b1327" stroke="#657dff" stroke-width="5"/><circle cx="100" cy="124" r="34" fill="none" stroke="#92eaff" stroke-width="7" stroke-dasharray="13 8"/><circle cx="100" cy="124" r="10" fill="#ff58c8"/>
+  </g>
+  <g transform="translate(420 38)" filter="url(#g)">
+    <rect x="18" y="18" width="164" height="130" rx="24" fill="#26160f" stroke="url(#amber)" stroke-width="5"/><rect x="36" y="38" width="114" height="82" rx="18" fill="#071426" stroke="#62eaff" stroke-width="3"/><path d="M151 51h17M151 70h17M151 89h17" stroke="#ffc766" stroke-width="7" stroke-linecap="round"/><path d="M68 153h64M55 175h90" stroke="#d68735" stroke-width="8" stroke-linecap="round"/>
+  </g>
+  <g transform="translate(620 39)" filter="url(#g)">
+    <rect x="28" y="24" width="144" height="146" rx="28" fill="#0d1224" stroke="url(#pink)" stroke-width="5"/><rect x="56" y="52" width="88" height="70" rx="12" fill="#171322" stroke="#ff65cc" stroke-width="4"/><circle cx="82" cy="87" r="22" fill="none" stroke="#66eaff" stroke-width="5"/><circle cx="118" cy="87" r="22" fill="none" stroke="#8c7bff" stroke-width="5"/><path d="M80 139h40" stroke="#eafaff" stroke-width="7" stroke-linecap="round"/><path d="M16 81c-17 28-18 69 2 100M184 81c17 28 18 69-2 100" fill="none" stroke="#67eaff" stroke-width="6"/>
+  </g>
+  <g transform="translate(820 39)" filter="url(#g)">
+    <path d="M42 18h103c18 0 28 15 27 34l-6 108H34L28 52c-1-19 9-34 14-34z" fill="#173047" fill-opacity=".88" stroke="url(#cyan)" stroke-width="5"/><rect x="49" y="39" width="102" height="87" rx="15" fill="#061121" stroke="#76eaff" stroke-width="4"/><path d="M69 82c24-29 48-29 72 0" fill="none" stroke="url(#pink)" stroke-width="5"/><rect x="78" y="158" width="44" height="10" rx="5" fill="#ff5bc9"/><path d="M58 183h84" stroke="#65eaff" stroke-width="8" stroke-linecap="round"/>
+  </g>
+  <g transform="translate(1020 34)" filter="url(#g)">
+    <rect x="42" y="14" width="116" height="170" rx="28" fill="#161735" stroke="url(#pink)" stroke-width="5"/><rect x="62" y="35" width="76" height="70" rx="10" fill="#071328" stroke="#60eaff" stroke-width="4"/><path d="M70 137h28M84 123v28" stroke="#73eaff" stroke-width="7" stroke-linecap="round"/><circle cx="126" cy="130" r="8" fill="#ff5ac8"/><circle cx="143" cy="145" r="8" fill="#8c7bff"/><path d="M77 169h46" stroke="#a97bff" stroke-width="5" stroke-linecap="round"/>
+  </g>
+  <g transform="translate(1218 38)" filter="url(#g)">
+    <g transform="rotate(-8 92 100)"><rect x="17" y="13" width="166" height="166" rx="30" fill="#10152c" stroke="url(#cyan)" stroke-width="5"/><rect x="35" y="31" width="130" height="130" rx="21" fill="#071328" stroke="#8a73ff" stroke-width="3"/><path d="M60 108c29-49 61-49 94 0M61 80c28 42 59 42 92 0" fill="none" stroke="url(#pink)" stroke-width="5"/><circle cx="106" cy="94" r="17" fill="#55eaff"/><circle cx="69" cy="61" r="7" fill="#ff5ac8"/><circle cx="147" cy="130" r="7" fill="#8f75ff"/></g>
+  </g>
+</svg>

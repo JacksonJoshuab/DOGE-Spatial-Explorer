@@ -16,6 +16,16 @@ public struct SupportConsoleView: View {
                     Label(model.routeEngine.plan.name, systemImage: "map")
                     Label(model.routeEngine.plan.verification.state.rawValue, systemImage: "checkmark.shield")
                 }
+                Section("Rider sync") {
+                    if let packet = model.peerSync.latestPacket {
+                        TimelineView(.periodic(from: .now, by: 5)) { context in
+                            RiderPacketSummary(packet: packet, now: context.date)
+                        }
+                    } else {
+                        Label("No rider packet received", systemImage: "antenna.radiowaves.left.and.right.slash")
+                            .foregroundStyle(.secondary)
+                    }
+                }
                 Section("Areas of interest") {
                     ForEach(model.areas) { area in
                         Label(area.name, systemImage: area.category.systemImage).tag(area.id)
@@ -38,15 +48,33 @@ public struct SupportConsoleView: View {
             if let area = model.selectedArea {
                 AreaDetailView(area: area, webBaseURL: model.webBaseURL)
                     .safeAreaInset(edge: .bottom) {
-                        VStack(spacing: 8) {
-                            TextField("Ask the guide", text: $guideQuestion)
+                        VStack(alignment: .leading, spacing: 10) {
+                            HStack {
+                                TextField("Ask the guide", text: $guideQuestion)
+                                Button("Refresh weather") {
+                                    Task { await model.refreshWeather() }
+                                }
+                            }
                             Button("Ask consent-forward AI guide") {
                                 Task { await model.askGuide(guideQuestion) }
                             }
                             .buttonStyle(.borderedProminent)
-                            if let response = model.lastGuideResponse {
+                            .disabled(guideQuestion.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+
+                            if let weather = model.latestWeather {
+                                Label(
+                                    "\(weather.condition), \(Int(weather.temperatureCelsius))°C · observed \(weather.observedAt.formatted(date: .omitted, time: .shortened))",
+                                    systemImage: "cloud.sun"
+                                )
+                                .font(.caption)
+                            }
+
+                            if let response = model.selectedAreaGuideResponse {
+                                ForEach(response.warnings, id: \.self) {
+                                    Label($0, systemImage: "exclamationmark.triangle.fill")
+                                        .foregroundStyle(.orange)
+                                }
                                 Text(response.shortCard).font(.callout)
-                                ForEach(response.warnings, id: \.self) { Label($0, systemImage: "exclamationmark.triangle") }
                             }
                         }
                         .padding()
@@ -59,5 +87,50 @@ public struct SupportConsoleView: View {
         }
         .sheet(isPresented: $showGPXImport) { GPXImportView(model: model) }
         .sheet(isPresented: $showPairing) { PeerPairingView(service: model.peerSync) }
+        .alert("Support console notice", isPresented: Binding(
+            get: { model.alertMessage != nil },
+            set: { if !$0 { model.alertMessage = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(model.alertMessage ?? "")
+        }
+    }
+}
+
+private struct RiderPacketSummary: View {
+    let packet: NavigationSyncPacket
+    let now: Date
+
+    private var ageSeconds: TimeInterval {
+        max(0, now.timeIntervalSince(packet.generatedAt))
+    }
+
+    private var isStale: Bool { ageSeconds > 10 }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            Label(
+                isStale ? "Rider data stale" : "Rider data current",
+                systemImage: isStale ? "clock.badge.exclamationmark" : "checkmark.circle"
+            )
+            .foregroundStyle(isStale ? .orange : .green)
+            if let instruction = packet.maneuverInstruction {
+                Text(instruction).font(.caption.bold())
+            }
+            HStack {
+                if let speed = packet.speedMetersPerSecond {
+                    Text("\(Int(speed * 3.6)) km/h")
+                }
+                Text(packet.motionSafetyState.rawValue)
+                Text("\(Int(ageSeconds))s ago")
+            }
+            .font(.caption2)
+            .foregroundStyle(.secondary)
+            if let weather = packet.weather {
+                Text("Rider weather: \(weather.condition), \(Int(weather.temperatureCelsius))°C")
+                    .font(.caption2)
+            }
+        }
     }
 }

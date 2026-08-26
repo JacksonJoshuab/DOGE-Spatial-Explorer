@@ -1,0 +1,125 @@
+name: Promote Gonzo Health Evaluation Skill
+
+on:
+  push:
+    branches:
+      - feature/gonzo-health-webkit-evaluation-skill
+    paths:
+      - "skills/gonzo-health-webkit-evaluator/**"
+      - "scripts/evaluate-gonzo-health-webkit.mjs"
+      - "evaluation/gonzo-health-webkit/**"
+      - ".github/workflows/evaluate-gonzo-health-webkit.yml"
+      - ".github/workflows/promote-gonzo-health-evaluation-skill.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: promote-gonzo-health-evaluation-skill
+  cancel-in-progress: false
+
+jobs:
+  verify-and-promote:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Check out evaluation skill branch
+        uses: actions/checkout@v4
+        with:
+          ref: feature/gonzo-health-webkit-evaluation-skill
+          fetch-depth: 0
+          path: evaluator-repo
+
+      - name: Check out deployed branded site
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: site-source
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Playwright WebKit
+        working-directory: evaluator-repo/evaluation/gonzo-health-webkit
+        run: |
+          npm install --no-package-lock --no-audit --no-fund
+          npx playwright install --with-deps webkit
+
+      - name: Start deployed-source server
+        run: |
+          python3 -m http.server 4173 \
+            --bind 127.0.0.1 \
+            --directory "$GITHUB_WORKSPACE/site-source/gonzo-health-spatial-cognition" \
+            > "$RUNNER_TEMP/gonzo-health-skill-http.log" 2>&1 &
+          echo $! > "$RUNNER_TEMP/gonzo-health-skill-http.pid"
+          for attempt in {1..30}; do
+            curl --fail --silent http://127.0.0.1:4173/healthcheck.json >/dev/null && exit 0
+            sleep 1
+          done
+          cat "$RUNNER_TEMP/gonzo-health-skill-http.log"
+          exit 1
+
+      - name: Verify checked-out deployment source
+        working-directory: evaluator-repo
+        run: |
+          node scripts/evaluate-gonzo-health-webkit.mjs \
+            --site-dir "$GITHUB_WORKSPACE/site-source/gonzo-health-spatial-cognition" \
+            --url http://127.0.0.1:4173/ \
+            --browser webkit \
+            --json "$GITHUB_WORKSPACE/skill-evidence/source-report.json" \
+            --markdown "$GITHUB_WORKSPACE/skill-evidence/source-report.md" \
+            --screenshots "$GITHUB_WORKSPACE/skill-evidence/source-screenshots"
+          jq -e '.status == "PASS" and .score == 100 and (.criticalFailures|length)==0 and (.browser.criticalErrors|length)==0' "$GITHUB_WORKSPACE/skill-evidence/source-report.json" >/dev/null
+
+      - name: Verify public deployment
+        working-directory: evaluator-repo
+        run: |
+          node scripts/evaluate-gonzo-health-webkit.mjs \
+            --url https://jacksonjoshuab.github.io/DOGE-Spatial-Explorer/gonzo-health-spatial-cognition/ \
+            --browser webkit \
+            --require-live \
+            --json "$GITHUB_WORKSPACE/skill-evidence/live-report.json" \
+            --markdown "$GITHUB_WORKSPACE/skill-evidence/live-report.md" \
+            --screenshots "$GITHUB_WORKSPACE/skill-evidence/live-screenshots"
+          jq -e '.status == "PASS" and .score == 100 and (.criticalFailures|length)==0 and (.browser.criticalErrors|length)==0' "$GITHUB_WORKSPACE/skill-evidence/live-report.json" >/dev/null
+
+      - name: Fast-forward verified skill into main
+        working-directory: evaluator-repo
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          git merge-base --is-ancestor origin/main HEAD
+          git push origin HEAD:main
+
+      - name: Publish verification summary
+        if: always()
+        run: |
+          if [[ -f skill-evidence/source-report.md ]]; then
+            cat skill-evidence/source-report.md >> "$GITHUB_STEP_SUMMARY"
+          fi
+          if [[ -f skill-evidence/live-report.md ]]; then
+            printf '\n---\n\n' >> "$GITHUB_STEP_SUMMARY"
+            cat skill-evidence/live-report.md >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload skill verification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gonzo-health-evaluation-skill-promotion-evidence
+          path: |
+            skill-evidence/**
+            ${{ runner.temp }}/gonzo-health-skill-http.log
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Stop local server
+        if: always()
+        run: |
+          if [[ -f "$RUNNER_TEMP/gonzo-health-skill-http.pid" ]]; then
+            kill "$(cat "$RUNNER_TEMP/gonzo-health-skill-http.pid")" 2>/dev/null || true
+          fi

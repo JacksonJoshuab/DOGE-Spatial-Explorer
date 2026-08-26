@@ -16,6 +16,10 @@ permissions:
   contents: read
   security-events: write
 
+concurrency:
+  group: endless-equator-security-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   gateway-boundary-tests:
     runs-on: ubuntu-latest

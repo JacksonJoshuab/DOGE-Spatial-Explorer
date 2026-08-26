@@ -15,9 +15,20 @@ public final class ExpeditionModel {
     public let turnHaptics: TurnHapticsService
     public let guideGateway: GuideGateway
 
-    public var selectedAreaID: String?
-    public var latestWeather: WeatherSummary?
-    public var lastGuideResponse: GuideResponse?
+    public var selectedAreaID: String? {
+        didSet {
+            guard selectedAreaID != oldValue else { return }
+            lastGuideResponse = nil
+            guideResponseAreaID = nil
+            latestWeather = nil
+            alertMessage = nil
+            guard !suppressLiveServices else { return }
+            Task { [weak self] in await self?.refreshWeather() }
+        }
+    }
+    public private(set) var latestWeather: WeatherSummary?
+    public private(set) var lastGuideResponse: GuideResponse?
+    public private(set) var guideResponseAreaID: String?
     public var alertMessage: String?
     public var webBaseURL: URL
     public var stationaryOverrideAcknowledged = false
@@ -34,7 +45,8 @@ public final class ExpeditionModel {
             return URL(string: "http://localhost:8787")!
         }()
         areas = try ExpeditionCatalog.loadAreas()
-        routeEngine = RouteEngine(plan: try ExpeditionCatalog.loadSeedRoute())
+        let seedRoute = try ExpeditionCatalog.loadSeedRoute()
+        routeEngine = RouteEngine(plan: (try? RouteStore.loadPlanningRoute()) ?? seedRoute)
         locationService = ExpeditionLocationService()
         voiceGuidance = VoiceGuidanceService()
         weatherService = AreaWeatherService()
@@ -47,7 +59,10 @@ public final class ExpeditionModel {
         locationService.onLocation = { [weak self] location in
             guard let self else { return }
             let priorIndex = self.routeEngine.snapshot.activeManeuverIndex
-            self.routeEngine.ingest(location: location, stationaryOverrideAcknowledged: self.stationaryOverrideAcknowledged)
+            self.routeEngine.ingest(
+                location: location,
+                stationaryOverrideAcknowledged: self.stationaryOverrideAcknowledged
+            )
             let currentIndex = self.routeEngine.snapshot.activeManeuverIndex
             if self.routeEngine.isRunning, currentIndex != priorIndex,
                let instruction = self.routeEngine.activeManeuver?.instruction {
@@ -77,6 +92,11 @@ public final class ExpeditionModel {
         areas.first { $0.id == selectedAreaID }
     }
 
+    public var selectedAreaGuideResponse: GuideResponse? {
+        guard guideResponseAreaID == selectedAreaID else { return nil }
+        return lastGuideResponse
+    }
+
     public var syncedManeuverInstruction: String? {
         peerSync.latestPacket?.maneuverInstruction
     }
@@ -85,6 +105,16 @@ public final class ExpeditionModel {
         guard !suppressLiveServices else { return }
         peerSync.start()
         locationService.requestAuthorizationAndStart()
+        Task { await refreshWeather() }
+    }
+
+    public func installImportedPlan(_ plan: RoutePlan) {
+        routeEngine.replacePlan(plan)
+        do {
+            try RouteStore.savePlanningRoute(plan)
+        } catch {
+            alertMessage = "The route is available for this session but could not be stored: \(error.localizedDescription)"
+        }
     }
 
     public func speakCurrentTurn() {
@@ -93,22 +123,48 @@ public final class ExpeditionModel {
     }
 
     public func refreshWeather() async {
-        guard let area = selectedArea else { return }
-        do { latestWeather = try await weatherService.currentWeather(at: area.coordinate) }
-        catch { alertMessage = error.localizedDescription }
+        guard !suppressLiveServices, let area = selectedArea else { return }
+        let requestedAreaID = area.id
+        do {
+            let weather = try await weatherService.currentWeather(at: area.coordinate)
+            guard selectedAreaID == requestedAreaID else { return }
+            latestWeather = weather
+        } catch {
+            guard selectedAreaID == requestedAreaID else { return }
+            latestWeather = nil
+            alertMessage = error.localizedDescription
+        }
     }
 
     public func askGuide(_ question: String, locale: String = "en-US") async {
         guard let area = selectedArea else { return }
+        let requestedAreaID = area.id
+        lastGuideResponse = nil
+        guideResponseAreaID = nil
+        alertMessage = nil
+
+        let verifiedManeuver: String? = routeEngine.isRunning &&
+            routeEngine.plan.verification.permitsOperationalGuidance
+            ? routeEngine.activeManeuver?.instruction
+            : nil
         let request = GuideRequest(
             areaID: area.id,
             locale: locale,
-            currentManeuver: routeEngine.activeManeuver?.instruction,
+            currentManeuver: verifiedManeuver,
             weatherSummary: latestWeather.map { "\($0.condition), \(Int($0.temperatureCelsius))°C" },
             coarseContext: "Area verification: \(area.verificationState.rawValue)",
             question: question
         )
-        do { lastGuideResponse = try await guideGateway.ask(request) }
-        catch { alertMessage = error.localizedDescription }
+        do {
+            let response = try await guideGateway.ask(request)
+            guard selectedAreaID == requestedAreaID else { return }
+            lastGuideResponse = response
+            guideResponseAreaID = requestedAreaID
+        } catch {
+            guard selectedAreaID == requestedAreaID else { return }
+            lastGuideResponse = nil
+            guideResponseAreaID = nil
+            alertMessage = error.localizedDescription
+        }
     }
 }

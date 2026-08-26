@@ -1,0 +1,157 @@
+name: Endless Equator Main Xcode 27
+
+on:
+  pull_request:
+    paths:
+      - 'apps/endless-equator-spatial/**'
+      - '.github/workflows/endless-equator-main-xcode-27.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'apps/endless-equator-spatial/**'
+      - '.github/workflows/endless-equator-main-xcode-27.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: endless-equator-main-xcode-27-${{ github.event.pull_request.head.sha || github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  exact-commit-apple-build:
+    runs-on: xcode-27
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: apps/endless-equator-spatial
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Record exact source and Xcode 27 toolchain
+        run: |
+          set -euo pipefail
+          mkdir -p Build/MainEvidence
+          git rev-parse HEAD | tee Build/MainEvidence/source-commit.txt
+          xcodebuild -version | tee Build/MainEvidence/xcode-version.txt
+          grep -Eq '^Xcode 27([. ]|$)' Build/MainEvidence/xcode-version.txt
+          swift --version 2>&1 | tee Build/MainEvidence/swift-version.txt
+          xcrun simctl list devices available | tee Build/MainEvidence/simulators.txt
+
+      - name: Install native ARM64 XcodeGen
+        run: |
+          set -euo pipefail
+          if ! command -v xcodegen >/dev/null 2>&1; then
+            arch -arm64 brew install xcodegen
+          fi
+          xcodegen --version | tee Build/MainEvidence/xcodegen-version.txt
+
+      - name: Generate reproducible project and resolve pinned packages
+        run: |
+          set -euo pipefail
+          xcodegen generate --spec project.yml
+          xcodebuild -project EndlessEquator.xcodeproj -list | tee Build/MainEvidence/project-list.log
+          xcodebuild \
+            -resolvePackageDependencies \
+            -project EndlessEquator.xcodeproj \
+            -scheme EndlessEquatorCompanion | tee Build/MainEvidence/package-resolution.log
+
+      - name: Build iPhone application and UI-test bundle
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project EndlessEquator.xcodeproj \
+            -scheme EndlessEquatorCompanion \
+            -configuration Debug \
+            -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=27.0' \
+            -derivedDataPath Build/DerivedData-iPhone \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            build-for-testing | tee Build/MainEvidence/iPhone-build-for-testing.log | xcbeautify
+
+      - name: Build iPadOS support console
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project EndlessEquator.xcodeproj \
+            -scheme EndlessEquatorCompanion \
+            -configuration Debug \
+            -destination 'platform=iOS Simulator,name=iPad Pro 13-inch (M5),OS=27.0' \
+            -derivedDataPath Build/DerivedData-iPad \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            build | tee Build/MainEvidence/iPad-build.log | xcbeautify
+
+      - name: Build Apple Vision Pro stationary route room
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project EndlessEquator.xcodeproj \
+            -scheme EndlessEquatorVision \
+            -configuration Debug \
+            -destination 'platform=visionOS Simulator,name=Apple Vision Pro,OS=27.0' \
+            -derivedDataPath Build/DerivedData-visionOS \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            build | tee Build/MainEvidence/visionOS-build.log | xcbeautify
+
+      - name: Run static analyzer
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project EndlessEquator.xcodeproj \
+            -scheme EndlessEquatorCompanion \
+            -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath Build/DerivedData-analyze \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            analyze | tee Build/MainEvidence/analyze.log | xcbeautify
+
+      - name: Validate Apple metadata and capability templates
+        run: |
+          set -euo pipefail
+          plutil -lint Config/Info-iOS.plist | tee Build/MainEvidence/info-ios-plist.log
+          plutil -lint Config/Info-visionOS.plist | tee Build/MainEvidence/info-visionos-plist.log
+          plutil -lint Config/EndlessEquator.entitlements | tee Build/MainEvidence/entitlements.log
+          plutil -lint Config/PrivacyInfo.xcprivacy | tee Build/MainEvidence/privacy-manifest.log
+          /usr/libexec/PlistBuddy -c 'Print :com.apple.developer.weatherkit' Config/EndlessEquator.entitlements | grep -q true
+
+      - name: Create unsigned iOS and visionOS release archives
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project EndlessEquator.xcodeproj \
+            -scheme EndlessEquatorCompanion \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath Build/MainEvidence/EndlessEquatorCompanion.xcarchive \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            archive | tee Build/MainEvidence/iOS-archive.log | xcbeautify
+          xcodebuild \
+            -project EndlessEquator.xcodeproj \
+            -scheme EndlessEquatorVision \
+            -configuration Release \
+            -destination 'generic/platform=visionOS' \
+            -archivePath Build/MainEvidence/EndlessEquatorVision.xcarchive \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            archive | tee Build/MainEvidence/visionOS-archive.log | xcbeautify
+
+      - name: Hash generated archives and evidence files
+        run: |
+          set -euo pipefail
+          find Build/MainEvidence -type f -print0 | sort -z | xargs -0 shasum -a 256 > Build/MainEvidence/SHA256SUMS.txt
+          cat Build/MainEvidence/SHA256SUMS.txt
+
+      - name: Upload exact-commit Xcode 27 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Endless_Equator_Main_Xcode_27_Evidence
+          path: apps/endless-equator-spatial/Build/MainEvidence
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 6

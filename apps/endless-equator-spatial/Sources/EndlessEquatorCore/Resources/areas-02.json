@@ -1,0 +1,319 @@
+[
+  {
+    "id": "banos",
+    "slug": "banos",
+    "name": "Baños de Agua Santa",
+    "category": "waterfall",
+    "coordinate": {
+      "latitude": -1.396,
+      "longitude": -78.424
+    },
+    "altitudeMeters": 1820,
+    "highwayRefs": [
+      "E30"
+    ],
+    "summary": "Waterfalls, switchbacks and a two-night technical-riding/support base.",
+    "safetyNotes": [
+      "Wet rock, traffic, tunnels and tourist congestion require conservative riding.",
+      "Keep technical riding on verified legal tracks."
+    ],
+    "filmingNotes": [
+      "Use long-lens and stationary cameras; never stage public-road speed."
+    ],
+    "tags": [
+      "waterfalls",
+      "enduro",
+      "E30"
+    ],
+    "verificationState": "verifyBeforeUse",
+    "verificationNote": "Confirm trail legality, closures and filming locations with local operators.",
+    "seasonalWeather": {
+      "september": "Variable mountain rain; mornings often provide the best window.",
+      "october": "More mud and afternoon shower risk."
+    },
+    "sections": [
+      {
+        "id": "technical",
+        "title": "Technical loop rule",
+        "body": "Every hard section needs a support-accessible bypass and a prebriefed regroup point."
+      }
+    ]
+  },
+  {
+    "id": "banos-rotary",
+    "slug": "banos-rotary",
+    "name": "Rotary Coordination — Baños",
+    "category": "rotary",
+    "coordinate": {
+      "latitude": -1.397,
+      "longitude": -78.423
+    },
+    "altitudeMeters": 1820,
+    "highwayRefs": [
+      "E30"
+    ],
+    "summary": "Potential community-service coordination stop in central Ecuador.",
+    "safetyNotes": [
+      "Confirm an actual host and project before displaying this as active."
+    ],
+    "filmingNotes": [
+      "Community value comes before expedition promotion."
+    ],
+    "tags": [
+      "Rotary",
+      "community",
+      "Baños"
+    ],
+    "verificationState": "verifyBeforeUse",
+    "verificationNote": "District 4400 identifies social reach in Baños; exact club/project details require confirmation.",
+    "seasonalWeather": {
+      "september": "Variable showers.",
+      "october": "Greater rain and mud risk."
+    },
+    "sections": [
+      {
+        "id": "consent",
+        "title": "Consent",
+        "body": "The app requires host confirmation and participant release status before enabling a filming checklist."
+      }
+    ]
+  },
+  {
+    "id": "quilotoa",
+    "slug": "quilotoa",
+    "name": "Quilotoa Crater",
+    "category": "crater",
+    "coordinate": {
+      "latitude": -0.858,
+      "longitude": -78.902
+    },
+    "altitudeMeters": 3914,
+    "highwayRefs": [
+      "E30"
+    ],
+    "summary": "Signature crater reveal and high-elevation weather checkpoint.",
+    "safetyNotes": [
+      "Wind, cold and altitude can degrade rider judgment.",
+      "Stay on authorized roads and visitor areas."
+    ],
+    "filmingNotes": [
+      "Hold a quiet spatial reveal; do not crowd the rim or obstruct visitors."
+    ],
+    "tags": [
+      "crater",
+      "altitude",
+      "E30"
+    ],
+    "verificationState": "verifyBeforeUse",
+    "verificationNote": "Confirm local access, parking, community rules and weather on the day.",
+    "seasonalWeather": {
+      "september": "Clearer morning potential with strong wind and UV.",
+      "october": "More cloud, rain and reduced visibility."
+    },
+    "sections": [
+      {
+        "id": "reveal",
+        "title": "Reveal shot",
+        "body": "Stage the camera only after the area is secure; preserve a quiet moment before narration."
+      }
+    ]
+  },
+  {
+    "id": "chugchilan",
+    "slug": "chugchilan",
+    "name": "Chugchilán",
+    "category": "lodging",
+    "coordinate": {
+      "latitude": -0.803,
+      "longitude": -78.921
+    },
+    "altitudeMeters": 3200,
+    "highwayRefs": [
+      "E30"
+    ],
+    "summary": "Remote highland lodging and regroup base near Quilotoa.",
+    "safetyNotes": [
+      "Fuel, medical and recovery services may be limited; arrive before dark."
+    ],
+    "filmingNotes": [
+      "Confirm property and community filming consent."
+    ],
+    "tags": [
+      "lodging",
+      "highlands",
+      "regroup"
+    ],
+    "verificationState": "verifyBeforeUse",
+    "verificationNote": "Hotel selection, rates and availability are not bundled as current quotes.",
+    "seasonalWeather": {
+      "september": "Cold nights and relatively clearer mornings.",
+      "october": "Wet afternoons and colder perceived conditions."
+    },
+    "sections": [
+      {
+        "id": "lodging",
+        "title": "Lodging contract",
+        "body": "Record cancellation terms, secure motorcycle parking, meal times, power availability and emergency transport."
+      }
+    ]
+  },
+  {
+    "id": "angamarca",
+    "slug": "angamarca",
+    "name": "Angamarca Backcountry Gate",
+    "category": "support",
+    "coordinate": {
+      "latitude": -1.104,
+      "longitude": -78.988
+    },
+    "altitudeMeters": 3000,
+    "highwayRefs": [
+      "E30"
+    ],
+    "summary": "Planning gate for remote highland tracks and the hardest optional riding.",
+    "safetyNotes": [
+      "No bundled trail is authorized here.",
+      "Use a local lead, sweep, satellite communications and a verified bailout."
+    ],
+    "filmingNotes": [
+      "Camera placement must not block narrow roads or livestock movement."
+    ],
+    "tags": [
+      "backcountry",
+      "technical",
+      "verification"
+    ],
+    "verificationState": "planningOnly",
+    "verificationNote": "Operational geometry must come from a current locally verified GPX file.",
+    "seasonalWeather": {
+      "september": "Potentially firmer surfaces, but cold and wind remain.",
+      "october": "Mud and slope risk can make the route unsuitable."
+    },
+    "sections": [
+      {
+        "id": "lock",
+        "title": "Operational lock",
+        "body": "This area remains disabled in turn-by-turn mode until a verified GPX and current access record are imported."
+      }
+    ]
+  },
+  {
+    "id": "cotopaxi-perimeter",
+    "slug": "cotopaxi-perimeter",
+    "name": "Cotopaxi Perimeter",
+    "category": "volcano",
+    "coordinate": {
+      "latitude": -0.68,
+      "longitude": -78.436
+    },
+    "altitudeMeters": 3600,
+    "highwayRefs": [
+      "E35",
+      "E20C"
+    ],
+    "summary": "Volcano-perimeter scenic stage using only currently authorized access.",
+    "safetyNotes": [
+      "Protected-area and motorcycle rules can change.",
+      "Never infer access from an old GPX or social post."
+    ],
+    "filmingNotes": [
+      "Use established viewpoints and keep wildlife/visitor disturbance low."
+    ],
+    "tags": [
+      "volcano",
+      "protected area",
+      "E35"
+    ],
+    "verificationState": "verifyBeforeUse",
+    "verificationNote": "Park and motorcycle access must be confirmed immediately before travel.",
+    "seasonalWeather": {
+      "september": "Often the preferred visibility window, with cold wind.",
+      "october": "Cloud and precipitation are more likely."
+    },
+    "sections": [
+      {
+        "id": "park",
+        "title": "Protected-area rule",
+        "body": "The app requires a current access source and timestamp before displaying any internal route as operational."
+      }
+    ]
+  },
+  {
+    "id": "machachi",
+    "slug": "machachi",
+    "name": "Machachi / South Quito Support Base",
+    "category": "support",
+    "coordinate": {
+      "latitude": -0.5102,
+      "longitude": -78.567
+    },
+    "altitudeMeters": 2945,
+    "highwayRefs": [
+      "E35"
+    ],
+    "summary": "Final Andean regroup, lodging and mechanical-support area before Pifo/Quito.",
+    "safetyNotes": [
+      "Avoid fatigue-driven late transfers into metropolitan traffic."
+    ],
+    "filmingNotes": [
+      "Good location for the route debrief and equipment wrap sequence."
+    ],
+    "tags": [
+      "support",
+      "E35",
+      "lodging"
+    ],
+    "verificationState": "verifyBeforeUse",
+    "verificationNote": "Confirm current lodging, mechanic and recovery providers.",
+    "seasonalWeather": {
+      "september": "Cold mornings and stronger afternoon wind.",
+      "october": "More frequent rain and cloud."
+    },
+    "sections": [
+      {
+        "id": "debrief",
+        "title": "Debrief",
+        "body": "Close incident notes, media manifests, route deviations and maintenance issues before the final transfer."
+      }
+    ]
+  },
+  {
+    "id": "ingapirca",
+    "slug": "ingapirca",
+    "name": "Ingapirca Cultural Extension",
+    "category": "ruins",
+    "coordinate": {
+      "latitude": -2.541,
+      "longitude": -78.872
+    },
+    "altitudeMeters": 3120,
+    "highwayRefs": [
+      "E35"
+    ],
+    "summary": "Optional southern cultural extension, not part of the compact eight-day loop.",
+    "safetyNotes": [
+      "Requires substantial additional transit and a separate operating plan."
+    ],
+    "filmingNotes": [
+      "Follow archaeological-site rules; avoid touching or climbing structures."
+    ],
+    "tags": [
+      "archaeology",
+      "culture",
+      "optional"
+    ],
+    "verificationState": "planningOnly",
+    "verificationNote": "Confirm opening, conservation and filming rules and build a separate route plan.",
+    "seasonalWeather": {
+      "september": "Cool highland conditions with variable sun.",
+      "october": "Higher rain probability."
+    },
+    "sections": [
+      {
+        "id": "interpretation",
+        "title": "Interpretation",
+        "body": "Use qualified local interpretation and clearly separate Cañari and Inca historical context."
+      }
+    ]
+  }
+]

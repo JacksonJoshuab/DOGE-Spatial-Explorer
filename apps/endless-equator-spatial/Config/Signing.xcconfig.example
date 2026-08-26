@@ -1,0 +1,12 @@
+// Copy to Signing.xcconfig locally or provide these values through CI.
+// Do not commit certificates, provisioning profiles, API private keys, or passwords.
+
+APPLE_TEAM_ID = REPLACE_WITH_APPLE_DEVELOPER_TEAM_ID
+ENDLESS_EQUATOR_IOS_BUNDLE_ID = com.gonzosocialclub.endlessequator
+ENDLESS_EQUATOR_VISION_BUNDLE_ID = com.gonzosocialclub.endlessequator.spatial
+
+CODE_SIGN_STYLE = Automatic
+DEVELOPMENT_TEAM = $(APPLE_TEAM_ID)
+
+// Production HTTPS gateway used by physical devices.
+ENDLESS_EQUATOR_SERVER_URL = https://api.endlessequator.example

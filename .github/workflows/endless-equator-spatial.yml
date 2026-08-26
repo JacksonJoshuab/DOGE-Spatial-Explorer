@@ -1,0 +1,122 @@
+name: Endless Equator Spatial
+on:
+  pull_request:
+    paths:
+      - 'apps/endless-equator-spatial/**'
+      - '.github/workflows/endless-equator-spatial.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'apps/endless-equator-spatial/**'
+      - '.github/workflows/endless-equator-spatial.yml'
+permissions:
+  contents: read
+concurrency:
+  group: endless-equator-spatial-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  server-and-data:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/endless-equator-spatial
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - name: Validate canonical JSON and release schemas
+        run: |
+          node -e "for (const f of ['areas-01.json','areas-02.json','areas-03.json']) JSON.parse(require('fs').readFileSync('Sources/EndlessEquatorCore/Resources/'+f))"
+          node -e "JSON.parse(require('fs').readFileSync('Sources/EndlessEquatorCore/Resources/route-plan.json'))"
+          node -e "JSON.parse(require('fs').readFileSync('Sources/EndlessEquatorCore/Resources/route.geojson'))"
+          node -e "const s=JSON.parse(require('fs').readFileSync('Release/route-verification-manifest.schema.json')); if(s.type!=='object'||!s.required.includes('gpxSHA256')||!s.required.includes('signature')) process.exit(1)"
+      - name: Check server syntax
+        run: node --check Server/server.mjs
+      - name: Smoke-test server
+        run: |
+          node Server/server.mjs > /tmp/endless-equator.log 2>&1 &
+          pid=$!
+          trap 'kill $pid' EXIT
+          sleep 2
+          curl --fail http://localhost:8787/health
+          curl --fail http://localhost:8787/api/areas >/dev/null
+          curl --fail http://localhost:8787/api/route >/dev/null
+      - name: Build and smoke-test production container
+        run: |
+          set -euo pipefail
+          docker build -f Server/Dockerfile -t endless-equator-gateway:${{ github.sha }} .
+          container=$(docker run -d -p 127.0.0.1:8788:8787 endless-equator-gateway:${{ github.sha }})
+          trap 'docker rm -f "$container" >/dev/null 2>&1 || true' EXIT
+          for attempt in $(seq 1 20); do
+            if curl --fail --silent http://127.0.0.1:8788/health >/tmp/container-health.json; then break; fi
+            sleep 1
+          done
+          cat /tmp/container-health.json
+          curl --fail http://127.0.0.1:8788/api/areas >/dev/null
+          test "$(docker inspect -f '{{.Config.User}}' "$container")" = node
+      - name: Verify no obvious committed secrets
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          patterns = [re.compile(r"sk-proj-[A-Za-z0-9_-]{20,}"), re.compile(r"-----BEGIN PRIVATE KEY-----"), re.compile(r"OPENAI_API_KEY=\S+")]
+          violations=[]
+          for path in Path('.').rglob('*'):
+              if not path.is_file() or path.name == '.env.example' or '.git' in path.parts:
+                  continue
+              if path.as_posix().endswith('.github/workflows/endless-equator-spatial.yml'):
+                  continue
+              try: text=path.read_text(errors='ignore')
+              except OSError: continue
+              if any(pattern.search(text) for pattern in patterns): violations.append(str(path))
+          if violations: raise SystemExit('Potential committed secrets: ' + ', '.join(violations))
+          PY
+      - name: Write build manifest
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib, json
+          root=Path('.')
+          files=sorted(p for p in root.rglob('*') if p.is_file() and p.name != '.env')
+          manifest={
+            'artifact':'Endless Equator Spatial Navigator Source',
+            'commit':'${{ github.sha }}',
+            'files':len(files),
+            'sha256':{str(p):hashlib.sha256(p.read_bytes()).hexdigest() for p in files},
+          }
+          Path('BUILD_MANIFEST.json').write_text(json.dumps(manifest,indent=2)+'\n')
+          PY
+      - name: Upload verified source package
+        uses: actions/upload-artifact@v4
+        with:
+          name: Endless_Equator_Spatial_Navigator_Source
+          path: |
+            apps/endless-equator-spatial
+            .github/workflows/endless-equator-spatial.yml
+          if-no-files-found: error
+          retention-days: 30
+  apple-source-syntax:
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: apps/endless-equator-spatial
+    steps:
+      - uses: actions/checkout@v4
+      - name: Report Apple toolchain
+        run: swift --version
+      - name: Parse Swift source files
+        run: |
+          find Sources AppTemplates AppTests Tests -name '*.swift' -print0 | while IFS= read -r -d '' file; do
+            swiftc -frontend -parse "$file"
+          done
+      - name: Validate package manifest on Swift 6.4+
+        run: |
+          python3 - <<'PY'
+          import re, subprocess
+          text=subprocess.check_output(['swift','--version'],text=True)
+          m=re.search(r'Swift version (\d+)\.(\d+)',text)
+          if m and (int(m.group(1)),int(m.group(2))) >= (6,4):
+              subprocess.check_call(['swift','package','dump-package'])
+          else:
+              print('Manifest requires Swift 6.4/Xcode 27; source parsing completed on the available runner.')
+          PY

@@ -1,0 +1,12 @@
+.git
+.github
+Build
+.build
+DerivedData
+*.xcarchive
+*.xcresult
+.env
+.env.*
+!Server/.env.example
+node_modules
+.DS_Store

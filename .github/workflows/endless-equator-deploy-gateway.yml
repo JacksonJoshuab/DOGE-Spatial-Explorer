@@ -1,0 +1,183 @@
+name: Endless Equator Deploy Gateway
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_production:
+        description: 'Type DEPLOY to authorize a production revision'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  APP_PATH: apps/endless-equator-spatial
+  IMAGE_REPOSITORY: endless-equator-gateway
+
+jobs:
+  deploy:
+    if: inputs.confirm_production == 'DEPLOY'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    environment: gateway-production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate required configuration
+        env:
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
+          AZURE_LOCATION: ${{ vars.AZURE_LOCATION }}
+          AZURE_KEY_VAULT_NAME: ${{ vars.AZURE_KEY_VAULT_NAME }}
+          APPLE_MAPS_TEAM_ID: ${{ vars.APPLE_MAPS_TEAM_ID }}
+          APPLE_MAPS_KEY_ID: ${{ vars.APPLE_MAPS_KEY_ID }}
+          ALLOWED_ORIGINS: ${{ vars.ALLOWED_ORIGINS }}
+          MAPKIT_ALLOWED_ORIGINS: ${{ vars.MAPKIT_ALLOWED_ORIGINS }}
+        run: |
+          set -euo pipefail
+          for name in AZURE_CLIENT_ID AZURE_TENANT_ID AZURE_SUBSCRIPTION_ID AZURE_RESOURCE_GROUP AZURE_LOCATION AZURE_KEY_VAULT_NAME APPLE_MAPS_TEAM_ID APPLE_MAPS_KEY_ID ALLOWED_ORIGINS MAPKIT_ALLOWED_ORIGINS; do
+            test -n "${!name:-}" || { echo "Missing required production value: $name" >&2; exit 1; }
+          done
+
+      - name: Azure federated login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Validate Bicep
+        run: |
+          az bicep build --file "$APP_PATH/Infrastructure/Azure/foundation.bicep"
+          az bicep build --file "$APP_PATH/Infrastructure/Azure/app.bicep"
+
+      - name: Ensure resource group
+        run: |
+          az group create \
+            --name '${{ vars.AZURE_RESOURCE_GROUP }}' \
+            --location '${{ vars.AZURE_LOCATION }}' \
+            --tags application=endless-equator environment=production managed-by=github-actions
+
+      - name: Deploy foundation
+        id: foundation
+        run: |
+          set -euo pipefail
+          deployment="endless-equator-foundation-${GITHUB_RUN_NUMBER}"
+          az deployment group create \
+            --name "$deployment" \
+            --resource-group '${{ vars.AZURE_RESOURCE_GROUP }}' \
+            --template-file "$APP_PATH/Infrastructure/Azure/foundation.bicep" \
+            --parameters prefix='endless-equator' location='${{ vars.AZURE_LOCATION }}' \
+            --only-show-errors
+          outputs="$(az deployment group show --name "$deployment" --resource-group '${{ vars.AZURE_RESOURCE_GROUP }}' --query properties.outputs -o json)"
+          echo "registry_name=$(jq -r '.registryName.value' <<<"$outputs")" >> "$GITHUB_OUTPUT"
+          echo "registry_server=$(jq -r '.registryLoginServer.value' <<<"$outputs")" >> "$GITHUB_OUTPUT"
+          echo "environment_name=$(jq -r '.managedEnvironmentName.value' <<<"$outputs")" >> "$GITHUB_OUTPUT"
+          echo "identity_name=$(jq -r '.identityName.value' <<<"$outputs")" >> "$GITHUB_OUTPUT"
+
+      - name: Build immutable image in ACR
+        id: image
+        run: |
+          image='${{ steps.foundation.outputs.registry_server }}/endless-equator-gateway:${{ github.sha }}'
+          az acr build \
+            --registry '${{ steps.foundation.outputs.registry_name }}' \
+            --image "endless-equator-gateway:${{ github.sha }}" \
+            --file "$APP_PATH/Server/Dockerfile" \
+            "$APP_PATH" \
+            --only-show-errors
+          echo "uri=$image" >> "$GITHUB_OUTPUT"
+
+      - name: Capture current production revision
+        id: previous
+        continue-on-error: true
+        run: |
+          revision="$(az containerapp revision list \
+            --resource-group '${{ vars.AZURE_RESOURCE_GROUP }}' \
+            --name endless-equator-gateway \
+            --query "[?properties.trafficWeight > \`0\`].name | [0]" -o tsv 2>/dev/null || true)"
+          echo "revision=$revision" >> "$GITHUB_OUTPUT"
+
+      - name: Create deployment parameter file
+        run: |
+          set -euo pipefail
+          jq -n \
+            --arg location '${{ vars.AZURE_LOCATION }}' \
+            --arg environment '${{ steps.foundation.outputs.environment_name }}' \
+            --arg identity '${{ steps.foundation.outputs.identity_name }}' \
+            --arg registry '${{ steps.foundation.outputs.registry_name }}' \
+            --arg image '${{ steps.image.outputs.uri }}' \
+            --arg vault '${{ vars.AZURE_KEY_VAULT_NAME }}' \
+            --arg team '${{ vars.APPLE_MAPS_TEAM_ID }}' \
+            --arg key '${{ vars.APPLE_MAPS_KEY_ID }}' \
+            --arg openaiModel '${{ vars.OPENAI_MODEL }}' \
+            --arg allowed '${{ vars.ALLOWED_ORIGINS }}' \
+            --arg mapOrigins '${{ vars.MAPKIT_ALLOWED_ORIGINS }}' \
+            '{
+              "$schema":"https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+              "contentVersion":"1.0.0.0",
+              "parameters":{
+                "location":{"value":$location},
+                "managedEnvironmentName":{"value":$environment},
+                "identityName":{"value":$identity},
+                "registryName":{"value":$registry},
+                "containerImage":{"value":$image},
+                "keyVaultName":{"value":$vault},
+                "appleMapsTeamID":{"value":$team},
+                "appleMapsKeyID":{"value":$key},
+                "openAIModel":{"value":($openaiModel | if length == 0 then "gpt-5.6-sol" else . end)},
+                "allowedOrigins":{"value":($allowed | split(",") | map(gsub("^\\s+|\\s+$";"")) | map(select(length>0)))},
+                "mapKitAllowedOrigins":{"value":($mapOrigins | split(",") | map(gsub("^\\s+|\\s+$";"")) | map(select(length>0)))}
+              }
+            }' > "$RUNNER_TEMP/app.parameters.json"
+
+      - name: Deploy application revision
+        run: |
+          az deployment group create \
+            --name "endless-equator-app-${GITHUB_RUN_NUMBER}" \
+            --resource-group '${{ vars.AZURE_RESOURCE_GROUP }}' \
+            --template-file "$APP_PATH/Infrastructure/Azure/app.bicep" \
+            --parameters "@$RUNNER_TEMP/app.parameters.json" \
+            --only-show-errors
+          rm -f "$RUNNER_TEMP/app.parameters.json"
+
+      - name: Resolve HTTPS endpoint and smoke test
+        id: smoke
+        run: |
+          set -euo pipefail
+          fqdn="$(az containerapp show --resource-group '${{ vars.AZURE_RESOURCE_GROUP }}' --name endless-equator-gateway --query properties.configuration.ingress.fqdn -o tsv)"
+          url="https://$fqdn"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          for attempt in $(seq 1 18); do
+            if curl --fail --silent --show-error --max-time 10 "$url/health" > "$RUNNER_TEMP/health.json" && \
+               curl --fail --silent --show-error --max-time 10 "$url/api/areas" > /dev/null && \
+               curl --fail --silent --show-error --max-time 10 "$url/api/route" > /dev/null; then
+              cat "$RUNNER_TEMP/health.json"
+              exit 0
+            fi
+            sleep 10
+          done
+          exit 1
+
+      - name: Roll back traffic after failed smoke test
+        if: failure() && steps.previous.outputs.revision != ''
+        run: |
+          az containerapp ingress traffic set \
+            --resource-group '${{ vars.AZURE_RESOURCE_GROUP }}' \
+            --name endless-equator-gateway \
+            --revision-weight '${{ steps.previous.outputs.revision }}=100'
+
+      - name: Write deployment summary
+        if: success()
+        run: |
+          {
+            echo '## Endless Equator production gateway'
+            echo
+            echo '- URL: `${{ steps.smoke.outputs.url }}`'
+            echo '- Image: `${{ steps.image.outputs.uri }}`'
+            echo '- Commit: `${{ github.sha }}`'
+            echo '- Health, area, and route smoke tests: passed'
+          } >> "$GITHUB_STEP_SUMMARY"

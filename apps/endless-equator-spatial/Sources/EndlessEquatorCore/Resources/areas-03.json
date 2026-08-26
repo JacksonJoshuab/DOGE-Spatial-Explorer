@@ -1,0 +1,317 @@
+[
+  {
+    "id": "quito-motorcycle-rental",
+    "slug": "quito-motorcycle-rental",
+    "name": "Quito Motorcycle Rental / Fleet Staging",
+    "category": "motorcycleRental",
+    "coordinate": {
+      "latitude": -0.184,
+      "longitude": -78.482
+    },
+    "altitudeMeters": 2850,
+    "highwayRefs": [
+      "E28C",
+      "E35"
+    ],
+    "summary": "Planning pin for contracting a legal rental fleet, mechanic, sweep and recovery support.",
+    "safetyNotes": [
+      "Inspect insurance, licensing, deposits, roadside coverage and off-road restrictions."
+    ],
+    "filmingNotes": [
+      "Record serial numbers and condition photos with operator consent."
+    ],
+    "tags": [
+      "motorcycles",
+      "rental",
+      "mechanic"
+    ],
+    "verificationState": "planningOnly",
+    "verificationNote": "The app intentionally stores no unverified current vendor price or address.",
+    "seasonalWeather": {
+      "september": "Cool morning staging.",
+      "october": "Plan covered loading for rain."
+    },
+    "sections": [
+      {
+        "id": "contract",
+        "title": "Fleet contract",
+        "body": "Capture bike model, VIN, maintenance history, tire/mousse setup, tool allocation, insurance exclusions and emergency replacement terms."
+      }
+    ]
+  },
+  {
+    "id": "quito-spatial-capture",
+    "slug": "quito-spatial-capture",
+    "name": "Spatial Camera Production Staging",
+    "category": "spatialCapture",
+    "coordinate": {
+      "latitude": -0.203,
+      "longitude": -78.49
+    },
+    "altitudeMeters": 2800,
+    "highwayRefs": [
+      "E28C"
+    ],
+    "summary": "Planning environment for iPhone spatial video and a professionally operated immersive-camera package.",
+    "safetyNotes": [
+      "Never mount cinema-scale immersive hardware on a rider.",
+      "Use protected stationary positions and a dedicated camera team."
+    ],
+    "filmingNotes": [
+      "Log generated versus documentary footage and preserve media provenance."
+    ],
+    "tags": [
+      "spatial video",
+      "Vision Pro",
+      "production"
+    ],
+    "verificationState": "planningOnly",
+    "verificationNote": "No local URSA Cine Immersive rental is claimed; obtain a current production-house quote.",
+    "seasonalWeather": {
+      "september": "Protect from dust and high UV.",
+      "october": "Weatherproof cases and condensation control are essential."
+    },
+    "sections": [
+      {
+        "id": "capture",
+        "title": "Capture split",
+        "body": "Use iPhone for lightweight spatial moments, action cameras for rider POV and the immersive cinema system only for controlled hero placements."
+      }
+    ]
+  },
+  {
+    "id": "manta",
+    "slug": "manta",
+    "name": "Manta / Pacific Logistics Hub",
+    "category": "support",
+    "coordinate": {
+      "latitude": -0.953,
+      "longitude": -80.735
+    },
+    "altitudeMeters": 6,
+    "highwayRefs": [
+      "E15"
+    ],
+    "summary": "Airport, port, lodging and production-support anchor for the optional Pacific extension.",
+    "safetyNotes": [
+      "Build a separate coast security, road and heat plan."
+    ],
+    "filmingNotes": [
+      "Coordinate drone and commercial filming permissions separately."
+    ],
+    "tags": [
+      "Pacific",
+      "airport",
+      "E15"
+    ],
+    "verificationState": "verifyBeforeUse",
+    "verificationNote": "Confirm current providers, route conditions and operating permissions.",
+    "seasonalWeather": {
+      "september": "Cooler coastal season with overcast periods and warm water activity.",
+      "october": "Warming transition with variable cloud and showers."
+    },
+    "sections": [
+      {
+        "id": "coast",
+        "title": "Coast reset",
+        "body": "Change tire/gear strategy, hydrate for heat and recheck surf, tides and coastal-road conditions."
+      }
+    ]
+  },
+  {
+    "id": "manta-rotary",
+    "slug": "manta-rotary",
+    "name": "Rotary Coordination — Manta",
+    "category": "rotary",
+    "coordinate": {
+      "latitude": -0.95,
+      "longitude": -80.73
+    },
+    "altitudeMeters": 10,
+    "highwayRefs": [
+      "E15"
+    ],
+    "summary": "Potential District 4400 coordination point on the Manabí coast.",
+    "safetyNotes": [
+      "Confirm the specific club, project, host and location."
+    ],
+    "filmingNotes": [
+      "Keep project claims source-linked and consent-forward."
+    ],
+    "tags": [
+      "Rotary",
+      "Manta",
+      "community"
+    ],
+    "verificationState": "verifyBeforeUse",
+    "verificationNote": "District 4400 confirms Rotary presence in Manta; this pin is not a confirmed appointment.",
+    "seasonalWeather": {
+      "september": "Cooler coastal pattern.",
+      "october": "Warmer and more variable."
+    },
+    "sections": [
+      {
+        "id": "project",
+        "title": "Project verification",
+        "body": "Do not enable a donation-delivery workflow until recipient needs, ownership, support and data-security responsibilities are documented."
+      }
+    ]
+  },
+  {
+    "id": "canoa",
+    "slug": "canoa",
+    "name": "Canoa Surf Stop",
+    "category": "surf",
+    "coordinate": {
+      "latitude": -0.466,
+      "longitude": -80.454
+    },
+    "altitudeMeters": 4,
+    "highwayRefs": [
+      "E15"
+    ],
+    "summary": "Optional northern Manabí surf and beach-production stop.",
+    "safetyNotes": [
+      "Check surf, rip currents, tides, security and local guidance before entering water."
+    ],
+    "filmingNotes": [
+      "Keep motorcycles off sensitive beach areas and secure all equipment."
+    ],
+    "tags": [
+      "surf",
+      "Manabí",
+      "E15"
+    ],
+    "verificationState": "verifyBeforeUse",
+    "verificationNote": "Surf and access conditions are live and require local confirmation.",
+    "seasonalWeather": {
+      "september": "Cooler, often overcast coastal conditions.",
+      "october": "Warmer transition with variable conditions."
+    },
+    "sections": [
+      {
+        "id": "surf",
+        "title": "Surf protocol",
+        "body": "Use a qualified local surf guide, buddy system and a separate water-safety plan."
+      }
+    ]
+  },
+  {
+    "id": "bahia",
+    "slug": "bahia-de-caraquez",
+    "name": "Bahía de Caráquez",
+    "category": "surf",
+    "coordinate": {
+      "latitude": -0.6,
+      "longitude": -80.423
+    },
+    "altitudeMeters": 8,
+    "highwayRefs": [
+      "E15"
+    ],
+    "summary": "Coastal connector, lodging and estuary-area context for the E15 extension.",
+    "safetyNotes": [
+      "Confirm bridge, road and local security conditions."
+    ],
+    "filmingNotes": [
+      "Avoid disturbing mangrove or wildlife areas."
+    ],
+    "tags": [
+      "coast",
+      "estuary",
+      "E15"
+    ],
+    "verificationState": "verifyBeforeUse",
+    "verificationNote": "Current route and lodging status must be checked.",
+    "seasonalWeather": {
+      "september": "Cooler and often cloudy.",
+      "october": "Warming and more variable."
+    },
+    "sections": [
+      {
+        "id": "ecology",
+        "title": "Ecology",
+        "body": "Use local environmental guidance before mapping or publishing sensitive habitat locations."
+      }
+    ]
+  },
+  {
+    "id": "ayampe",
+    "slug": "ayampe",
+    "name": "Ayampe Surf Finish",
+    "category": "surf",
+    "coordinate": {
+      "latitude": -1.679,
+      "longitude": -80.813
+    },
+    "altitudeMeters": 8,
+    "highwayRefs": [
+      "E15"
+    ],
+    "summary": "Lower-key Pacific finale with beach, forest and a controlled sunset film sequence.",
+    "safetyNotes": [
+      "Check surf hazards, tides, access, security and community expectations."
+    ],
+    "filmingNotes": [
+      "Use a stationary beach-edge immersive setup outside the impact zone."
+    ],
+    "tags": [
+      "surf",
+      "sunset",
+      "E15"
+    ],
+    "verificationState": "verifyBeforeUse",
+    "verificationNote": "Confirm surf guide, lodging, beach access and commercial filming rules.",
+    "seasonalWeather": {
+      "september": "Cooler coastal light, clouds and wind possible.",
+      "october": "Warmer transition with variable shower risk."
+    },
+    "sections": [
+      {
+        "id": "finale",
+        "title": "Finale",
+        "body": "Boards travel in the support vehicle; no dangerous board mounting on enduro motorcycles."
+      }
+    ]
+  },
+  {
+    "id": "montanita",
+    "slug": "montanita",
+    "name": "Montañita Surf / Social Stop",
+    "category": "surf",
+    "coordinate": {
+      "latitude": -1.827,
+      "longitude": -80.753
+    },
+    "altitudeMeters": 5,
+    "highwayRefs": [
+      "E15"
+    ],
+    "summary": "High-energy optional surf and nightlife stop on the Spondylus corridor.",
+    "safetyNotes": [
+      "Use a transport plan that separates riding from alcohol or fatigue.",
+      "Secure equipment and verify local conditions."
+    ],
+    "filmingNotes": [
+      "Obtain releases in crowded public-facing commercial scenes."
+    ],
+    "tags": [
+      "surf",
+      "E15",
+      "nightlife"
+    ],
+    "verificationState": "verifyBeforeUse",
+    "verificationNote": "Live surf, event, lodging and security conditions require confirmation.",
+    "seasonalWeather": {
+      "september": "Cooler coastal pattern and possible marine cloud.",
+      "october": "Warmer and increasingly variable."
+    },
+    "sections": [
+      {
+        "id": "transport",
+        "title": "Transport boundary",
+        "body": "Motorcycles are parked before any nightlife activity; designated support transport returns the team."
+      }
+    ]
+  }
+]

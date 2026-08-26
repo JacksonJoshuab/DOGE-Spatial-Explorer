@@ -1,0 +1,170 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://endless-equator.example/schemas/route-verification-manifest.schema.json",
+  "title": "Endless Equator Route Verification Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "manifestVersion",
+    "routeID",
+    "gpxSHA256",
+    "verifiedBy",
+    "verifiedAt",
+    "accessCheckedAt",
+    "weatherCheckedAt",
+    "validFrom",
+    "validUntil",
+    "segments",
+    "bailouts",
+    "emergencyPlan",
+    "riderAcknowledgements",
+    "signature"
+  ],
+  "properties": {
+    "manifestVersion": {
+      "const": "1.0"
+    },
+    "routeID": {
+      "type": "string",
+      "minLength": 1
+    },
+    "gpxSHA256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "verifiedBy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "organization", "role", "phone", "email"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "organization": { "type": "string", "minLength": 1 },
+        "role": { "type": "string", "minLength": 1 },
+        "phone": { "type": "string", "minLength": 5 },
+        "email": { "type": "string", "format": "email" }
+      }
+    },
+    "verifiedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "accessCheckedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "weatherCheckedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "validFrom": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "validUntil": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "segments": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "start",
+          "end",
+          "surface",
+          "accessAuthority",
+          "accessStatus",
+          "source",
+          "checkedAt"
+        ],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "start": { "type": "string", "minLength": 1 },
+          "end": { "type": "string", "minLength": 1 },
+          "surface": { "type": "string", "minLength": 1 },
+          "accessAuthority": { "type": "string", "minLength": 1 },
+          "accessStatus": {
+            "enum": ["open", "conditional", "closed"]
+          },
+          "source": { "type": "string", "minLength": 1 },
+          "checkedAt": { "type": "string", "format": "date-time" },
+          "conditions": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    },
+    "bailouts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["segmentID", "description", "coordinate"],
+        "properties": {
+          "segmentID": { "type": "string", "minLength": 1 },
+          "description": { "type": "string", "minLength": 1 },
+          "coordinate": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["latitude", "longitude"],
+            "properties": {
+              "latitude": { "type": "number", "minimum": -90, "maximum": 90 },
+              "longitude": { "type": "number", "minimum": -180, "maximum": 180 }
+            }
+          }
+        }
+      }
+    },
+    "emergencyPlan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["lead", "primaryNumber", "medicalFacilities", "communications"],
+      "properties": {
+        "lead": { "type": "string", "minLength": 1 },
+        "primaryNumber": { "type": "string", "minLength": 5 },
+        "medicalFacilities": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "communications": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "riderAcknowledgements": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["riderID", "acknowledgedAt"],
+        "properties": {
+          "riderID": { "type": "string", "minLength": 1 },
+          "acknowledgedAt": { "type": "string", "format": "date-time" }
+        }
+      }
+    },
+    "signature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["algorithm", "keyID", "value"],
+      "properties": {
+        "algorithm": { "const": "Ed25519" },
+        "keyID": { "type": "string", "minLength": 1 },
+        "value": {
+          "type": "string",
+          "contentEncoding": "base64",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

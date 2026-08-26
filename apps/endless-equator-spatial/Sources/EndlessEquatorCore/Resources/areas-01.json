@@ -1,0 +1,363 @@
+[
+  {
+    "id": "pifo-launch",
+    "slug": "pifo-launch",
+    "name": "Pifo / Quito Expedition Launch",
+    "category": "launch",
+    "coordinate": {
+      "latitude": -0.226,
+      "longitude": -78.338
+    },
+    "altitudeMeters": 2550,
+    "highwayRefs": [
+      "E28C",
+      "E35",
+      "E20"
+    ],
+    "summary": "Arrival, bike inspection, acclimatization and the mandatory route-verification briefing.",
+    "safetyNotes": [
+      "Do not begin a maximum-effort stage immediately after a long flight.",
+      "Confirm fuel range, communications and weather before departure."
+    ],
+    "filmingNotes": [
+      "Dawn loading sequence and stationary spatial-camera setup.",
+      "Record releases before identifiable interviews."
+    ],
+    "tags": [
+      "airport",
+      "launch",
+      "acclimatization"
+    ],
+    "verificationState": "verified",
+    "verificationNote": "Geographic planning anchor; exact operating base must be contracted.",
+    "seasonalWeather": {
+      "september": "Cool, often clearer Andean mornings; strong UV.",
+      "october": "Greener conditions with a higher afternoon shower risk."
+    },
+    "sections": [
+      {
+        "id": "briefing",
+        "title": "Start protocol",
+        "body": "Complete route verification, support check-in, motorcycle inspection and altitude briefing before unlocking operational guidance."
+      }
+    ]
+  },
+  {
+    "id": "quito-rotary",
+    "slug": "quito-rotary",
+    "name": "Rotary Coordination — Quito",
+    "category": "rotary",
+    "coordinate": {
+      "latitude": -0.1807,
+      "longitude": -78.4678
+    },
+    "altitudeMeters": 2850,
+    "highwayRefs": [
+      "E28C",
+      "E35"
+    ],
+    "summary": "District 4400 coordination area for a consent-forward community or service visit.",
+    "safetyNotes": [
+      "A map pin is not confirmation of a meeting or project.",
+      "Confirm host, address, consent and project scope before arrival."
+    ],
+    "filmingNotes": [
+      "Prioritize the project and participants rather than expedition branding."
+    ],
+    "tags": [
+      "Rotary",
+      "community",
+      "Quito"
+    ],
+    "verificationState": "verifyBeforeUse",
+    "verificationNote": "Rotary District 4400 confirms strong Quito presence; specific visit and address require direct confirmation.",
+    "seasonalWeather": {
+      "september": "Generally clearer mornings and cool evenings.",
+      "october": "More frequent afternoon showers; carry rain protection."
+    },
+    "sections": [
+      {
+        "id": "ethics",
+        "title": "Community filming",
+        "body": "Use written consent, avoid filming minors without guardian permission and separate confirmed project facts from proposed activity."
+      }
+    ]
+  },
+  {
+    "id": "mitad-del-mundo",
+    "slug": "mitad-del-mundo",
+    "name": "Mitad del Mundo",
+    "category": "ruins",
+    "coordinate": {
+      "latitude": 0.0022,
+      "longitude": -78.4558
+    },
+    "altitudeMeters": 2483,
+    "highwayRefs": [
+      "E28B"
+    ],
+    "summary": "Optional cultural and equator-marker extension for the expedition opening or closing sequence.",
+    "safetyNotes": [
+      "Use official visitor access and posted hours."
+    ],
+    "filmingNotes": [
+      "Keep overlays historically precise and avoid implying that a monument alone defines the geodetic equator."
+    ],
+    "tags": [
+      "equator",
+      "culture",
+      "Quito"
+    ],
+    "verificationState": "verifyBeforeUse",
+    "verificationNote": "Confirm operating hours, permissions and exact filming rules.",
+    "seasonalWeather": {
+      "september": "Dry-season tendency with bright sun and cool wind.",
+      "october": "Variable cloud and afternoon showers."
+    },
+    "sections": [
+      {
+        "id": "context",
+        "title": "Context",
+        "body": "Present the site as a cultural stop and verify geodetic explanations before publishing narration."
+      }
+    ]
+  },
+  {
+    "id": "cayambe-volcano",
+    "slug": "cayambe-volcano",
+    "name": "Cayambe Volcano / Páramo Viewpoint",
+    "category": "volcano",
+    "coordinate": {
+      "latitude": 0.018,
+      "longitude": -78.004
+    },
+    "altitudeMeters": 4300,
+    "highwayRefs": [
+      "E35",
+      "E28B"
+    ],
+    "summary": "High-Andes visual anchor with cold, wind, thin air and rapidly changing conditions.",
+    "safetyNotes": [
+      "Treat altitude symptoms seriously and descend when required.",
+      "Confirm legal motor access; the pin is not a trail authorization."
+    ],
+    "filmingNotes": [
+      "Use a stationary immersive pass-by with a protected camera zone."
+    ],
+    "tags": [
+      "volcano",
+      "páramo",
+      "altitude"
+    ],
+    "verificationState": "planningOnly",
+    "verificationNote": "Approximate scenic planning coordinate; local guide and access verification are mandatory.",
+    "seasonalWeather": {
+      "september": "Best chance of clearer high-country mornings; freezing wind remains possible.",
+      "october": "More cloud, rain and mud risk; start early."
+    },
+    "sections": [
+      {
+        "id": "altitude",
+        "title": "Altitude protocol",
+        "body": "Acclimatize, hydrate, limit early exertion and retain a lower-elevation bailout route."
+      }
+    ]
+  },
+  {
+    "id": "papallacta",
+    "slug": "papallacta",
+    "name": "Papallacta Hot Springs",
+    "category": "hotSprings",
+    "coordinate": {
+      "latitude": -0.368,
+      "longitude": -78.142
+    },
+    "altitudeMeters": 3300,
+    "highwayRefs": [
+      "E20"
+    ],
+    "summary": "Recovery stop where high-Andes cold transitions into cloud-forest mist.",
+    "safetyNotes": [
+      "Watch for fog, wet pavement and temperature changes on E20."
+    ],
+    "filmingNotes": [
+      "Steam provides depth for a stationary spatial shot; protect lenses from condensation."
+    ],
+    "tags": [
+      "hot springs",
+      "recovery",
+      "E20"
+    ],
+    "verificationState": "verifyBeforeUse",
+    "verificationNote": "Confirm lodging, access, rates and commercial filming permission.",
+    "seasonalWeather": {
+      "september": "Cold and misty despite the broader Andean dry season.",
+      "october": "More persistent showers and cloud."
+    },
+    "sections": [
+      {
+        "id": "recovery",
+        "title": "Recovery",
+        "body": "Use this as a hydration, equipment-dryout and rider-health checkpoint rather than a late-night transfer."
+      }
+    ]
+  },
+  {
+    "id": "baenza-bailout",
+    "slug": "baeza-bailout",
+    "name": "Baeza Support / Bailout Junction",
+    "category": "support",
+    "coordinate": {
+      "latitude": -0.463,
+      "longitude": -77.891
+    },
+    "altitudeMeters": 1900,
+    "highwayRefs": [
+      "E20",
+      "E45"
+    ],
+    "summary": "Connector and support decision point between the E20 descent and E45 Amazon corridor.",
+    "safetyNotes": [
+      "Confirm landslide, road and bridge conditions before committing south."
+    ],
+    "filmingNotes": [
+      "Use only short route-transition graphics here."
+    ],
+    "tags": [
+      "support",
+      "bailout",
+      "E20",
+      "E45"
+    ],
+    "verificationState": "verifyBeforeUse",
+    "verificationNote": "Road status is live operational information and must be rechecked.",
+    "seasonalWeather": {
+      "september": "Rain remains possible in the cloud-forest transition.",
+      "october": "Higher shower and slope-instability risk."
+    },
+    "sections": [
+      {
+        "id": "decision",
+        "title": "Go/no-go point",
+        "body": "Support lead records weather, road and rider status before the route changes from E20 to E45."
+      }
+    ]
+  },
+  {
+    "id": "archidona",
+    "slug": "archidona",
+    "name": "Archidona",
+    "category": "jungle",
+    "coordinate": {
+      "latitude": -0.909,
+      "longitude": -77.807
+    },
+    "altitudeMeters": 577,
+    "highwayRefs": [
+      "E45"
+    ],
+    "summary": "Amazon-foothills staging area for river, forest and community content.",
+    "safetyNotes": [
+      "Expect heat, rain, insects and slick surfaces in both travel months."
+    ],
+    "filmingNotes": [
+      "Do not enter community or Indigenous spaces without an invited local host and consent."
+    ],
+    "tags": [
+      "Amazon",
+      "jungle",
+      "E45"
+    ],
+    "verificationState": "verifyBeforeUse",
+    "verificationNote": "Exact trail, host and filming arrangements require local confirmation.",
+    "seasonalWeather": {
+      "september": "Warm, humid and rain-capable.",
+      "october": "Warm, humid and often wetter; flexible timing required."
+    },
+    "sections": [
+      {
+        "id": "respect",
+        "title": "Local protocol",
+        "body": "Use local guides, compensate community collaborators fairly and do not geotag sensitive places without permission."
+      }
+    ]
+  },
+  {
+    "id": "tena",
+    "slug": "tena",
+    "name": "Tena / Amazon Support Base",
+    "category": "jungle",
+    "coordinate": {
+      "latitude": -0.9938,
+      "longitude": -77.8129
+    },
+    "altitudeMeters": 510,
+    "highwayRefs": [
+      "E45"
+    ],
+    "summary": "Fuel, lodging, medical and support hub for the Amazon stage.",
+    "safetyNotes": [
+      "Reassess river levels, rain and communications coverage."
+    ],
+    "filmingNotes": [
+      "Capture environmental sound separately from narration."
+    ],
+    "tags": [
+      "Amazon",
+      "support",
+      "E45"
+    ],
+    "verificationState": "verifyBeforeUse",
+    "verificationNote": "Confirm current providers, hours and emergency capabilities.",
+    "seasonalWeather": {
+      "september": "Hot and humid with episodic heavy rain.",
+      "october": "Hot, humid and frequently wet."
+    },
+    "sections": [
+      {
+        "id": "support",
+        "title": "Support reset",
+        "body": "Dry equipment, inspect air filters and brakes, recharge communications and confirm the next lodging before departure."
+      }
+    ]
+  },
+  {
+    "id": "tena-rotary",
+    "slug": "tena-rotary",
+    "name": "Rotary Coordination — Tena",
+    "category": "rotary",
+    "coordinate": {
+      "latitude": -0.995,
+      "longitude": -77.814
+    },
+    "altitudeMeters": 510,
+    "highwayRefs": [
+      "E45"
+    ],
+    "summary": "Potential District 4400 coordination point in the Amazon region.",
+    "safetyNotes": [
+      "Do not represent a proposed stop as a confirmed Rotary project."
+    ],
+    "filmingNotes": [
+      "Use consent-forward interviews and publish the confirmed host organization."
+    ],
+    "tags": [
+      "Rotary",
+      "community",
+      "Tena"
+    ],
+    "verificationState": "verifyBeforeUse",
+    "verificationNote": "District 4400 identifies social reach in Tena; meeting, project and location are unconfirmed until directly arranged.",
+    "seasonalWeather": {
+      "september": "Rain-capable and humid.",
+      "october": "Higher wet-weather likelihood."
+    },
+    "sections": [
+      {
+        "id": "verification",
+        "title": "Required confirmation",
+        "body": "Record club/contact, project owner, objectives, participant consent and whether technology delivery is requested."
+      }
+    ]
+  }
+]

@@ -1,0 +1,9 @@
+{
+  "name": "Endless Equator Spatial Navigator",
+  "short_name": "Endless Equator",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#07100f",
+  "theme_color": "#09100f",
+  "description": "Local-first Ecuador expedition route and area guide"
+}

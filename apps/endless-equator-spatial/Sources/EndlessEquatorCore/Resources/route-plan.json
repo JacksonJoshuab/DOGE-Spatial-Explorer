@@ -1,0 +1,386 @@
+{
+  "id": "endless-equator-seed",
+  "name": "Endless Equator Ecuador Planning Preview",
+  "version": "2026-08-22",
+  "points": [
+    {
+      "id": "p0",
+      "coordinate": {
+        "latitude": -0.226,
+        "longitude": -78.338
+      },
+      "elevationMeters": 2550
+    },
+    {
+      "id": "p1",
+      "coordinate": {
+        "latitude": -0.1,
+        "longitude": -78.25
+      },
+      "elevationMeters": 2800
+    },
+    {
+      "id": "p2",
+      "coordinate": {
+        "latitude": 0.0408,
+        "longitude": -78.145
+      },
+      "elevationMeters": 2830
+    },
+    {
+      "id": "p3",
+      "coordinate": {
+        "latitude": 0.018,
+        "longitude": -78.004
+      },
+      "elevationMeters": 4300
+    },
+    {
+      "id": "p4",
+      "coordinate": {
+        "latitude": -0.226,
+        "longitude": -78.338
+      },
+      "elevationMeters": 2550
+    },
+    {
+      "id": "p5",
+      "coordinate": {
+        "latitude": -0.368,
+        "longitude": -78.142
+      },
+      "elevationMeters": 3300
+    },
+    {
+      "id": "p6",
+      "coordinate": {
+        "latitude": -0.463,
+        "longitude": -77.891
+      },
+      "elevationMeters": 1900
+    },
+    {
+      "id": "p7",
+      "coordinate": {
+        "latitude": -0.909,
+        "longitude": -77.807
+      },
+      "elevationMeters": 577
+    },
+    {
+      "id": "p8",
+      "coordinate": {
+        "latitude": -0.9938,
+        "longitude": -77.8129
+      },
+      "elevationMeters": 510
+    },
+    {
+      "id": "p9",
+      "coordinate": {
+        "latitude": -1.25,
+        "longitude": -78.05
+      },
+      "elevationMeters": 900
+    },
+    {
+      "id": "p10",
+      "coordinate": {
+        "latitude": -1.396,
+        "longitude": -78.424
+      },
+      "elevationMeters": 1820
+    },
+    {
+      "id": "p11",
+      "coordinate": {
+        "latitude": -1.25,
+        "longitude": -78.62
+      },
+      "elevationMeters": 2500
+    },
+    {
+      "id": "p12",
+      "coordinate": {
+        "latitude": -0.95,
+        "longitude": -78.75
+      },
+      "elevationMeters": 3000
+    },
+    {
+      "id": "p13",
+      "coordinate": {
+        "latitude": -0.858,
+        "longitude": -78.902
+      },
+      "elevationMeters": 3914
+    },
+    {
+      "id": "p14",
+      "coordinate": {
+        "latitude": -0.803,
+        "longitude": -78.921
+      },
+      "elevationMeters": 3200
+    },
+    {
+      "id": "p15",
+      "coordinate": {
+        "latitude": -0.68,
+        "longitude": -78.436
+      },
+      "elevationMeters": 3600
+    },
+    {
+      "id": "p16",
+      "coordinate": {
+        "latitude": -0.5102,
+        "longitude": -78.567
+      },
+      "elevationMeters": 2945
+    },
+    {
+      "id": "p17",
+      "coordinate": {
+        "latitude": -0.226,
+        "longitude": -78.338
+      },
+      "elevationMeters": 2550
+    }
+  ],
+  "maneuvers": [
+    {
+      "id": "m0",
+      "sequence": 0,
+      "coordinate": {
+        "latitude": -0.226,
+        "longitude": -78.338
+      },
+      "instruction": "Depart Pifo only after the route and rider check are complete.",
+      "roadReference": "E28C",
+      "kind": "depart",
+      "areaID": "pifo-launch"
+    },
+    {
+      "id": "m1",
+      "sequence": 1,
+      "coordinate": {
+        "latitude": -0.1,
+        "longitude": -78.25
+      },
+      "instruction": "Continue toward the Cayambe corridor using the approved connector.",
+      "roadReference": "E35",
+      "kind": "continueStraight",
+      "areaID": null
+    },
+    {
+      "id": "m2",
+      "sequence": 2,
+      "coordinate": {
+        "latitude": 0.0408,
+        "longitude": -78.145
+      },
+      "instruction": "Regroup in the Cayambe area before any high-páramo segment.",
+      "roadReference": "E35",
+      "kind": "caution",
+      "areaID": "cayambe-volcano"
+    },
+    {
+      "id": "m3",
+      "sequence": 3,
+      "coordinate": {
+        "latitude": 0.018,
+        "longitude": -78.004
+      },
+      "instruction": "Turn back at the locally verified high-country limit.",
+      "roadReference": null,
+      "kind": "caution",
+      "areaID": "cayambe-volcano"
+    },
+    {
+      "id": "m4",
+      "sequence": 4,
+      "coordinate": {
+        "latitude": -0.226,
+        "longitude": -78.338
+      },
+      "instruction": "Return to Pifo and merge east onto the Papallacta corridor.",
+      "roadReference": "E20",
+      "kind": "merge",
+      "areaID": "pifo-launch"
+    },
+    {
+      "id": "m5",
+      "sequence": 5,
+      "coordinate": {
+        "latitude": -0.368,
+        "longitude": -78.142
+      },
+      "instruction": "Continue through Papallacta after the weather and rider checkpoint.",
+      "roadReference": "E20",
+      "kind": "continueStraight",
+      "areaID": "papallacta"
+    },
+    {
+      "id": "m6",
+      "sequence": 6,
+      "coordinate": {
+        "latitude": -0.463,
+        "longitude": -77.891
+      },
+      "instruction": "At Baeza, confirm the E45 southbound go/no-go decision.",
+      "roadReference": "E45",
+      "kind": "turnRight",
+      "areaID": "baenza-bailout"
+    },
+    {
+      "id": "m7",
+      "sequence": 7,
+      "coordinate": {
+        "latitude": -0.909,
+        "longitude": -77.807
+      },
+      "instruction": "Continue on the approved Amazon connector toward Archidona and Tena.",
+      "roadReference": "E45",
+      "kind": "continueStraight",
+      "areaID": "archidona"
+    },
+    {
+      "id": "m8",
+      "sequence": 8,
+      "coordinate": {
+        "latitude": -0.9938,
+        "longitude": -77.8129
+      },
+      "instruction": "Regroup in Tena; reset fuel, communications and wet-weather gear.",
+      "roadReference": "E45",
+      "kind": "caution",
+      "areaID": "tena"
+    },
+    {
+      "id": "m9",
+      "sequence": 9,
+      "coordinate": {
+        "latitude": -1.25,
+        "longitude": -78.05
+      },
+      "instruction": "Continue toward Baños using the support-approved corridor.",
+      "roadReference": "E45 / E30",
+      "kind": "continueStraight",
+      "areaID": null
+    },
+    {
+      "id": "m10",
+      "sequence": 10,
+      "coordinate": {
+        "latitude": -1.396,
+        "longitude": -78.424
+      },
+      "instruction": "Arrive at the Baños base; technical loops require separate verified GPX tracks.",
+      "roadReference": "E30",
+      "kind": "arrive",
+      "areaID": "banos"
+    },
+    {
+      "id": "m11",
+      "sequence": 11,
+      "coordinate": {
+        "latitude": -1.25,
+        "longitude": -78.62
+      },
+      "instruction": "Depart Baños west only after the mountain-weather check.",
+      "roadReference": "E30",
+      "kind": "continueStraight",
+      "areaID": null
+    },
+    {
+      "id": "m12",
+      "sequence": 12,
+      "coordinate": {
+        "latitude": -0.95,
+        "longitude": -78.75
+      },
+      "instruction": "Continue toward Zumbahua using the approved E30 transfer.",
+      "roadReference": "E30",
+      "kind": "continueStraight",
+      "areaID": null
+    },
+    {
+      "id": "m13",
+      "sequence": 13,
+      "coordinate": {
+        "latitude": -0.858,
+        "longitude": -78.902
+      },
+      "instruction": "Arrive at the Quilotoa staging area and park in an authorized location.",
+      "roadReference": "E30",
+      "kind": "arrive",
+      "areaID": "quilotoa"
+    },
+    {
+      "id": "m14",
+      "sequence": 14,
+      "coordinate": {
+        "latitude": -0.803,
+        "longitude": -78.921
+      },
+      "instruction": "Proceed to Chugchilán only on the verified local route.",
+      "roadReference": null,
+      "kind": "caution",
+      "areaID": "chugchilan"
+    },
+    {
+      "id": "m15",
+      "sequence": 15,
+      "coordinate": {
+        "latitude": -0.68,
+        "longitude": -78.436
+      },
+      "instruction": "Use the confirmed Cotopaxi perimeter access; do not infer park entry.",
+      "roadReference": "E35 / E20C",
+      "kind": "caution",
+      "areaID": "cotopaxi-perimeter"
+    },
+    {
+      "id": "m16",
+      "sequence": 16,
+      "coordinate": {
+        "latitude": -0.5102,
+        "longitude": -78.567
+      },
+      "instruction": "Continue north on E35 to the Machachi support stop.",
+      "roadReference": "E35",
+      "kind": "continueStraight",
+      "areaID": "machachi"
+    },
+    {
+      "id": "m17",
+      "sequence": 17,
+      "coordinate": {
+        "latitude": -0.226,
+        "longitude": -78.338
+      },
+      "instruction": "Return to Pifo and close the route log.",
+      "roadReference": "E35 / E28C",
+      "kind": "arrive",
+      "areaID": "pifo-launch"
+    }
+  ],
+  "verification": {
+    "state": "planningOnly",
+    "verifiedBy": null,
+    "verifiedAt": null,
+    "accessCheckedAt": null,
+    "weatherCheckedAt": null,
+    "riderAcknowledged": false,
+    "note": "High-level connector preview only. Import a current, locally verified GPX for operational guidance."
+  },
+  "optionalCoastExtensionAreaIDs": [
+    "manta",
+    "manta-rotary",
+    "bahia",
+    "canoa",
+    "ayampe",
+    "montanita"
+  ]
+}

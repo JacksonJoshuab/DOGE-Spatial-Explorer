@@ -1,0 +1,91 @@
+name: Endless Equator RC Evidence
+
+on:
+  pull_request:
+    paths:
+      - 'apps/endless-equator-spatial/Release/**'
+      - '.github/workflows/endless-equator-rc-evidence.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'apps/endless-equator-spatial/Release/**'
+      - '.github/workflows/endless-equator-rc-evidence.yml'
+  workflow_dispatch:
+    inputs:
+      evidence_path:
+        description: 'Repository-relative release evidence index to validate'
+        required: false
+        default: 'apps/endless-equator-spatial/Release/release-evidence.ci.json'
+        type: string
+      expected_commit:
+        description: 'Optional immutable 40-character source commit expected by the evidence index'
+        required: false
+        default: ''
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: endless-equator-rc-evidence-${{ github.event.pull_request.head.sha || github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  validate-release-evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Select evidence index
+        id: evidence
+        shell: bash
+        env:
+          DISPATCH_PATH: ${{ inputs.evidence_path }}
+        run: |
+          set -euo pipefail
+          path="${DISPATCH_PATH:-apps/endless-equator-spatial/Release/release-evidence.ci.json}"
+          case "$path" in
+            apps/endless-equator-spatial/Release/*.json) ;;
+            *) echo "Evidence path must remain under apps/endless-equator-spatial/Release and end in .json" >&2; exit 1 ;;
+          esac
+          test -f "$path"
+          echo "path=$path" >> "$GITHUB_OUTPUT"
+
+      - name: Syntax-check evidence tooling
+        run: |
+          node --check apps/endless-equator-spatial/Release/verify-release-evidence.mjs
+          node --check apps/endless-equator-spatial/Release/test-release-evidence.mjs
+          node -e "JSON.parse(require('fs').readFileSync('apps/endless-equator-spatial/Release/release-evidence.schema.json'))"
+          node -e "JSON.parse(require('fs').readFileSync('apps/endless-equator-spatial/Release/release-evidence.template.json'))"
+          node -e "JSON.parse(require('fs').readFileSync('apps/endless-equator-spatial/Release/release-evidence.ci.json'))"
+
+      - name: Run decision-escalation negative tests
+        run: node apps/endless-equator-spatial/Release/test-release-evidence.mjs
+
+      - name: Validate selected evidence index
+        shell: bash
+        env:
+          EVIDENCE_PATH: ${{ steps.evidence.outputs.path }}
+          EXPECTED_COMMIT: ${{ inputs.expected_commit }}
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/endless-equator-release
+          args=("$EVIDENCE_PATH")
+          if [[ -n "${EXPECTED_COMMIT:-}" ]]; then
+            [[ "$EXPECTED_COMMIT" =~ ^[a-fA-F0-9]{40}$ ]] || { echo 'expected_commit must be a full 40-character Git commit' >&2; exit 1; }
+            args+=("$EXPECTED_COMMIT")
+          fi
+          node apps/endless-equator-spatial/Release/verify-release-evidence.mjs "${args[@]}" | tee /tmp/endless-equator-release/validation.json
+
+      - name: Upload nonsecret validation result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Endless_Equator_RC_Evidence_Validation
+          path: /tmp/endless-equator-release/validation.json
+          if-no-files-found: ignore
+          retention-days: 30

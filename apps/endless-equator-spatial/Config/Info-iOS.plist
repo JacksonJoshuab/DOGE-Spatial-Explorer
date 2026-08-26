@@ -21,7 +21,7 @@
     <key>CFBundleVersion</key>
     <string>$(CURRENT_PROJECT_VERSION)</string>
     <key>EndlessEquatorServerURL</key>
-    <string>http://localhost:8787</string>
+    <string>$(ENDLESS_EQUATOR_SERVER_URL)</string>
     <key>LSRequiresIPhoneOS</key>
     <true/>
     <key>NSAppTransportSecurity</key>

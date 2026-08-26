@@ -71,19 +71,7 @@ public final class ExpeditionModel {
             }
             if Date().timeIntervalSince(self.lastSyncAt) >= 1 {
                 self.lastSyncAt = Date()
-                let packet = NavigationSyncPacket(
-                    routeID: self.routeEngine.plan.id,
-                    maneuverIndex: currentIndex,
-                    maneuverInstruction: self.routeEngine.activeManeuver?.instruction,
-                    roadReference: self.routeEngine.activeManeuver?.roadReference,
-                    activeManeuverCoordinate: self.routeEngine.activeManeuver?.coordinate,
-                    speedMetersPerSecond: self.routeEngine.snapshot.currentSpeedMetersPerSecond,
-                    motionSafetyState: self.routeEngine.motionSafetyState,
-                    selectedAreaID: self.selectedAreaID,
-                    weather: self.latestWeather,
-                    generatedAt: .now
-                )
-                try? self.peerSync.send(packet)
+                try? self.peerSync.send(self.makeSyncPacket(generatedAt: .now))
             }
         }
     }
@@ -114,6 +102,19 @@ public final class ExpeditionModel {
             try RouteStore.savePlanningRoute(plan)
         } catch {
             alertMessage = "The route is available for this session but could not be stored: \(error.localizedDescription)"
+        }
+    }
+
+    public func sendSupportCheckIn() {
+        guard !peerSync.connectedPeers.isEmpty else {
+            alertMessage = "No paired support device is connected. Stop safely and use the expedition's configured satellite or phone channel."
+            return
+        }
+        do {
+            try peerSync.send(makeSyncPacket(generatedAt: .now))
+            alertMessage = "Current route, maneuver, motion state and weather context were sent to paired support."
+        } catch {
+            alertMessage = "The paired support check-in failed: \(error.localizedDescription)"
         }
     }
 
@@ -166,5 +167,20 @@ public final class ExpeditionModel {
             guideResponseAreaID = nil
             alertMessage = error.localizedDescription
         }
+    }
+
+    private func makeSyncPacket(generatedAt: Date) -> NavigationSyncPacket {
+        NavigationSyncPacket(
+            routeID: routeEngine.plan.id,
+            maneuverIndex: routeEngine.snapshot.activeManeuverIndex,
+            maneuverInstruction: routeEngine.activeManeuver?.instruction,
+            roadReference: routeEngine.activeManeuver?.roadReference,
+            activeManeuverCoordinate: routeEngine.activeManeuver?.coordinate,
+            speedMetersPerSecond: routeEngine.snapshot.currentSpeedMetersPerSecond,
+            motionSafetyState: routeEngine.motionSafetyState,
+            selectedAreaID: selectedAreaID,
+            weather: latestWeather,
+            generatedAt: generatedAt
+        )
     }
 }

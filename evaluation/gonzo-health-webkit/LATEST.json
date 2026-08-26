@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "gonzo-health-webkit-evaluation/1.0",
+  "evaluatedAt": "2026-08-26T00:00:00Z",
+  "target": {
+    "url": "https://jacksonjoshuab.github.io/DOGE-Spatial-Explorer/gonzo-health-spatial-cognition/",
+    "sourceRef": "gh-pages",
+    "browser": "playwright-webkit"
+  },
+  "brandVersion": "gonzo-health-webkit-brand/1.0.0",
+  "status": "PASS",
+  "score": 100,
+  "scorePossible": 100,
+  "criticalFailures": 0,
+  "criticalBrowserErrors": 0,
+  "verified": {
+    "brandMedia": true,
+    "sevenGenerationPacks": true,
+    "threeBatteries": true,
+    "sharedAnchors": 12,
+    "dailyResponseCount": 36,
+    "standardResponseCount": 132,
+    "researchResponseCount": 252,
+    "consentFlow": true,
+    "assessmentRuntime": true,
+    "resultsRuntime": true,
+    "localPersistence": true,
+    "serviceWorker": true,
+    "offlineReload": true,
+    "privacyBoundary": true,
+    "noProviderKey": true,
+    "noExternalTracker": true
+  },
+  "releaseDecision": "PASS"
+}

@@ -5,11 +5,8 @@ import UniformTypeIdentifiers
 public struct GPXImportView: View {
     @Bindable private var model: ExpeditionModel
     @Environment(\.dismiss) private var dismiss
-    @State private var verifier = ""
-    @State private var routeName = "Verified Ecuador route"
-    @State private var accessChecked = false
-    @State private var weatherChecked = false
-    @State private var riderAcknowledged = false
+    @State private var routeName = "Ecuador planning route"
+    @State private var understandsPlanningOnly = false
     @State private var showingImporter = false
     @State private var errorMessage: String?
 
@@ -18,46 +15,68 @@ public struct GPXImportView: View {
     public var body: some View {
         NavigationStack {
             Form {
-                Section("Verification manifest") {
+                Section("Planning route") {
                     TextField("Route name", text: $routeName)
-                    TextField("Named local verifier / guide", text: $verifier)
-                    Toggle("Access and closures checked now", isOn: $accessChecked)
-                    Toggle("Weather checked now", isOn: $weatherChecked)
-                    Toggle("Rider acknowledges this exact route", isOn: $riderAcknowledged)
+                    Toggle(
+                        "I understand this file cannot unlock operational guidance",
+                        isOn: $understandsPlanningOnly
+                    )
                 }
                 Section("Operational boundary") {
-                    Text("Importing a GPX does not prove access. Operational guidance unlocks only when every verification field is complete. Protected-area and private-road rules still control.")
+                    Label(
+                        "A GPX file is geometry, not access authorization.",
+                        systemImage: "lock.shield"
+                    )
+                    Text(
+                        "This importer rejects invalid coordinates, oversized files, excessive point counts, and multiple track segments. It always installs the route as planning-only. Operational mode requires a separately validated signed route bundle whose GPX hash, access evidence, weather check, expiry, and rider acknowledgement all match."
+                    )
                 }
-                Button("Choose GPX file") { showingImporter = true }
+                Button("Choose planning GPX file") { showingImporter = true }
                     .disabled(!canImport)
             }
-            .navigationTitle("Import verified GPX")
+            .navigationTitle("Import planning GPX")
             .toolbar { Button("Cancel") { dismiss() } }
             .fileImporter(
                 isPresented: $showingImporter,
                 allowedContentTypes: [UTType(filenameExtension: "gpx") ?? .xml, .xml],
                 allowsMultipleSelection: false
             ) { result in
-                do {
-                    guard let url = try result.get().first else { return }
-                    let scoped = url.startAccessingSecurityScopedResource()
-                    defer { if scoped { url.stopAccessingSecurityScopedResource() } }
-                    let data = try Data(contentsOf: url)
-                    let now = Date()
-                    let verification = RouteVerification(
-                        state: .verified,
-                        verifiedBy: verifier,
-                        verifiedAt: now,
-                        accessCheckedAt: accessChecked ? now : nil,
-                        weatherCheckedAt: weatherChecked ? now : nil,
-                        riderAcknowledged: riderAcknowledged,
-                        note: "Imported from GPX after explicit operator verification."
-                    )
-                    let plan = try GPXImporter().importRoute(data: data, name: routeName, verification: verification)
-                    model.routeEngine.replacePlan(plan)
-                    dismiss()
-                } catch {
-                    errorMessage = error.localizedDescription
+                Task {
+                    do {
+                        guard let url = try result.get().first else { return }
+                        let scoped = url.startAccessingSecurityScopedResource()
+                        defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+
+                        let fileSize = try url.resourceValues(forKeys: [.fileSizeKey]).fileSize ?? 0
+                        guard fileSize <= GPXImporter.maximumInputBytes else {
+                            throw GPXImportError.inputTooLarge(maximumBytes: GPXImporter.maximumInputBytes)
+                        }
+
+                        let data = try await Task.detached(priority: .userInitiated) {
+                            try Data(contentsOf: url, options: .mappedIfSafe)
+                        }.value
+                        let name = routeName.trimmingCharacters(in: .whitespacesAndNewlines)
+                        let verification = RouteVerification(
+                            state: .planningOnly,
+                            verifiedBy: nil,
+                            verifiedAt: nil,
+                            accessCheckedAt: nil,
+                            weatherCheckedAt: nil,
+                            riderAcknowledged: false,
+                            note: "Unsigned GPX import. Operational guidance remains locked until a matching signed route bundle is validated."
+                        )
+                        let plan = try await Task.detached(priority: .userInitiated) {
+                            try GPXImporter().importRoute(
+                                data: data,
+                                name: name,
+                                verification: verification
+                            )
+                        }.value
+                        model.installImportedPlan(plan)
+                        dismiss()
+                    } catch {
+                        errorMessage = error.localizedDescription
+                    }
                 }
             }
             .alert("GPX import failed", isPresented: Binding(
@@ -67,8 +86,7 @@ public struct GPXImportView: View {
     }
 
     private var canImport: Bool {
-        !verifier.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
         !routeName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
-        accessChecked && weatherChecked && riderAcknowledged
+        understandsPlanningOnly
     }
 }

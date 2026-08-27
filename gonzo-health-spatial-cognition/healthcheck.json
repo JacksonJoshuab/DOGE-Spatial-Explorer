@@ -2,9 +2,9 @@
   "status": "ok",
   "app": "Gonzo | Health — Spatial Cognition Lab",
   "deployment": "github-pages",
-  "release": "gsc-webkit/2.3.3",
+  "release": "gsc-webkit/2.3.4",
   "brandVersion": "gonzo-health-webkit-brand/1.1.1",
-  "experienceVersion": "gonzo-health-experience/2.3.3",
+  "experienceVersion": "gonzo-health-experience/2.3.4",
   "defaultTheme": "light",
   "themeToggle": true,
   "themePreferencePersistent": true,
@@ -13,7 +13,7 @@
   "validityFirstReporting": true,
   "explicitExamState": true,
   "explicitResultsState": true,
-  "responseSemantics": "global-color-hotkey",
+  "responseSemantics": "rendered-color-hotkey",
   "reportLayoutGuard": true,
   "keyboardFlow": true,
   "responsiveEvaluation": true,
@@ -31,5 +31,5 @@
   "generationPacks": 7,
   "batteryResponseCounts": [36, 132, 252],
   "sharedAnchors": 12,
-  "updatedAt": "2026-08-27T01:19:00Z"
+  "updatedAt": "2026-08-27T01:31:00Z"
 }

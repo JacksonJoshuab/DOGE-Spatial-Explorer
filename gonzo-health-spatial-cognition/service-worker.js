@@ -1,10 +1,10 @@
 const CACHE_PREFIX = "gsc-spatial-cognition-";
-const CACHE = `${CACHE_PREFIX}brand-v5`;
+const CACHE = `${CACHE_PREFIX}experience-v13`;
 const CORE = [
   "./", "./index.html", "./boot.mjs", "./brand-refresh.mjs", "./brand-refresh.css", "./light-theme.css",
-  "./manifest.webmanifest", "./brand-icon.svg", "./icon.svg", "./brand-hero.svg",
-  "./generation-media.svg", "./offline.html", "./privacy.html", "./support.html",
-  "./healthcheck.json", "./robots.txt"
+  "./experience-v2.mjs", "./response-semantics.mjs", "./experience-v2.css", "./experience-state.css", "./manifest.webmanifest",
+  "./brand-icon.svg", "./icon.svg", "./brand-hero.svg", "./generation-media.svg", "./offline.html",
+  "./privacy.html", "./support.html", "./healthcheck.json", "./robots.txt"
 ];
 const PAYLOAD = [
   "payload/g00/000.txt", "payload/g00/001.txt", "payload/g00/002.txt", "payload/g00/003.txt",

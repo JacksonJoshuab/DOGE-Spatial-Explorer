@@ -1,12 +1,22 @@
-const VERSION='gonzo-health-experience/2.3.3';
+const VERSION='gonzo-health-experience/2.3.4';
 const app=document.querySelector('#app');
 const $=(selector,root=app)=>root?.querySelector(selector);
 const $$=(selector,root=app)=>[...(root?.querySelectorAll(selector)||[])];
 const responseKeys={red:'r',blue:'b',green:'g',yellow:'y',orange:'o',purple:'p'};
 
-function accessibleName(element){return [element.getAttribute('aria-label'),element.getAttribute('title'),element.textContent].filter(Boolean).join(' ').replace(/\s+/g,' ').trim()}
+function accessibleName(element){return [element.getAttribute('aria-label'),element.getAttribute('title'),element.innerText,element.textContent].filter(Boolean).join(' ').replace(/\s+/g,' ').trim()}
 function normalizedWords(value){return String(value||'').toLowerCase().replace(/[^a-z]+/g,' ').trim()}
-function responseDescriptor(value){const words=normalizedWords(value).split(/\s+/).filter(Boolean);if(words.length<2||words.length>5)return null;for(const [color,key] of Object.entries(responseKeys)){if(words.includes(color)&&words.includes(key))return{color,label:color[0].toUpperCase()+color.slice(1)}}return null}
+function responseDescriptor(value){
+  const raw=String(value||'').toLowerCase();
+  const compact=raw.replace(/[^a-z]+/g,'');
+  const words=normalizedWords(raw).split(/\s+/).filter(Boolean);
+  const colors=Object.keys(responseKeys).filter(color=>words.includes(color)||compact===`${color}${responseKeys[color]}`||compact===`${responseKeys[color]}${color}`);
+  if(colors.length!==1)return null;
+  const color=colors[0],key=responseKeys[color];
+  const exactCompact=compact===`${color}${key}`||compact===`${key}${color}`;
+  if(!exactCompact&&!words.includes(key))return null;
+  return{color,label:color[0].toUpperCase()+color.slice(1)}
+}
 function addSkip(){if(document.querySelector('.gh-skip'))return;const link=document.createElement('a');link.className='gh-skip';link.href='#app';link.textContent='Skip to activity';document.body.prepend(link)}
 function normalizeLobbyActions(){for(const button of $$('button')){const name=accessibleName(button);if(/18-second demo|walkthrough|\bdemo\b/i.test(name)&&!button.dataset.action)button.dataset.action='demo';if(/start daily|begin 180-second|start assessment/i.test(name)&&!button.dataset.action)button.dataset.action='start'}}
 function annotateBattery(){const definitions={daily:['3 min','36 responses','Quick baseline'],standard:['15 min','132 responses','Deeper profile'],research:['30–45 min','252 responses','Research depth']};for(const card of $$('[data-battery]')){if(card.querySelector('.gh-exam-meta'))continue;const values=definitions[card.dataset.battery];if(!values)continue;const metadata=document.createElement('div');metadata.className='gh-exam-meta';metadata.innerHTML=values.map(value=>`<span>${value}</span>`).join('');card.append(metadata)}}
@@ -14,10 +24,10 @@ function addReadiness(){const hero=$('.hero,.hero-stage');if(!hero||$('.gh-readi
 function findExamRoot(){const explicit=$('.test-layout,.assessment-layout,.assessment-screen,[data-view="assessment"]');if(explicit&&!explicit.querySelector('[data-generation],[data-battery]'))return explicit;const text=(app?.textContent||'').replace(/\s+/g,' ');const control=$$('button,[role="button"],[tabindex]').find(element=>/pause|resume|stop session|end session|exit assessment|time remaining|Ⅱ|⏸|×|✕|✖/i.test(accessibleName(element)));if(control&&/trial\s*\d+|time remaining|guided practice|core stroop|response window/i.test(text))return control.closest('.page,.test-layout,.assessment-layout')||app;return null}
 function markResponseTargets(){
   const rootRect=app.getBoundingClientRect();
-  const candidates=$$('*',app).filter(element=>element.children.length<=6&&responseDescriptor(element.textContent));
+  const candidates=$$('*',app).filter(element=>element.children.length<=8&&responseDescriptor(element.innerText||element.textContent));
   const marked=new Set();
   for(const leaf of candidates){
-    const descriptor=responseDescriptor(leaf.textContent);if(!descriptor)continue;
+    const descriptor=responseDescriptor(leaf.innerText||leaf.textContent);if(!descriptor)continue;
     const leafRect=leaf.getBoundingClientRect();if(!leafRect.width||!leafRect.height)continue;
     let node=leaf;let best=null;
     for(let depth=0;node&&node!==app&&depth<6;depth++,node=node.parentElement){
@@ -45,4 +55,4 @@ function enhanceResults(root){document.body.dataset.ghView='results';if(root.dat
 function addReportNav(){const nav=$('nav');if(!nav||nav.querySelector('[data-gh-report-help]'))return;const button=document.createElement('button');button.type='button';button.dataset.ghReportHelp='';button.textContent='How scoring works';button.addEventListener('click',()=>{const target=$('.gh-report-explainer,.anchor-panel,.anchor-bridge');target?.scrollIntoView({behavior:document.documentElement.dataset.motion==='reduced'?'auto':'smooth',block:'center'})});nav.append(button)}
 function keyboard(){document.addEventListener('keydown',event=>{if(event.key==='Escape'&&document.body.dataset.ghExam==='active'){const stop=$('[data-action="stop"]');if(stop){event.preventDefault();stop.focus()}}if((event.metaKey||event.ctrlKey)&&event.key==='Enter'){const start=$('[data-action="start"]');if(start){event.preventDefault();start.click()}}})}
 function enhance(){if(!app||app.hidden)return;addSkip();normalizeLobbyActions();annotateBattery();addReadiness();addReportNav();const exam=findExamRoot();if(exam)enhanceExam(exam);else{removeSessionGuide();const results=findResultsRoot();if(results)enhanceResults(results);else document.body.dataset.ghView='lobby'}document.documentElement.dataset.ghExperience=VERSION}
-let scheduled=false;new MutationObserver(()=>{if(scheduled)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;enhance()})}).observe(app,{subtree:true,childList:true});keyboard();enhance();window.addEventListener('pageshow',enhance);window.__GONZO_HEALTH_EXPERIENCE__=Object.freeze({version:VERSION,examExpanded:true,reportingExpanded:true,stateDetection:'explicit',responseSemantics:'global-color-hotkey'});
+let scheduled=false;new MutationObserver(()=>{if(scheduled)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;enhance()})}).observe(app,{subtree:true,childList:true});keyboard();enhance();window.addEventListener('pageshow',enhance);window.__GONZO_HEALTH_EXPERIENCE__=Object.freeze({version:VERSION,examExpanded:true,reportingExpanded:true,stateDetection:'explicit',responseSemantics:'rendered-color-hotkey'});

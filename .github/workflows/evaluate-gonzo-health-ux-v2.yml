@@ -7,6 +7,7 @@ on:
     paths:
       - "gonzo-health-spatial-cognition/**"
       - "scripts/evaluate-gonzo-health-ux-v2.3.mjs"
+      - "scripts/evaluate-gonzo-health-ux-v2.3.3.mjs"
       - "scripts/diagnose-gonzo-health-boot.mjs"
       - "scripts/https-static-server.mjs"
       - ".github/workflows/evaluate-gonzo-health-ux-v2.yml"
@@ -16,6 +17,7 @@ on:
     paths:
       - "gonzo-health-spatial-cognition/**"
       - "scripts/evaluate-gonzo-health-ux-v2.3.mjs"
+      - "scripts/evaluate-gonzo-health-ux-v2.3.3.mjs"
       - "scripts/diagnose-gonzo-health-boot.mjs"
       - "scripts/https-static-server.mjs"
       - ".github/workflows/evaluate-gonzo-health-ux-v2.yml"
@@ -91,7 +93,7 @@ jobs:
           GH_BASE_URL: https://127.0.0.1:4173/
           GH_SITE_DIR: gonzo-health-spatial-cognition
           GH_OUTPUT_DIR: evaluation-output/gonzo-health-ux-v2
-        run: node scripts/evaluate-gonzo-health-ux-v2.3.mjs
+        run: node scripts/evaluate-gonzo-health-ux-v2.3.3.mjs
 
       - name: Publish evaluation summary
         if: always()

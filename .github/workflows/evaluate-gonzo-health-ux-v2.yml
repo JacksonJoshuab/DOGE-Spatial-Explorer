@@ -8,6 +8,7 @@ on:
       - "gonzo-health-spatial-cognition/**"
       - "scripts/evaluate-gonzo-health-ux-v2.mjs"
       - "scripts/diagnose-gonzo-health-boot.mjs"
+      - "scripts/https-static-server.mjs"
       - ".github/workflows/evaluate-gonzo-health-ux-v2.yml"
   pull_request:
     branches:
@@ -16,6 +17,7 @@ on:
       - "gonzo-health-spatial-cognition/**"
       - "scripts/evaluate-gonzo-health-ux-v2.mjs"
       - "scripts/diagnose-gonzo-health-boot.mjs"
+      - "scripts/https-static-server.mjs"
       - ".github/workflows/evaluate-gonzo-health-ux-v2.yml"
   workflow_dispatch:
 
@@ -31,23 +33,50 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
-          node-version: 20
+          node-version: 24
 
       - name: Install Playwright WebKit
         run: |
           npm install --no-save playwright@1.55.0
           npx playwright install --with-deps webkit
 
-      - name: Start release-candidate server
+      - name: Create a trusted local test certificate
         run: |
-          python3 -m http.server 4173 --directory gonzo-health-spatial-cognition > /tmp/gonzo-health-server.log 2>&1 &
+          set -euo pipefail
+          openssl req -x509 -newkey rsa:2048 -nodes \
+            -keyout /tmp/gonzo-ca.key -out /tmp/gonzo-ca.crt -days 1 \
+            -subj "/CN=Gonzo Health WebKit Test CA" \
+            -addext "basicConstraints=critical,CA:TRUE"
+          openssl req -newkey rsa:2048 -nodes \
+            -keyout /tmp/gonzo-server.key -out /tmp/gonzo-server.csr \
+            -subj "/CN=127.0.0.1"
+          cat >/tmp/gonzo-server.ext <<'EOF'
+          subjectAltName=IP:127.0.0.1,DNS:localhost
+          extendedKeyUsage=serverAuth
+          basicConstraints=critical,CA:FALSE
+          keyUsage=critical,digitalSignature,keyEncipherment
+          EOF
+          openssl x509 -req -in /tmp/gonzo-server.csr \
+            -CA /tmp/gonzo-ca.crt -CAkey /tmp/gonzo-ca.key -CAcreateserial \
+            -out /tmp/gonzo-server.crt -days 1 -sha256 -extfile /tmp/gonzo-server.ext
+          sudo cp /tmp/gonzo-ca.crt /usr/local/share/ca-certificates/gonzo-health-webkit-test-ca.crt
+          sudo update-ca-certificates
+
+      - name: Start trusted HTTPS release-candidate server
+        env:
+          SITE_DIR: gonzo-health-spatial-cognition
+          PORT: 4173
+          TLS_CERT: /tmp/gonzo-server.crt
+          TLS_KEY: /tmp/gonzo-server.key
+        run: |
+          node scripts/https-static-server.mjs > /tmp/gonzo-health-server.log 2>&1 &
           echo $! > /tmp/gonzo-health-server.pid
           for attempt in {1..30}; do
-            curl --fail --silent http://127.0.0.1:4173/healthcheck.json >/dev/null && exit 0
+            curl --fail --silent https://127.0.0.1:4173/healthcheck.json >/dev/null && exit 0
             sleep 1
           done
           cat /tmp/gonzo-health-server.log
@@ -55,12 +84,12 @@ jobs:
 
       - name: Diagnose WebKit boot contract
         env:
-          GH_BASE_URL: http://127.0.0.1:4173/
+          GH_BASE_URL: https://127.0.0.1:4173/
         run: node scripts/diagnose-gonzo-health-boot.mjs
 
       - name: Run fail-closed WebKit evaluation
         env:
-          GH_BASE_URL: http://127.0.0.1:4173/
+          GH_BASE_URL: https://127.0.0.1:4173/
           GH_SITE_DIR: gonzo-health-spatial-cognition
           GH_OUTPUT_DIR: evaluation-output/gonzo-health-ux-v2
         run: node scripts/evaluate-gonzo-health-ux-v2.mjs

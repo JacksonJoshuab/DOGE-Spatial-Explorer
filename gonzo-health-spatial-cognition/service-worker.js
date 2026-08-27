@@ -1,5 +1,5 @@
 const CACHE_PREFIX = "gsc-spatial-cognition-";
-const CACHE = `${CACHE_PREFIX}experience-v10`;
+const CACHE = `${CACHE_PREFIX}experience-v11`;
 const CORE = [
   "./", "./index.html", "./boot.mjs", "./brand-refresh.mjs", "./brand-refresh.css", "./light-theme.css",
   "./experience-v2.mjs", "./experience-v2.css", "./experience-state.css", "./manifest.webmanifest",

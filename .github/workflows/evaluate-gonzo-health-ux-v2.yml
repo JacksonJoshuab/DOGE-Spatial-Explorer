@@ -8,6 +8,7 @@ on:
       - "gonzo-health-spatial-cognition/**"
       - "scripts/evaluate-gonzo-health-ux-v2.3.mjs"
       - "scripts/evaluate-gonzo-health-ux-v2.3.5-localtls.mjs"
+      - "scripts/inspect-gonzo-health-response-dom.mjs"
       - "scripts/diagnose-gonzo-health-boot.mjs"
       - "scripts/https-static-server.mjs"
       - ".github/workflows/evaluate-gonzo-health-ux-v2.yml"
@@ -18,6 +19,7 @@ on:
       - "gonzo-health-spatial-cognition/**"
       - "scripts/evaluate-gonzo-health-ux-v2.3.mjs"
       - "scripts/evaluate-gonzo-health-ux-v2.3.5-localtls.mjs"
+      - "scripts/inspect-gonzo-health-response-dom.mjs"
       - "scripts/diagnose-gonzo-health-boot.mjs"
       - "scripts/https-static-server.mjs"
       - ".github/workflows/evaluate-gonzo-health-ux-v2.yml"
@@ -88,6 +90,11 @@ jobs:
           GH_BASE_URL: https://localhost:4173/
         run: node scripts/diagnose-gonzo-health-boot.mjs
 
+      - name: Inspect the timed response-strip DOM
+        env:
+          GH_BASE_URL: https://localhost:4173/
+        run: node scripts/inspect-gonzo-health-response-dom.mjs > response-dom-inspection.json
+
       - name: Run fail-closed WebKit evaluation
         env:
           GH_BASE_URL: https://localhost:4173/
@@ -109,5 +116,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: gonzo-health-exam-reporting-ux-v2-evidence
-          path: evaluation-output/gonzo-health-ux-v2
+          path: |
+            evaluation-output/gonzo-health-ux-v2
+            response-dom-inspection.json
+            response-dom-inspection.png
           if-no-files-found: warn

@@ -1,0 +1,76 @@
+name: Evaluate Gonzo Health Exam Reporting UX v2
+
+on:
+  push:
+    branches:
+      - feature/gonzo-health-exam-reporting-ux
+    paths:
+      - "gonzo-health-spatial-cognition/**"
+      - "scripts/evaluate-gonzo-health-ux-v2.mjs"
+      - ".github/workflows/evaluate-gonzo-health-ux-v2.yml"
+  pull_request:
+    branches:
+      - gh-pages
+    paths:
+      - "gonzo-health-spatial-cognition/**"
+      - "scripts/evaluate-gonzo-health-ux-v2.mjs"
+      - ".github/workflows/evaluate-gonzo-health-ux-v2.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gonzo-health-ux-v2-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  webkit-evaluation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Playwright WebKit
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps webkit
+
+      - name: Start release-candidate server
+        run: |
+          python3 -m http.server 4173 --directory gonzo-health-spatial-cognition > /tmp/gonzo-health-server.log 2>&1 &
+          echo $! > /tmp/gonzo-health-server.pid
+          for attempt in {1..30}; do
+            curl --fail --silent http://127.0.0.1:4173/healthcheck.json >/dev/null && exit 0
+            sleep 1
+          done
+          cat /tmp/gonzo-health-server.log
+          exit 1
+
+      - name: Run fail-closed WebKit evaluation
+        env:
+          GH_BASE_URL: http://127.0.0.1:4173/
+          GH_SITE_DIR: gonzo-health-spatial-cognition
+          GH_OUTPUT_DIR: evaluation-output/gonzo-health-ux-v2
+        run: node scripts/evaluate-gonzo-health-ux-v2.mjs
+
+      - name: Publish evaluation summary
+        if: always()
+        run: |
+          if [[ -f evaluation-output/gonzo-health-ux-v2/report.md ]]; then
+            cat evaluation-output/gonzo-health-ux-v2/report.md >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Evaluation report was not generated." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload evaluation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gonzo-health-exam-reporting-ux-v2-evidence
+          path: evaluation-output/gonzo-health-ux-v2
+          if-no-files-found: warn

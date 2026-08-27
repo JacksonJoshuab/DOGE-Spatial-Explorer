@@ -7,7 +7,7 @@ on:
     paths:
       - "gonzo-health-spatial-cognition/**"
       - "scripts/evaluate-gonzo-health-ux-v2.3.mjs"
-      - "scripts/evaluate-gonzo-health-ux-v2.3.3.mjs"
+      - "scripts/evaluate-gonzo-health-ux-v2.3.4.mjs"
       - "scripts/diagnose-gonzo-health-boot.mjs"
       - "scripts/https-static-server.mjs"
       - ".github/workflows/evaluate-gonzo-health-ux-v2.yml"
@@ -17,7 +17,7 @@ on:
     paths:
       - "gonzo-health-spatial-cognition/**"
       - "scripts/evaluate-gonzo-health-ux-v2.3.mjs"
-      - "scripts/evaluate-gonzo-health-ux-v2.3.3.mjs"
+      - "scripts/evaluate-gonzo-health-ux-v2.3.4.mjs"
       - "scripts/diagnose-gonzo-health-boot.mjs"
       - "scripts/https-static-server.mjs"
       - ".github/workflows/evaluate-gonzo-health-ux-v2.yml"
@@ -54,9 +54,9 @@ jobs:
             -addext "basicConstraints=critical,CA:TRUE"
           openssl req -newkey rsa:2048 -nodes \
             -keyout /tmp/gonzo-server.key -out /tmp/gonzo-server.csr \
-            -subj "/CN=127.0.0.1"
+            -subj "/CN=localhost"
           cat >/tmp/gonzo-server.ext <<'EOF'
-          subjectAltName=IP:127.0.0.1,DNS:localhost
+          subjectAltName=DNS:localhost,IP:127.0.0.1
           extendedKeyUsage=serverAuth
           basicConstraints=critical,CA:FALSE
           keyUsage=critical,digitalSignature,keyEncipherment
@@ -77,7 +77,7 @@ jobs:
           node scripts/https-static-server.mjs > /tmp/gonzo-health-server.log 2>&1 &
           echo $! > /tmp/gonzo-health-server.pid
           for attempt in {1..30}; do
-            curl --fail --silent https://127.0.0.1:4173/healthcheck.json >/dev/null && exit 0
+            curl --fail --silent https://localhost:4173/healthcheck.json >/dev/null && exit 0
             sleep 1
           done
           cat /tmp/gonzo-health-server.log
@@ -85,15 +85,15 @@ jobs:
 
       - name: Diagnose WebKit boot contract
         env:
-          GH_BASE_URL: https://127.0.0.1:4173/
+          GH_BASE_URL: https://localhost:4173/
         run: node scripts/diagnose-gonzo-health-boot.mjs
 
       - name: Run fail-closed WebKit evaluation
         env:
-          GH_BASE_URL: https://127.0.0.1:4173/
+          GH_BASE_URL: https://localhost:4173/
           GH_SITE_DIR: gonzo-health-spatial-cognition
           GH_OUTPUT_DIR: evaluation-output/gonzo-health-ux-v2
-        run: node scripts/evaluate-gonzo-health-ux-v2.3.3.mjs
+        run: node scripts/evaluate-gonzo-health-ux-v2.3.4.mjs
 
       - name: Publish evaluation summary
         if: always()

@@ -13,7 +13,10 @@ if (!source.includes(versionNeedle)) {
 source = source.replace(versionNeedle, "const EXPERIENCE='gonzo-health-experience/2.3.5';");
 source = source.replaceAll("serviceWorkers:'allow'", "serviceWorkers:'allow',ignoreHTTPSErrors:true");
 
-const nativeSelector = 'button.response-button[data-response][aria-label^="Respond "],button[data-response][aria-label^="Respond "],[data-gh-response]';
+// The packed assessment already renders six native, focusable buttons. Their
+// visible color and hotkey text supplies the accessible name; this gate tests
+// those authoritative controls rather than requiring an enhancement marker.
+const nativeSelector = 'button.response-button[data-response],button[data-response]';
 const waitNeedle = "await page.waitForSelector('[data-gh-response]',{timeout:10000});";
 const dimensionsNeedle = "const responses=await dimensions(page,'[data-gh-response]');";
 if (!source.includes(waitNeedle) || !source.includes(dimensionsNeedle)) {

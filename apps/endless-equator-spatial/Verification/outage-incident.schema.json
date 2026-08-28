@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gonzo.example/schemas/ecuador-outage-incident-v1.schema.json",
+  "title": "Ecuador outage incident evidence record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "incident_id",
+    "location_id",
+    "service_domain",
+    "service_state",
+    "causality_state",
+    "corrective_action_state",
+    "administrative_state",
+    "detected_at_utc",
+    "clock_source",
+    "clock_uncertainty_seconds",
+    "impact_denominator",
+    "geometry_state",
+    "evidence_grade",
+    "claim_ceiling",
+    "source_artifacts"
+  ],
+  "properties": {
+    "incident_id": {"type": "string", "minLength": 1},
+    "root_event_id": {"type": ["string", "null"]},
+    "service_effect_id": {"type": ["string", "null"]},
+    "location_id": {"enum": ["la-carolina", "cci", "utn", "inta-kara", "intag"]},
+    "service_domain": {"enum": ["ELECTRICITY", "WATER_WASTEWATER", "TELECOM", "PUBLIC_LIGHTING", "SOLID_WASTE"]},
+    "service_state": {"enum": ["UNKNOWN", "IMPACTED", "DEGRADED", "RESTORED"]},
+    "causality_state": {"enum": ["UNKNOWN", "CORRELATED", "PROBABLE", "CONFIRMED", "UNKNOWN_AFTER_INVESTIGATION"]},
+    "corrective_action_state": {"enum": ["NOT_STARTED", "PLANNED", "IMPLEMENTED", "VALIDATED"]},
+    "administrative_state": {"enum": ["OPEN", "ACTIVE", "RCA_REVIEWED", "CLOSED"]},
+    "detected_at_utc": {"type": "string", "format": "date-time"},
+    "impact_start_at_utc": {"type": ["string", "null"], "format": "date-time"},
+    "work_start_at_utc": {"type": ["string", "null"], "format": "date-time"},
+    "service_restored_at_utc": {"type": ["string", "null"], "format": "date-time"},
+    "service_restoration_bound": {"type": ["string", "null"]},
+    "root_cause_decided_at_utc": {"type": ["string", "null"], "format": "date-time"},
+    "corrective_action_validated_at_utc": {"type": ["string", "null"], "format": "date-time"},
+    "clock_source": {"type": "string", "minLength": 1},
+    "clock_uncertainty_seconds": {"type": "number", "minimum": 0},
+    "impact_denominator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "unit"],
+      "properties": {
+        "state": {"enum": ["KNOWN", "BOUNDED", "UNKNOWN"]},
+        "affected": {"type": ["number", "null"], "minimum": 0},
+        "total": {"type": ["number", "null"], "minimum": 0},
+        "unit": {"type": "string", "minLength": 1}
+      }
+    },
+    "geometry_state": {"enum": ["VERIFIED_POLYGON", "VERIFIED_ASSET", "BOUNDED_AREA", "POINT_REFERENCE_ONLY", "UNKNOWN"]},
+    "evidence_grade": {"enum": ["R0_MODELLED", "R1_OPERATOR_DECLARED", "R2_MEASURED", "R3_INDEPENDENTLY_VERIFIED"]},
+    "cause_hypothesis": {"type": ["string", "null"]},
+    "rejected_hypotheses": {"type": "array", "items": {"type": "string"}},
+    "claim_ceiling": {"type": "string", "minLength": 1},
+    "source_artifacts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["label", "observed_at_utc", "sha256"],
+        "properties": {
+          "label": {"type": "string", "minLength": 1},
+          "url": {"type": ["string", "null"], "format": "uri"},
+          "observed_at_utc": {"type": "string", "format": "date-time"},
+          "sha256": {"type": "string", "pattern": "^[a-fA-F0-9]{64}$"}
+        }
+      }
+    }
+  }
+}

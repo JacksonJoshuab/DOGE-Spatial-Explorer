@@ -10,6 +10,7 @@ on:
         default: true
   push:
     branches:
+      - main
       - automation/acidance-azure-recovery-20260904
     paths:
       - .github/workflows/acidance-azure-recovery.yml

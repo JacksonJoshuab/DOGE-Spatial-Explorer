@@ -1,0 +1,147 @@
+name: Acidance Azure Key Vault recovery
+
+on:
+  workflow_dispatch:
+    inputs:
+      render_proof:
+        description: Render the eight-second photorealistic Quito proof when Acidance is recovered
+        required: true
+        type: boolean
+        default: true
+  push:
+    branches:
+      - main
+      - automation/acidance-azure-recovery-20260904
+    paths:
+      - .github/workflows/acidance-azure-recovery.yml
+      - scripts/acidance_azure_recovery.py
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: acidance-azure-recovery-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  recover:
+    name: Recover Acidance through Azure Key Vault
+    runs-on: ubuntu-latest
+    timeout-minutes: 65
+    environment: gateway-production
+    env:
+      AZURE_KEY_VAULT_NAME: ${{ vars.AZURE_KEY_VAULT_NAME }}
+      AZURE_OPENAI_SECRET_NAME: endless-equator-openai-api-key
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Validate protected Azure configuration
+        shell: bash
+        env:
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        run: |
+          set -euo pipefail
+          for name in AZURE_CLIENT_ID AZURE_TENANT_ID AZURE_SUBSCRIPTION_ID AZURE_KEY_VAULT_NAME; do
+            test -n "${!name:-}" || {
+              echo "Missing protected Azure configuration: $name" >&2
+              exit 2
+            }
+          done
+
+      - name: Sign in to Azure with GitHub OIDC
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Load the OpenAI key without exposing it
+        shell: bash
+        run: |
+          set -euo pipefail
+          key="$(az keyvault secret show \
+            --vault-name "$AZURE_KEY_VAULT_NAME" \
+            --name "$AZURE_OPENAI_SECRET_NAME" \
+            --query value \
+            --output tsv \
+            --only-show-errors)"
+          test -n "$key" || {
+            echo "Azure Key Vault returned an empty OpenAI key." >&2
+            exit 3
+          }
+          echo "::add-mask::$key"
+          printf 'OPENAI_API_KEY=%s\n' "$key" >> "$GITHUB_ENV"
+          echo "OpenAI credential loaded from Azure Key Vault and masked."
+
+      - name: Recover exact Acidance identity and render proof
+        id: recover
+        shell: bash
+        run: |
+          set +e
+          args=(
+            scripts/acidance_azure_recovery.py
+            --output-dir artifacts/acidance-azure-recovery
+            --max-pages 20
+            --page-size 100
+            --proof-timeout-minutes 45
+          )
+          render='true'
+          if [[ '${{ github.event_name }}' == 'workflow_dispatch' ]]; then
+            render='${{ inputs.render_proof }}'
+          fi
+          if [[ "$render" == 'true' ]]; then
+            args+=(--render-proof)
+          fi
+          python "${args[@]}"
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Publish recovery summary
+        if: always()
+        shell: bash
+        run: |
+          summary='artifacts/acidance-azure-recovery/summary.md'
+          if [[ -f "$summary" ]]; then
+            cat "$summary" >> "$GITHUB_STEP_SUMMARY"
+          else
+            {
+              echo '# Acidance Azure recovery'
+              echo
+              echo 'No summary file was produced.'
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload redacted records and proof video
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: acidance-azure-recovery-${{ github.run_id }}
+          path: artifacts/acidance-azure-recovery
+          if-no-files-found: warn
+          retention-days: 14
+          compression-level: 0
+
+      - name: Enforce recovery result
+        if: always()
+        shell: bash
+        run: |
+          code='${{ steps.recover.outputs.exit_code }}'
+          if [[ -z "$code" ]]; then
+            echo 'Recovery did not publish an exit code.' >&2
+            exit 1
+          fi
+          if [[ "$code" != '0' ]]; then
+            echo "Acidance Azure recovery exited with code $code. Inspect the redacted artifact." >&2
+            exit "$code"
+          fi
